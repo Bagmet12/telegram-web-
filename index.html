@@ -81,6 +81,9 @@
         issue,
         user: tg.initDataUnsafe?.user?.username || tg.initDataUnsafe?.user?.id
       };
+
+      console.log("📤 Отправка данных:", data);
+
       fetch("https://tesla-service-dashboard-eda44e4816de.herokuapp.com/api/save_request", {
         method: "POST",
         headers: {
@@ -88,9 +91,22 @@
         },
         body: JSON.stringify(data)
       })
-        .then(res => res.json())
-        .then(res => alert("Заявка отправлена!"))
-        .catch(() => alert("Ошибка при отправке"));
+      .then(res => {
+        console.log("📥 Ответ от сервера:", res);
+        return res.json();
+      })
+      .then(json => {
+        console.log("✅ Ответ JSON:", json);
+        if (json.status === "ok") {
+          alert("Заявка отправлена!");
+        } else {
+          alert("Сервер ответил с ошибкой: " + json.message);
+        }
+      })
+      .catch(err => {
+        console.error("❌ Ошибка запроса:", err);
+        alert("Ошибка при отправке");
+      });
     }
   </script>
 </body>
