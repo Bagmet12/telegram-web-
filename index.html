@@ -4,12 +4,14 @@
   <meta charset="UTF-8">
   <title>Tesla Assistant</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Telegram WebApp -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- OCR -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
   <style>
     body {
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto;
       background-color: #121212;
       color: #fff;
       padding: 20px;
@@ -20,21 +22,24 @@
     .scanner-area { background: #1e1e1e; border-radius: 12px; padding: 12px; margin-bottom: 20px; }
     #video { width: 100%; border-radius: 8px; margin-top: 10px; display: none; }
     #close-scan { display: none; margin-top: 10px; background: #d32f2f; }
-    .card { background-color: #1e1e1e; border-radius: 12px; padding: 14px; margin-bottom: 12px; font-size: 15px; cursor: pointer; }
-    .card strong { display: block; margin-bottom: 5px; }
+    input[type=file] { display: none; }
+    .card { background-color: #1e1e1e; border-radius: 12px; padding: 14px; margin-bottom: 0; font-size: 15px; cursor: pointer; }
+    .card + .section-content { margin-bottom: 12px; display: none; background-color: #1e1e1e; border-radius: 0 0 12px 12px; padding: 12px 14px; }
+    .card strong { display: block; }
     button, input, select, textarea { width: 100%; padding: 10px; margin-top: 10px; border-radius: 8px; border: none; font-size: 16px; }
     button { background-color: #03c75a; color: #fff; font-weight: bold; cursor: pointer; }
     .form-card { background: #1e1e1e; border-radius: 12px; padding: 15px; margin-top: 20px; }
     .form-row { margin-bottom: 15px; }
     .form-row label { display: block; margin-bottom: 5px; color: #ccc; }
-    .radio-group { display: flex; flex-direction: column; gap: 8px; }
+    a { color: #03c75a; text-decoration: none; }
   </style>
 </head>
 <body>
   <div class="header" id="greeting">Вітаємо!</div>
-  <div class="subtext">Ваш підкjected VIN — коннектов</div>
+  <div class="subtext">Ваш підективн VIN — коннектов</div>
   <div class="vin-display" id="vin-display">Не вказано</div>
 
+  <!-- Scanner -->
   <div class="scanner-area">
     <div class="form-row">
       <label for="vin-input">Останні 6 символів VIN</label>
@@ -44,27 +49,41 @@
     <button id="close-scan" onclick="stopScan()">✖ Закрити скан</button>
     <video id="video" playsinline></video>
     <button onclick="saveVin()">💾 Зберегти VIN</button>
+    <input type="file" id="file-input" accept="image/*;capture=camera">
   </div>
 
-  <div class="card" onclick="showStatus()">
+  <!-- Sections -->
+  <div class="card" onclick="toggleSection('status-sec')">
     <strong>🔧 Статус ремонту</strong>
-    <span id="status-text">В процесі</span>
+  </div>
+  <div id="status-sec" class="section-content">
+    <p id="status-text">В процесі</p>
   </div>
 
-  <div class="card" onclick="downloadPDF()">
+  <div class="card" onclick="toggleSection('pdf-sec')">
     <strong>📄 Отримати PDF звіт</strong>
   </div>
+  <div id="pdf-sec" class="section-content">
+    <button onclick="downloadPDF()">Завантажити PDF</button>
+  </div>
 
-  <div class="card" onclick="showContacts()">
+  <div class="card" onclick="toggleSection('contact-sec')">
     <strong>📞 Контактна інформація</strong>
-    <span>Тел.: +380 44 123 45 67<br>Адреса: м. Київ, вул. Сервісна 10</span>
+  </div>
+  <div id="contact-sec" class="section-content">
+    <p><a href="tel:+380441234567">+380 44 123 45 67</a></p>
+    <p><a href="https://www.google.com/maps/dir/?api=1&destination=м.+Київ,+вул.+Сервісна+10" target="_blank">м. Київ, вул. Сервісна 10</a></p>
   </div>
 
-  <div class="card" onclick="showErrors()">
+  <div class="card" onclick="toggleSection('errors-sec')">
     <strong>⚠️ Поточні помилки</strong>
-    <span>• P1234 – зниження потужності (можна їхати)<br>• P5678 – проблема з гальмами (рекомендується зупинитися)</span>
+  </div>
+  <div id="errors-sec" class="section-content">
+    <p>• P1234 – зниження потужності (<em>можна їхати</em>)</p>
+    <p>• P5678 – проблема з гальмами (<strong>зупинитися</strong>)</p>
   </div>
 
+  <!-- Form to admin -->
   <div class="form-card">
     <strong>📩 Надіслати адміну</strong>
     <div class="form-row">
@@ -77,7 +96,7 @@
       </select>
     </div>
     <div class="form-row">
-      <label for="custom-issue">Інша проблема</label>
+      <label for="custom-issue">Інша проблема (опис)</label>
       <textarea id="custom-issue" placeholder="Опишіть проблему"></textarea>
     </div>
     <button onclick="submitForm()">Надіслати</button>
@@ -87,69 +106,88 @@
     const tg = window.Telegram.WebApp; tg.ready(); tg.expand();
     document.getElementById('greeting').innerText = `Вітаємо, ${tg.initDataUnsafe.user.first_name || 'користувач'}!`;
 
-    // LocalStorage persistence
+    // Persist load
     window.onload = () => {
-      const savedVin = localStorage.getItem('vin');
-      if (savedVin) updateVin(savedVin);
-      const savedIssue = localStorage.getItem('issue');
-      if (savedIssue) document.getElementById('issue-type').value = savedIssue;
+      const v = localStorage.getItem('vin'); if (v) updateVin(v);
+      const is = localStorage.getItem('issue'); if (is) document.getElementById('issue-type').value = is;
     };
 
     function updateVin(val) {
       document.getElementById('vin-display').innerText = val || 'Не вказано';
     }
 
+    function toggleSection(id) {
+      const el = document.getElementById(id);
+      el.style.display = el.style.display === 'block' ? 'none' : 'block';
+    }
+
     let currentStream;
     async function startScan() {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-        currentStream = stream;
+        currentStream = await navigator.mediaDevices.getUserMedia({ video:{facingMode:'environment'} });
         const video = document.getElementById('video');
-        video.srcObject = stream; video.style.display = 'block';
+        video.srcObject = currentStream; video.style.display = 'block';
         document.getElementById('close-scan').style.display = 'block';
-        // Tesseract OCR
-        const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
-        let attempts = 0;
-        const maxAttempts = 20;
-        const interval = setInterval(async () => {
-          if (attempts++ > maxAttempts) return clearInterval(interval);
-          canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-          ctx.drawImage(video, 0, 0);
-          const { data: { text } } = await Tesseract.recognize(canvas, 'eng', { tessedit_char_whitelist: '0123456789' });
-          const digits = text.replace(/\D/g, '');
-          if (digits.length >= 6) {
+        const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d');
+        let attempts=0, max=20;
+        const interval = setInterval(async ()=>{
+          if(attempts++>max) return clearInterval(interval);
+          canvas.width=video.videoWidth; canvas.height=video.videoHeight;
+          ctx.drawImage(video,0,0);
+          const { data:{ text }} = await Tesseract.recognize(canvas,'eng',{tessedit_char_whitelist:'0123456789'});
+          const digits = text.replace(/\D/g,'');
+          if(digits.length>=6) {
             clearInterval(interval); stopScan();
             const last6 = digits.slice(-6);
             document.getElementById('vin-input').value = last6; updateVin(last6);
           }
-        }, 1000);
+        },1000);
       } catch (err) {
-        alert('Помилка доступу до камери: ' + err.message);
+        const fi = document.getElementById('file-input'); fi.style.display='block';
+        fi.onchange = e => {
+          const file=e.target.files[0]; const img=new Image(); img.src=URL.createObjectURL(file);
+          img.onload = ()=>{
+            const canvas=document.createElement('canvas'), ctx=canvas.getContext('2d');
+            canvas.width=img.naturalWidth; canvas.height=img.naturalHeight;
+            ctx.drawImage(img,0,0);
+            Tesseract.recognize(canvas,'eng',{tessedit_char_whitelist:'0123456789'})
+              .then(({data:{text}})=>{
+                const d=text.replace(/\D/g,''); if(d.length>=6) {
+                  const last6=d.slice(-6);
+                  document.getElementById('vin-input').value=last6; updateVin(last6);
+                  fi.style.display='none';
+                }
+              });
+          };
+        };
       }
     }
     function stopScan() {
-      if (currentStream) currentStream.getTracks().forEach(t => t.stop());
-      document.getElementById('video').style.display = 'none';
-      document.getElementById('close-scan').style.display = 'none';
+      if(currentStream) currentStream.getTracks().forEach(t=>t.stop());
+      document.getElementById('video').style.display='none';
+      document.getElementById('close-scan').style.display='none';
     }
     function saveVin() {
-      const vin = document.getElementById('vin-input').value.trim();
-      if (vin.length === 6) { localStorage.setItem('vin', vin); updateVin(vin); alert('VIN збережено'); }
-      else alert('Введіть 6 цифр VIN');
+      const vin=document.getElementById('vin-input').value.trim();
+      if(vin.length===6){ localStorage.setItem('vin',vin); updateVin(vin); alert('VIN збережено'); }
+      else alert('Вкажіть 6 символів VIN');
     }
-    function submitForm() {
-      const vin = document.getElementById('vin-display').innerText;
-      let issue = document.getElementById('issue-type').value;
-      if (issue === 'Інше') issue = document.getElementById('custom-issue').value.trim();
-      if (!vin || vin==='Не вказано') return alert('Вкажіть VIN');
-      localStorage.setItem('issue', document.getElementById('issue-type').value);
-      const data = { vin, issue, user: tg.initDataUnsafe.user.first_name };
-      fetch('https://tesla-service-dashboard-eda44e4816de.herokuapp.com/api/save_request', {
-        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)
-      })
-      .then(r=>r.json()).then(j=>alert(j.status==='ok'? 'Заявку надіслано':'Помилка: '+j.message))
-      .catch(()=>alert('Не вдалося надіслати'));
+    function submitForm(){
+      const vin=document.getElementById('vin-display').innerText;
+      let issue=document.getElementById('issue-type').value;
+      if(issue==='Інше') issue=document.getElementById('custom-issue').value.trim();
+      if(!vin||vin==='Не вказано') return alert('Вкажіть VIN');
+      localStorage.setItem('issue',document.getElementById('issue-type').value);
+      const data={vin,issue,user:tg.initDataUnsafe.user.first_name};
+      fetch('https://tesla-service-dashboard-eda44e4816de.herokuapp.com/api/save_request',{
+        method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)
+      }).then(r=>r.json()).then(j=>alert(j.status==='ok'?'Заявку надіслано':'Помилка: '+j.message))
+      .catch(()=>alert('Не вдалося надіслати заявку'));
     }
+    function downloadPDF(){ alert('PDF скоро буде доступний'); }
+    function showStatus(){ toggleSection('status-sec'); }
+    function showContacts(){ toggleSection('contact-sec'); }
+    function showErrors(){ toggleSection('errors-sec'); }
   </script>
 </body>
 </html>
