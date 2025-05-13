@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <title>Tesla Assistant</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Telegram WebApp -->
+  <!-- Telegram WebApp script -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- OCR -->
+  <!-- Tesseract OCR -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
   <style>
     body {
@@ -22,7 +22,7 @@
     .scanner-area { background: #1e1e1e; border-radius: 12px; padding: 12px; margin-bottom: 20px; }
     #video { width: 100%; border-radius: 8px; margin-top: 10px; display: none; }
     #close-scan { display: none; margin-top: 10px; background: #d32f2f; }
-    input[type=file] { display: none; }
+    input[type=file] { display: none; margin-top: 10px; }
     .card { background-color: #1e1e1e; border-radius: 12px; padding: 14px; margin-bottom: 0; font-size: 15px; cursor: pointer; }
     .card + .section-content { margin-bottom: 12px; display: none; background-color: #1e1e1e; border-radius: 0 0 12px 12px; padding: 12px 14px; }
     .card strong { display: block; }
@@ -47,7 +47,7 @@
     </div>
     <button onclick="startScan()">📷 Сканувати VIN</button>
     <button id="close-scan" onclick="stopScan()">✖ Закрити скан</button>
-    <video id="video" playsinline></video>
+    <video id="video" autoplay playsinline></video>
     <button onclick="saveVin()">💾 Зберегти VIN</button>
     <input type="file" id="file-input" accept="image/*;capture=camera">
   </div>
@@ -57,7 +57,7 @@
     <strong>🔧 Статус ремонту</strong>
   </div>
   <div id="status-sec" class="section-content">
-    <p id="status-text">В процесі</p>
+    <p>В процесі</p>
   </div>
 
   <div class="card" onclick="toggleSection('pdf-sec')">
@@ -71,7 +71,7 @@
     <strong>📞 Контактна інформація</strong>
   </div>
   <div id="contact-sec" class="section-content">
-    <p><a href="tel:+380441234567">+380 44 123 45 67</a></p>
+    <p><a href="tel:+380441234567">+380 67 467 94 95</a></p>
     <p><a href="https://www.google.com/maps/dir/?api=1&destination=м.+Київ,+вул.+Сервісна+10" target="_blank">м. Київ, вул. Сервісна 10</a></p>
   </div>
 
@@ -106,10 +106,10 @@
     const tg = window.Telegram.WebApp; tg.ready(); tg.expand();
     document.getElementById('greeting').innerText = `Вітаємо, ${tg.initDataUnsafe.user.first_name || 'користувач'}!`;
 
-    // Persist load
+    // Restore saved data
     window.onload = () => {
-      const v = localStorage.getItem('vin'); if (v) updateVin(v);
-      const is = localStorage.getItem('issue'); if (is) document.getElementById('issue-type').value = is;
+      const sv = localStorage.getItem('vin'); if (sv) updateVin(sv);
+      const si = localStorage.getItem('issue'); if (si) document.getElementById('issue-type').value = si;
     };
 
     function updateVin(val) {
@@ -118,7 +118,7 @@
 
     function toggleSection(id) {
       const el = document.getElementById(id);
-      el.style.display = el.style.display === 'block' ? 'none' : 'block';
+      el.style.display = (el.style.display === 'block' ? 'none' : 'block');
     }
 
     let currentStream;
@@ -128,34 +128,43 @@
         const video = document.getElementById('video');
         video.srcObject = currentStream; video.style.display = 'block';
         document.getElementById('close-scan').style.display = 'block';
+        // OCR capture
         const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d');
-        let attempts=0, max=20;
+        let attempts=0;
+        const max=20;
         const interval = setInterval(async ()=>{
-          if(attempts++>max) return clearInterval(interval);
-          canvas.width=video.videoWidth; canvas.height=video.videoHeight;
+          if (++attempts > max) return clearInterval(interval);
+          canvas.width = video.videoWidth; canvas.height = video.videoHeight;
           ctx.drawImage(video,0,0);
-          const { data:{ text }} = await Tesseract.recognize(canvas,'eng',{tessedit_char_whitelist:'0123456789'});
-          const digits = text.replace(/\D/g,'');
-          if(digits.length>=6) {
-            clearInterval(interval); stopScan();
+          const { data } = await Tesseract.recognize(canvas,'eng',{ tessedit_char_whitelist:'0123456789' });
+          const digits = data.text.replace(/\D/g,'');
+          if (digits.length>=6) {
+            clearInterval(interval);
+            stopScan();
             const last6 = digits.slice(-6);
-            document.getElementById('vin-input').value = last6; updateVin(last6);
+            document.getElementById('vin-input').value = last6;
+            updateVin(last6);
           }
         },1000);
       } catch (err) {
-        const fi = document.getElementById('file-input'); fi.style.display='block';
+        // Fallback photo input
+        const fi = document.getElementById('file-input');
+        fi.style.display = 'block';
         fi.onchange = e => {
-          const file=e.target.files[0]; const img=new Image(); img.src=URL.createObjectURL(file);
+          const file = e.target.files[0];
+          const img = new Image(); img.src = URL.createObjectURL(file);
           img.onload = ()=>{
-            const canvas=document.createElement('canvas'), ctx=canvas.getContext('2d');
-            canvas.width=img.naturalWidth; canvas.height=img.naturalHeight;
+            const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d');
+            canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
             ctx.drawImage(img,0,0);
-            Tesseract.recognize(canvas,'eng',{tessedit_char_whitelist:'0123456789'})
-              .then(({data:{text}})=>{
-                const d=text.replace(/\D/g,''); if(d.length>=6) {
-                  const last6=d.slice(-6);
-                  document.getElementById('vin-input').value=last6; updateVin(last6);
-                  fi.style.display='none';
+            Tesseract.recognize(canvas,'eng',{ tessedit_char_whitelist:'0123456789' })
+              .then(({ data })=>{
+                const d = data.text.replace(/\D/g,'');
+                if (d.length>=6) {
+                  const l6 = d.slice(-6);
+                  document.getElementById('vin-input').value = l6;
+                  updateVin(l6);
+                  fi.style.display = 'none';
                 }
               });
           };
@@ -163,31 +172,28 @@
       }
     }
     function stopScan() {
-      if(currentStream) currentStream.getTracks().forEach(t=>t.stop());
+      if (currentStream) currentStream.getTracks().forEach(t=>t.stop());
       document.getElementById('video').style.display='none';
       document.getElementById('close-scan').style.display='none';
     }
     function saveVin() {
-      const vin=document.getElementById('vin-input').value.trim();
-      if(vin.length===6){ localStorage.setItem('vin',vin); updateVin(vin); alert('VIN збережено'); }
-      else alert('Вкажіть 6 символів VIN');
+      const vin = document.getElementById('vin-input').value.trim();
+      if (vin.length===6) { localStorage.setItem('vin',vin); updateVin(vin); alert('VIN збережено'); }
+      else alert('Введіть 6 символів VIN');
     }
-    function submitForm(){
-      const vin=document.getElementById('vin-display').innerText;
-      let issue=document.getElementById('issue-type').value;
-      if(issue==='Інше') issue=document.getElementById('custom-issue').value.trim();
-      if(!vin||vin==='Не вказано') return alert('Вкажіть VIN');
-      localStorage.setItem('issue',document.getElementById('issue-type').value);
-      const data={vin,issue,user:tg.initDataUnsafe.user.first_name};
+    function submitForm() {
+      const vin = document.getElementById('vin-display').innerText;
+      let issue = document.getElementById('issue-type').value;
+      if (issue==='Інше') issue = document.getElementById('custom-issue').value.trim();
+      if (!vin || vin==='Не вказано') return alert('Вкажіть VIN');
+      localStorage.setItem('issue', document.getElementById('issue-type').value);
+      const data = { vin, issue, user: tg.initDataUnsafe.user.first_name };
       fetch('https://tesla-service-dashboard-eda44e4816de.herokuapp.com/api/save_request',{
-        method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)
+        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)
       }).then(r=>r.json()).then(j=>alert(j.status==='ok'?'Заявку надіслано':'Помилка: '+j.message))
       .catch(()=>alert('Не вдалося надіслати заявку'));
     }
-    function downloadPDF(){ alert('PDF скоро буде доступний'); }
-    function showStatus(){ toggleSection('status-sec'); }
-    function showContacts(){ toggleSection('contact-sec'); }
-    function showErrors(){ toggleSection('errors-sec'); }
+    function downloadPDF() { alert('PDF скоро буде доступний'); }
   </script>
 </body>
 </html>
