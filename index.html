@@ -47,6 +47,16 @@
       cursor: pointer;
       text-align: center;
     }
+    a.button-link {
+      display: block;
+      margin-top: 10px;
+      background-color: #03a9f4;
+      text-align: center;
+      padding: 10px;
+      border-radius: 8px;
+      text-decoration: none;
+      color: white;
+    }
     #videoPreview {
       width: 100%;
       border-radius: 8px;
@@ -55,10 +65,15 @@
   </style>
 </head>
 <body>
-  <div class="title">Вітаємо у Tesla Service!</div>
+  <div class="title" id="userGreeting">Вітаємо!</div>
+
+  <div class="card">🔧 Статус ремонту: Очікує діагностику</div>
+  <a href="https://tesla-service-dashboard-eda44e4816de.herokuapp.com/download/5YJ3E1EAXKF317650" class="button-link">📄 Завантажити PDF-звіт</a>
+  <div class="card">📞 Контакти: +380 99 123 4567<br>Email: support@teslaassist.com</div>
+  <div class="card">⚠️ Виявлено помилки: перегрів батареї, збій BMS<br>🚘 Можна їхати: <b>обмежено, до сервісу</b></div>
 
   <div class="form-card">
-    <h3>🚗 Ваш VIN</h3>
+    <h3>📩 Заявка на сервіс</h3>
 
     <div id="vinDisplay" style="display: none;">
       <div class="card" id="savedVin"></div>
@@ -71,7 +86,7 @@
       <video id="videoPreview" autoplay muted playsinline style="display: none;"></video>
     </div>
 
-    <textarea id="issue" placeholder="Опишіть проблему або залиште коментар (необов’язково)"></textarea>
+    <textarea id="issue" placeholder="Опишіть проблему або залиште коментар"></textarea>
     <button onclick="sendRequest()">Надіслати заявку</button>
   </div>
 
@@ -79,6 +94,9 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
     const userId = tg.initDataUnsafe?.user?.id;
+    const userName = tg.initDataUnsafe?.user?.first_name || "Користувачу";
+
+    document.getElementById("userGreeting").innerText = `Вітаємо, ${userName}!`;
 
     window.onload = () => {
       fetch(`https://tesla-service-dashboard-eda44e4816de.herokuapp.com/api/get_vin?user_id=${userId}`)
@@ -100,7 +118,7 @@
     function scanVin() {
       const video = document.getElementById('videoPreview');
       video.style.display = 'block';
-      navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } } }).then(stream => {
         video.srcObject = stream;
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
@@ -139,7 +157,7 @@
       fetch("https://tesla-service-dashboard-eda44e4816de.herokuapp.com/api/save_request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ vin: vin.trim(), issue, user: userId })
+        body: JSON.stringify({ vin: vin.trim(), issue, user: userId, name: userName })
       })
       .then(res => res.json())
       .then(json => {
