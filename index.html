@@ -19,15 +19,11 @@
       font-weight: bold;
       margin-bottom: 10px;
     }
-    .card, .form-card, .template-button {
+    .card, .form-card {
       background-color: #1e1e1e;
       border-radius: 12px;
       padding: 15px;
       margin-top: 15px;
-      transition: 0.2s;
-    }
-    .card:hover, .form-card:hover, .template-button:hover {
-      background-color: #2c2c2c;
     }
     input, textarea, button {
       width: 100%;
@@ -42,48 +38,40 @@
       color: white;
       cursor: pointer;
     }
-    .template-button {
-      background-color: #2a2a2a;
-      cursor: pointer;
-      text-align: center;
-    }
-    a.button-link {
-      display: block;
+    #videoContainer {
+      position: relative;
+      display: none;
       margin-top: 10px;
-      background-color: #03a9f4;
-      text-align: center;
-      padding: 10px;
-      border-radius: 8px;
-      text-decoration: none;
-      color: white;
     }
     #videoPreview {
       width: 100%;
       border-radius: 8px;
-      margin-top: 10px;
+    }
+    #vinFrame {
+      position: absolute;
+      top: 25%;
+      left: 10%;
+      width: 80%;
+      height: 25%;
+      border: 2px dashed #03c75a;
+      box-sizing: border-box;
+      border-radius: 8px;
+      pointer-events: none;
     }
   </style>
 </head>
 <body>
   <div class="title" id="userGreeting">Вітаємо!</div>
 
-  <div class="card">🔧 Статус ремонту: Очікує діагностику</div>
-  <a href="https://tesla-service-dashboard-eda44e4816de.herokuapp.com/download/5YJ3E1EAXKF317650" class="button-link">📄 Завантажити PDF-звіт</a>
-  <div class="card">📞 Контакти: +380 99 123 4567<br>Email: support@teslaassist.com</div>
-  <div class="card">⚠️ Виявлено помилки: перегрів батареї, збій BMS<br>🚘 Можна їхати: <b>обмежено, до сервісу</b></div>
-
   <div class="form-card">
-    <h3>📩 Заявка на сервіс</h3>
+    <h3>📷 Сканування VIN</h3>
 
-    <div id="vinDisplay" style="display: none;">
-      <div class="card" id="savedVin"></div>
-      <button onclick="resetVin()">🔄 Змінити VIN</button>
-    </div>
+    <input type="text" id="vin" placeholder="Або введіть вручну">
+    <button onclick="scanVin()">Сканувати VIN</button>
 
-    <div id="vinInputArea">
-      <input type="text" id="vin" placeholder="Введіть VIN-код вручну">
-      <button onclick="scanVin()">📷 Сканувати VIN</button>
-      <video id="videoPreview" autoplay muted playsinline style="display: none;"></video>
+    <div id="videoContainer">
+      <video id="videoPreview" autoplay muted playsinline></video>
+      <div id="vinFrame"></div>
     </div>
 
     <textarea id="issue" placeholder="Опишіть проблему або залиште коментар"></textarea>
@@ -95,53 +83,61 @@
     tg.expand();
     const userId = tg.initDataUnsafe?.user?.id;
     const userName = tg.initDataUnsafe?.user?.first_name || "Користувачу";
-
     document.getElementById("userGreeting").innerText = `Вітаємо, ${userName}!`;
 
-    window.onload = () => {
-      fetch(`https://tesla-service-dashboard-eda44e4816de.herokuapp.com/api/get_vin?user_id=${userId}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.vin) {
-            document.getElementById('vinDisplay').style.display = 'block';
-            document.getElementById('vinInputArea').style.display = 'none';
-            document.getElementById('savedVin').innerText = data.vin;
-          }
-        });
-    };
-
-    function resetVin() {
-      document.getElementById('vinDisplay').style.display = 'none';
-      document.getElementById('vinInputArea').style.display = 'block';
+    function cleanText(text) {
+      return text.replace(/[^A-HJ-NPR-Z0-9]/gi, '').toUpperCase();
     }
 
     function scanVin() {
       const video = document.getElementById('videoPreview');
-      video.style.display = 'block';
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } } }).then(stream => {
+      const container = document.getElementById('videoContainer');
+      container.style.display = 'block';
+
+      navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: "environment" },
+          focusMode: "continuous"  // для некоторых Android может сработать
+        }
+      }).then(stream => {
         video.srcObject = stream;
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
 
+        let attempts = 0;
+        const maxAttempts = 20;
+
         const interval = setInterval(() => {
+          if (attempts >= maxAttempts) {
+            clearInterval(interval);
+            stream.getTracks().forEach(t => t.stop());
+            container.style.display = 'none';
+            alert("Не вдалося розпізнати VIN. Спробуйте ще раз.");
+            return;
+          }
+
+          attempts++;
           canvas.width = video.videoWidth;
           canvas.height = video.videoHeight;
           context.drawImage(video, 0, 0, canvas.width, canvas.height);
           Tesseract.recognize(canvas, 'eng').then(({ data: { text } }) => {
-            const vinMatch = text.match(/[A-HJ-NPR-Z0-9]{17}/);
+            const cleaned = cleanText(text);
+            const vinMatch = cleaned.match(/[A-HJ-NPR-Z0-9]{17}/);
             if (vinMatch) {
               clearInterval(interval);
               stream.getTracks().forEach(t => t.stop());
-              video.style.display = 'none';
+              container.style.display = 'none';
               document.getElementById('vin').value = vinMatch[0];
             }
           });
-        }, 1500);
+        }, 1000);
+      }).catch(err => {
+        alert("Помилка доступу до камери: " + err.message);
       });
     }
 
     function sendRequest() {
-      const vin = document.getElementById('vin').value || document.getElementById('savedVin').innerText;
+      const vin = document.getElementById('vin').value.trim();
       const issue = document.getElementById('issue').value.trim();
       if (!vin || !issue) {
         alert("Будь ласка, заповніть VIN та опишіть проблему.");
@@ -151,13 +147,13 @@
       fetch("https://tesla-service-dashboard-eda44e4816de.herokuapp.com/api/save_vin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ vin: vin.trim(), user_id: userId })
+        body: JSON.stringify({ vin: vin, user_id: userId })
       });
 
       fetch("https://tesla-service-dashboard-eda44e4816de.herokuapp.com/api/save_request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ vin: vin.trim(), issue, user: userId, name: userName })
+        body: JSON.stringify({ vin: vin, issue, user: userId, name: userName })
       })
       .then(res => res.json())
       .then(json => {
@@ -172,3 +168,4 @@
   </script>
 </body>
 </html>
+
