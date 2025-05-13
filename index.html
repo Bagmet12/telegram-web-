@@ -14,103 +14,59 @@
       color: #fff;
       padding: 20px;
     }
-    .header {
-      font-size: 20px;
-      font-weight: bold;
-      margin-bottom: 5px;
-    }
-    .subtext {
-      font-size: 14px;
-      color: #bbb;
-    }
-    .vin-display {
-      font-size: 16px;
-      font-weight: bold;
-      margin: 5px 0 20px;
-    }
-    .scanner-area {
-      position: relative;
-      background: #1e1e1e;
-      border-radius: 12px;
-      padding: 12px;
-      margin-bottom: 20px;
-    }
-    #video {
-      width: 100%;
-      border-radius: 8px;
-      margin-top: 10px;
-      display: none;
-    }
-    #close-scan {
-      display: none;
-      margin-top: 10px;
-      background: #d32f2f;
-    }
-    .card {
-      background-color: #1e1e1e;
-      border-radius: 12px;
-      padding: 14px;
-      margin-bottom: 12px;
-      font-size: 15px;
-      cursor: pointer;
-    }
-    .card strong {
-      display: block;
-      margin-bottom: 5px;
-    }
-    input, textarea, button, select {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 8px;
-      border: none;
-      font-size: 16px;
-    }
-    button {
-      background-color: #03c75a;
-      color: #fff;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .form-card {
-      background: #1e1e1e;
-      border-radius: 12px;
-      padding: 15px;
-      margin-top: 20px;
-    }
-    .form-row {
-      margin-bottom: 15px;
-    }
-    .form-row label {
-      display: block;
-      margin-bottom: 5px;
-      color: #ccc;
-    }
-    .radio-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
+    .header { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
+    .subtext { font-size: 14px; color: #bbb; }
+    .vin-display { font-size: 16px; font-weight: bold; margin: 5px 0 20px; }
+    .scanner-area { background: #1e1e1e; border-radius: 12px; padding: 12px; margin-bottom: 20px; }
+    #video { width: 100%; border-radius: 8px; margin-top: 10px; display: none; }
+    #close-scan { display: none; margin-top: 10px; background: #d32f2f; }
+    .card { background-color: #1e1e1e; border-radius: 12px; padding: 14px; margin-bottom: 12px; font-size: 15px; cursor: pointer; }
+    .card strong { display: block; margin-bottom: 5px; }
+    button, input, select, textarea { width: 100%; padding: 10px; margin-top: 10px; border-radius: 8px; border: none; font-size: 16px; }
+    button { background-color: #03c75a; color: #fff; font-weight: bold; cursor: pointer; }
+    .form-card { background: #1e1e1e; border-radius: 12px; padding: 15px; margin-top: 20px; }
+    .form-row { margin-bottom: 15px; }
+    .form-row label { display: block; margin-bottom: 5px; color: #ccc; }
+    .radio-group { display: flex; flex-direction: column; gap: 8px; }
   </style>
 </head>
 <body>
   <div class="header" id="greeting">Вітаємо!</div>
-  <div class="subtext">Ваш подективн VIN — коннектов</div>
+  <div class="subtext">Ваш підкjected VIN — коннектов</div>
   <div class="vin-display" id="vin-display">Не вказано</div>
 
   <div class="scanner-area">
     <div class="form-row">
       <label for="vin-input">Останні 6 символів VIN</label>
-      <input type="text" id="vin-input" placeholder="123456" maxlength="6" oninput="updateVin(this.value)">
+      <input type="text" id="vin-input" maxlength="6" placeholder="123456" oninput="updateVin(this.value)">
     </div>
     <button onclick="startScan()">📷 Сканувати VIN</button>
-    <button id="close-scan" onclick="stopScan()">Закрити скан</button>
+    <button id="close-scan" onclick="stopScan()">✖ Закрити скан</button>
     <video id="video" playsinline></video>
     <button onclick="saveVin()">💾 Зберегти VIN</button>
   </div>
 
+  <div class="card" onclick="showStatus()">
+    <strong>🔧 Статус ремонту</strong>
+    <span id="status-text">В процесі</span>
+  </div>
+
+  <div class="card" onclick="downloadPDF()">
+    <strong>📄 Отримати PDF звіт</strong>
+  </div>
+
+  <div class="card" onclick="showContacts()">
+    <strong>📞 Контактна інформація</strong>
+    <span>Тел.: +380 44 123 45 67<br>Адреса: м. Київ, вул. Сервісна 10</span>
+  </div>
+
+  <div class="card" onclick="showErrors()">
+    <strong>⚠️ Поточні помилки</strong>
+    <span>• P1234 – зниження потужності (можна їхати)<br>• P5678 – проблема з гальмами (рекомендується зупинитися)</span>
+  </div>
+
   <div class="form-card">
-    <strong>Обрати проблему</strong>
+    <strong>📩 Надіслати адміну</strong>
     <div class="form-row">
       <label>Тип проблеми</label>
       <select id="issue-type">
@@ -121,84 +77,78 @@
       </select>
     </div>
     <div class="form-row">
-      <label for="custom-issue">Інша проблема (опис)</label>
+      <label for="custom-issue">Інша проблема</label>
       <textarea id="custom-issue" placeholder="Опишіть проблему"></textarea>
     </div>
-    <button onclick="submitForm()">📩 Надіслати адміну</button>
+    <button onclick="submitForm()">Надіслати</button>
   </div>
 
   <script>
-    const tg = window.Telegram.WebApp;
-    tg.ready(); tg.expand();
+    const tg = window.Telegram.WebApp; tg.ready(); tg.expand();
     document.getElementById('greeting').innerText = `Вітаємо, ${tg.initDataUnsafe.user.first_name || 'користувач'}!`;
 
-    let currentStream;
+    // LocalStorage persistence
+    window.onload = () => {
+      const savedVin = localStorage.getItem('vin');
+      if (savedVin) updateVin(savedVin);
+      const savedIssue = localStorage.getItem('issue');
+      if (savedIssue) document.getElementById('issue-type').value = savedIssue;
+    };
+
     function updateVin(val) {
       document.getElementById('vin-display').innerText = val || 'Не вказано';
     }
 
+    let currentStream;
     async function startScan() {
       try {
-        const constraints = { video: { facingMode: 'environment' } };
-        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
         currentStream = stream;
         const video = document.getElementById('video');
-        video.srcObject = stream;
-        video.style.display = 'block';
+        video.srcObject = stream; video.style.display = 'block';
         document.getElementById('close-scan').style.display = 'block';
-
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
+        // Tesseract OCR
+        const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
         let attempts = 0;
         const maxAttempts = 20;
         const interval = setInterval(async () => {
           if (attempts++ > maxAttempts) return clearInterval(interval);
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
+          canvas.width = video.videoWidth; canvas.height = video.videoHeight;
           ctx.drawImage(video, 0, 0);
           const { data: { text } } = await Tesseract.recognize(canvas, 'eng', { tessedit_char_whitelist: '0123456789' });
           const digits = text.replace(/\D/g, '');
           if (digits.length >= 6) {
-            clearInterval(interval);
-            stopScan();
+            clearInterval(interval); stopScan();
             const last6 = digits.slice(-6);
-            document.getElementById('vin-input').value = last6;
-            updateVin(last6);
+            document.getElementById('vin-input').value = last6; updateVin(last6);
           }
         }, 1000);
       } catch (err) {
         alert('Помилка доступу до камери: ' + err.message);
       }
     }
-
     function stopScan() {
-      if (currentStream) {
-        currentStream.getTracks().forEach(t => t.stop());
-      }
+      if (currentStream) currentStream.getTracks().forEach(t => t.stop());
       document.getElementById('video').style.display = 'none';
       document.getElementById('close-scan').style.display = 'none';
     }
-
     function saveVin() {
       const vin = document.getElementById('vin-input').value.trim();
-      updateVin(vin);
-      alert('VIN збережено: ' + vin);
+      if (vin.length === 6) { localStorage.setItem('vin', vin); updateVin(vin); alert('VIN збережено'); }
+      else alert('Введіть 6 цифр VIN');
     }
-
     function submitForm() {
       const vin = document.getElementById('vin-display').innerText;
-      const type = document.getElementById('issue-type').value;
-      const custom = document.getElementById('custom-issue').value.trim();
-      if (!vin || vin === 'Не вказано') { alert('Вкажіть VIN'); return; }
-      const issue = type === 'Інше' ? custom : type;
+      let issue = document.getElementById('issue-type').value;
+      if (issue === 'Інше') issue = document.getElementById('custom-issue').value.trim();
+      if (!vin || vin==='Не вказано') return alert('Вкажіть VIN');
+      localStorage.setItem('issue', document.getElementById('issue-type').value);
       const data = { vin, issue, user: tg.initDataUnsafe.user.first_name };
       fetch('https://tesla-service-dashboard-eda44e4816de.herokuapp.com/api/save_request', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)
       })
-      .then(res => res.json())
-      .then(json => alert(json.status === 'ok' ? 'Заявку надіслано!' : 'Помилка: ' + json.message))
-      .catch(() => alert('Не вдалося надіслати заявку'));
+      .then(r=>r.json()).then(j=>alert(j.status==='ok'? 'Заявку надіслано':'Помилка: '+j.message))
+      .catch(()=>alert('Не вдалося надіслати'));
     }
   </script>
 </body>
