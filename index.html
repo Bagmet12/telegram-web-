@@ -2,119 +2,136 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tesla Assistant</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen;
-      background-color: #121212;
-      color: white;
+      background-color: #111;
+      color: #fff;
       padding: 20px;
     }
-    .title {
-      font-size: 22px;
+
+    .header {
+      font-size: 20px;
       font-weight: bold;
+      margin-bottom: 5px;
     }
-    .card, .form-card {
+
+    .subtext {
+      font-size: 14px;
+      color: #bbb;
+    }
+
+    .vin {
+      font-size: 16px;
+      font-weight: bold;
+      margin: 5px 0 20px;
+    }
+
+    .card {
       background-color: #1e1e1e;
       border-radius: 12px;
-      padding: 15px;
-      margin-top: 15px;
-      transition: 0.2s;
-    }
-    .card:hover, .form-card:hover {
-      background-color: #2c2c2c;
-    }
-    input, textarea, button {
-      width: 100%;
-      margin-top: 10px;
-      padding: 10px;
-      border-radius: 8px;
-      border: none;
-      font-size: 16px;
-    }
-    button {
-      background-color: #03c75a;
-      color: white;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 15px;
       cursor: pointer;
+    }
+
+    .card span {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .scanner-area {
+      background: #1e1e1e;
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    #preview {
+      width: 100%;
+      border-radius: 12px;
     }
   </style>
 </head>
 <body>
-  <div class="title">Вітаємо, <span id="username">користувач</span>!</div>
+  <div class="header" id="greeting">Вітаємо!</div>
+  <div class="subtext">Ваш подективн VIN — коннектов</div>
+  <div class="vin" id="vin-display">Не вказано</div>
 
-  <div class="form-card">
-    <h3>📋 Заявка на сервіс</h3>
-
-    <label for="vin">VIN номер</label>
-    <input type="text" id="vin" placeholder="Введіть VIN або проскануйте">
-    <button onclick="scanVIN()">📷 Сканувати VIN</button>
-
-    <label for="template">Що ви хочете зробити?</label>
-    <select id="template">
-      <option value="checkup">Записатись на діагностику</option>
-      <option value="report_error">Повідомити про помилку</option>
-      <option value="pdf_request">Отримати PDF звіт</option>
-      <option value="status_request">Дізнатись статус ремонту</option>
-    </select>
-
-    <label for="comment">Додатковий коментар</label>
-    <textarea id="comment" placeholder="Опишіть проблему або залиште коментар"></textarea>
-
-    <button onclick="sendRequest()">📩 Надіслати заявку</button>
+  <div class="scanner-area">
+    <button onclick="startScan()">📷 Сканувати VIN</button>
+    <input type="text" id="vin-input" placeholder="Або введіть вручну" oninput="updateVin(this.value)">
+    <video id="preview"></video>
   </div>
 
-  <script>
+  <div class="card" onclick="showStatus()">
+    <span>🔧 Статус ремонту</span><span id="status">В процесі</span>
+  </div>
+  <div class="card" onclick="downloadPDF()">
+    <span>📄 Отримати PDF-файл</span>
+  </div>
+  <div class="card" onclick="showContacts()">
+    <span>📞 Контактна інформація</span>
+  </div>
+  <div class="card" onclick="showErrors()">
+    <span>⚠️ Помилки та їх значення</span>
+  </div>
+
+  <script type="module">
+    import QrScanner from "https://unpkg.com/qr-scanner@1.4.2/qr-scanner.min.js";
+
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    // Автозаповнення імені користувача
-    const username = tg.initDataUnsafe?.user?.first_name || tg.initDataUnsafe?.user?.username || "користувач";
-    document.getElementById("username").innerText = username;
+    const username = tg.initDataUnsafe?.user?.first_name || 'Користувачу';
+    document.getElementById("greeting").innerText = `Вітаємо, ${username}!`;
 
-    function scanVIN() {
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-        .then(stream => {
-          alert("Запущена камера. Реалізація сканера потребує інтеграції з бібліотекою типу QuaggaJS.");
-          // Тут буде логіка з бібліотекою сканування (оптично розпізнати VIN)
-        })
-        .catch(() => alert("Не вдалося отримати доступ до камери. Дозвольте доступ у налаштуваннях браузера/Telegram."));
+    const preview = document.getElementById("preview");
+    const vinDisplay = document.getElementById("vin-display");
+
+    function updateVin(val) {
+      vinDisplay.innerText = val || 'Не вказано';
     }
 
-    function sendRequest() {
-      const vin = document.getElementById('vin').value.trim();
-      const issue = document.getElementById('template').value + ': ' + document.getElementById('comment').value.trim();
-      if (!vin || vin.length < 17) {
-        alert("Будь ласка, введіть дійсний VIN (17 символів)");
-        return;
-      }
-
-      const data = {
-        vin,
-        issue,
-        user: username
-      };
-
-      fetch("https://tesla-service-dashboard-eda44e4816de.herokuapp.com/api/save_request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      })
-      .then(res => res.json())
-      .then(json => {
-        if (json.status === "ok") {
-          alert("Заявку надіслано!");
-        } else {
-          alert("Помилка сервера: " + json.message);
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        alert("Не вдалося надіслати заявку");
+    window.startScan = async () => {
+      const scanner = new QrScanner(preview, result => {
+        updateVin(result);
+        scanner.stop();
+        preview.style.display = 'none';
+      }, {
+        returnDetailedScanResult: true,
+        highlightScanRegion: true,
+        maxScansPerSecond: 1
       });
-    }
+      await scanner.start();
+      preview.style.display = 'block';
+    };
+
+    window.showStatus = () => {
+      alert("Ваш ремонт наразі в процесі. Очікується завершення до завтра.");
+    };
+
+    window.downloadPDF = () => {
+      alert("Завантаження PDF ще не реалізовано. Скоро буде доступно!");
+    };
+
+    window.showContacts = () => {
+      alert("📞 Телефон: +380 67 123 4567\n📍 Адреса: Київ, вул. Електромобільна, 5");
+    };
+
+    window.showErrors = () => {
+      alert("⚠️ Помилка P100 - зниження потужності.\n🟢 Можна продовжувати рух, але рекомендується звернутися до сервісу.");
+    };
   </script>
 </body>
 </html>
