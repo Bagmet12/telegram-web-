@@ -5,6 +5,7 @@
   <title>Tesla Assistant</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://unpkg.com/quagga/dist/quagga.min.js"></script>
   <style>
     body {
       margin: 0;
@@ -13,125 +14,138 @@
       color: #fff;
       padding: 20px;
     }
-
     .header {
       font-size: 20px;
       font-weight: bold;
       margin-bottom: 5px;
     }
-
     .subtext {
       font-size: 14px;
       color: #bbb;
     }
-
-    .vin {
+    .vin-display {
       font-size: 16px;
       font-weight: bold;
       margin: 5px 0 20px;
     }
-
-    .card {
-      background-color: #1e1e1e;
-      border-radius: 12px;
-      padding: 14px 16px;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 15px;
-      cursor: pointer;
-    }
-
-    .card span {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
     .scanner-area {
+      position: relative;
       background: #1e1e1e;
       border-radius: 12px;
       padding: 12px;
       text-align: center;
       margin-bottom: 20px;
     }
-
-    #preview {
+    #video {
       width: 100%;
+      border-radius: 8px;
+      display: none;
+    }
+    .card {
+      background-color: #1e1e1e;
       border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 12px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    .card strong {
+      display: block;
+      margin-bottom: 5px;
+    }
+    button, input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+    }
+    button {
+      background-color: #03c75a;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
   <div class="header" id="greeting">Вітаємо!</div>
   <div class="subtext">Ваш подективн VIN — коннектов</div>
-  <div class="vin" id="vin-display">Не вказано</div>
+  <div class="vin-display" id="vin-display">Не вказано</div>
 
   <div class="scanner-area">
+    <input type="text" id="vin-input" placeholder="Останні 6 символів VIN" maxlength="6" oninput="updateVin(this.value)">
     <button onclick="startScan()">📷 Сканувати VIN</button>
-    <input type="text" id="vin-input" placeholder="Або введіть вручну" oninput="updateVin(this.value)">
-    <video id="preview"></video>
+    <div id="interactive" class="viewport"></div>
   </div>
 
   <div class="card" onclick="showStatus()">
-    <span>🔧 Статус ремонту</span><span id="status">В процесі</span>
+    <strong>🔧 Статус ремонту:</strong>
+    <span id="status-text">В процесі</span>
   </div>
+
   <div class="card" onclick="downloadPDF()">
-    <span>📄 Отримати PDF-файл</span>
+    <strong>📄 Отримати PDF звіт</strong>
   </div>
+
   <div class="card" onclick="showContacts()">
-    <span>📞 Контактна інформація</span>
+    <strong>📞 Контактна інформація</strong>
+    <span>Телефон: +380 44 123 45 67<br>Адреса: м. Київ, вул. Сервісна 10</span>
   </div>
+
   <div class="card" onclick="showErrors()">
-    <span>⚠️ Помилки та їх значення</span>
+    <strong>⚠️ Поточні помилки</strong>
+    <span>• P1234 – зниження потужності (можна їхати)<br>• P5678 – проблема з гальмами (рекомендується зупинитися)</span>
   </div>
 
-  <script type="module">
-    import QrScanner from "https://unpkg.com/qr-scanner@1.4.2/qr-scanner.min.js";
-
+  <script>
     const tg = window.Telegram.WebApp;
-    tg.expand();
-
-    const username = tg.initDataUnsafe?.user?.first_name || 'Користувачу';
-    document.getElementById("greeting").innerText = `Вітаємо, ${username}!`;
-
-    const preview = document.getElementById("preview");
-    const vinDisplay = document.getElementById("vin-display");
+    tg.ready(); tg.expand();
+    const username = tg.initDataUnsafe?.user?.first_name || 'користувач';
+    document.getElementById('greeting').innerText = `Вітаємо, ${username}!`;
 
     function updateVin(val) {
-      vinDisplay.innerText = val || 'Не вказано';
+      document.getElementById('vin-display').innerText = val || 'Не вказано';
     }
 
-    window.startScan = async () => {
-      const scanner = new QrScanner(preview, result => {
-        updateVin(result);
-        scanner.stop();
-        preview.style.display = 'none';
-      }, {
-        returnDetailedScanResult: true,
-        highlightScanRegion: true,
-        maxScansPerSecond: 1
+    function startScan() {
+      const scannerDiv = document.getElementById('interactive');
+      document.getElementById('vin-input').value = '';
+      Quagga.init({
+        inputStream: {
+          name: 'Live',
+          type: 'LiveStream',
+          target: scannerDiv,
+          constraints: { facingMode: 'environment' }
+        },
+        decoder: { readers: ['code_128_reader'] },
+        locate: true
+      }, err => {
+        if (err) {
+          alert('Помилка ініціалізації сканера: ' + err);
+          return;
+        }
+        document.getElementById('interactive').style.display = 'block';
+        Quagga.start();
       });
-      await scanner.start();
-      preview.style.display = 'block';
-    };
 
-    window.showStatus = () => {
-      alert("Ваш ремонт наразі в процесі. Очікується завершення до завтра.");
-    };
+      Quagga.onDetected(result => {
+        const code = result.codeResult.code;
+        if (code && code.length >= 6) {
+          const last6 = code.slice(-6);
+          Quagga.stop();
+          document.getElementById('interactive').style.display = 'none';
+          document.getElementById('vin-input').value = last6;
+          updateVin(last6);
+        }
+      });
+    }
 
-    window.downloadPDF = () => {
-      alert("Завантаження PDF ще не реалізовано. Скоро буде доступно!");
-    };
-
-    window.showContacts = () => {
-      alert("📞 Телефон: +380 67 123 4567\n📍 Адреса: Київ, вул. Електромобільна, 5");
-    };
-
-    window.showErrors = () => {
-      alert("⚠️ Помилка P100 - зниження потужності.\n🟢 Можна продовжувати рух, але рекомендується звернутися до сервісу.");
-    };
+    function showStatus() { alert('Ваш ремонт наразі в процесі.'); }
+    function downloadPDF() { alert('Функція отримання PDF у розробці.'); }
+    function showContacts() { alert('Телефон: +380 44 123 45 67\nАдреса: Київ, вул. Сервісна 10'); }
+    function showErrors() { alert('P1234: зниження потужності (можна їхати)\nP5678: проблема з гальмами (рекомендується зупинитися)'); }
   </script>
 </body>
 </html>
