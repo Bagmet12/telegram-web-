@@ -5,12 +5,12 @@
   <title>Tesla Assistant</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://unpkg.com/quagga/dist/quagga.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
   <style>
     body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen;
-      background-color: #111;
+      background-color: #121212;
       color: #fff;
       padding: 20px;
     }
@@ -33,13 +33,18 @@
       background: #1e1e1e;
       border-radius: 12px;
       padding: 12px;
-      text-align: center;
       margin-bottom: 20px;
     }
     #video {
       width: 100%;
       border-radius: 8px;
+      margin-top: 10px;
       display: none;
+    }
+    #close-scan {
+      display: none;
+      margin-top: 10px;
+      background: #d32f2f;
     }
     .card {
       background-color: #1e1e1e;
@@ -53,7 +58,7 @@
       display: block;
       margin-bottom: 5px;
     }
-    button, input {
+    input, textarea, button, select {
       width: 100%;
       padding: 10px;
       margin-top: 10px;
@@ -67,6 +72,25 @@
       font-weight: bold;
       cursor: pointer;
     }
+    .form-card {
+      background: #1e1e1e;
+      border-radius: 12px;
+      padding: 15px;
+      margin-top: 20px;
+    }
+    .form-row {
+      margin-bottom: 15px;
+    }
+    .form-row label {
+      display: block;
+      margin-bottom: 5px;
+      color: #ccc;
+    }
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
   </style>
 </head>
 <body>
@@ -75,77 +99,107 @@
   <div class="vin-display" id="vin-display">Не вказано</div>
 
   <div class="scanner-area">
-    <input type="text" id="vin-input" placeholder="Останні 6 символів VIN" maxlength="6" oninput="updateVin(this.value)">
+    <div class="form-row">
+      <label for="vin-input">Останні 6 символів VIN</label>
+      <input type="text" id="vin-input" placeholder="123456" maxlength="6" oninput="updateVin(this.value)">
+    </div>
     <button onclick="startScan()">📷 Сканувати VIN</button>
-    <div id="interactive" class="viewport"></div>
+    <button id="close-scan" onclick="stopScan()">Закрити скан</button>
+    <video id="video" playsinline></video>
+    <button onclick="saveVin()">💾 Зберегти VIN</button>
   </div>
 
-  <div class="card" onclick="showStatus()">
-    <strong>🔧 Статус ремонту:</strong>
-    <span id="status-text">В процесі</span>
-  </div>
-
-  <div class="card" onclick="downloadPDF()">
-    <strong>📄 Отримати PDF звіт</strong>
-  </div>
-
-  <div class="card" onclick="showContacts()">
-    <strong>📞 Контактна інформація</strong>
-    <span>Телефон: +380 44 123 45 67<br>Адреса: м. Київ, вул. Сервісна 10</span>
-  </div>
-
-  <div class="card" onclick="showErrors()">
-    <strong>⚠️ Поточні помилки</strong>
-    <span>• P1234 – зниження потужності (можна їхати)<br>• P5678 – проблема з гальмами (рекомендується зупинитися)</span>
+  <div class="form-card">
+    <strong>Обрати проблему</strong>
+    <div class="form-row">
+      <label>Тип проблеми</label>
+      <select id="issue-type">
+        <option value="Заміна комп’ютера">Заміна комп’ютера</option>
+        <option value="Поломка автопілота">Поломка автопілота</option>
+        <option value="Оновлення ПЗ">Оновлення ПЗ</option>
+        <option value="Інше">Інше</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label for="custom-issue">Інша проблема (опис)</label>
+      <textarea id="custom-issue" placeholder="Опишіть проблему"></textarea>
+    </div>
+    <button onclick="submitForm()">📩 Надіслати адміну</button>
   </div>
 
   <script>
     const tg = window.Telegram.WebApp;
     tg.ready(); tg.expand();
-    const username = tg.initDataUnsafe?.user?.first_name || 'користувач';
-    document.getElementById('greeting').innerText = `Вітаємо, ${username}!`;
+    document.getElementById('greeting').innerText = `Вітаємо, ${tg.initDataUnsafe.user.first_name || 'користувач'}!`;
 
+    let currentStream;
     function updateVin(val) {
       document.getElementById('vin-display').innerText = val || 'Не вказано';
     }
 
-    function startScan() {
-      const scannerDiv = document.getElementById('interactive');
-      document.getElementById('vin-input').value = '';
-      Quagga.init({
-        inputStream: {
-          name: 'Live',
-          type: 'LiveStream',
-          target: scannerDiv,
-          constraints: { facingMode: 'environment' }
-        },
-        decoder: { readers: ['code_128_reader'] },
-        locate: true
-      }, err => {
-        if (err) {
-          alert('Помилка ініціалізації сканера: ' + err);
-          return;
-        }
-        document.getElementById('interactive').style.display = 'block';
-        Quagga.start();
-      });
+    async function startScan() {
+      try {
+        const constraints = { video: { facingMode: 'environment' } };
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        currentStream = stream;
+        const video = document.getElementById('video');
+        video.srcObject = stream;
+        video.style.display = 'block';
+        document.getElementById('close-scan').style.display = 'block';
 
-      Quagga.onDetected(result => {
-        const code = result.codeResult.code;
-        if (code && code.length >= 6) {
-          const last6 = code.slice(-6);
-          Quagga.stop();
-          document.getElementById('interactive').style.display = 'none';
-          document.getElementById('vin-input').value = last6;
-          updateVin(last6);
-        }
-      });
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        let attempts = 0;
+        const maxAttempts = 20;
+        const interval = setInterval(async () => {
+          if (attempts++ > maxAttempts) return clearInterval(interval);
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          ctx.drawImage(video, 0, 0);
+          const { data: { text } } = await Tesseract.recognize(canvas, 'eng', { tessedit_char_whitelist: '0123456789' });
+          const digits = text.replace(/\D/g, '');
+          if (digits.length >= 6) {
+            clearInterval(interval);
+            stopScan();
+            const last6 = digits.slice(-6);
+            document.getElementById('vin-input').value = last6;
+            updateVin(last6);
+          }
+        }, 1000);
+      } catch (err) {
+        alert('Помилка доступу до камери: ' + err.message);
+      }
     }
 
-    function showStatus() { alert('Ваш ремонт наразі в процесі.'); }
-    function downloadPDF() { alert('Функція отримання PDF у розробці.'); }
-    function showContacts() { alert('Телефон: +380 44 123 45 67\nАдреса: Київ, вул. Сервісна 10'); }
-    function showErrors() { alert('P1234: зниження потужності (можна їхати)\nP5678: проблема з гальмами (рекомендується зупинитися)'); }
+    function stopScan() {
+      if (currentStream) {
+        currentStream.getTracks().forEach(t => t.stop());
+      }
+      document.getElementById('video').style.display = 'none';
+      document.getElementById('close-scan').style.display = 'none';
+    }
+
+    function saveVin() {
+      const vin = document.getElementById('vin-input').value.trim();
+      updateVin(vin);
+      alert('VIN збережено: ' + vin);
+    }
+
+    function submitForm() {
+      const vin = document.getElementById('vin-display').innerText;
+      const type = document.getElementById('issue-type').value;
+      const custom = document.getElementById('custom-issue').value.trim();
+      if (!vin || vin === 'Не вказано') { alert('Вкажіть VIN'); return; }
+      const issue = type === 'Інше' ? custom : type;
+      const data = { vin, issue, user: tg.initDataUnsafe.user.first_name };
+      fetch('https://tesla-service-dashboard-eda44e4816de.herokuapp.com/api/save_request', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      .then(res => res.json())
+      .then(json => alert(json.status === 'ok' ? 'Заявку надіслано!' : 'Помилка: ' + json.message))
+      .catch(() => alert('Не вдалося надіслати заявку'));
+    }
   </script>
 </body>
 </html>
