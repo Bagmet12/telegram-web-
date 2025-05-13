@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="uk">
 <head>
   <meta charset="UTF-8">
-  <title>Tesla Assistant</title>
+  <title>Tesla Service UA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
   <style>
     body {
       margin: 0;
@@ -16,20 +17,16 @@
     .title {
       font-size: 22px;
       font-weight: bold;
+      margin-bottom: 10px;
     }
-    .vin {
-      margin-top: 5px;
-      font-size: 14px;
-      color: #aaa;
-    }
-    .card, .form-card {
+    .card, .form-card, .template-button {
       background-color: #1e1e1e;
       border-radius: 12px;
       padding: 15px;
       margin-top: 15px;
       transition: 0.2s;
     }
-    .card:hover, .form-card:hover {
+    .card:hover, .form-card:hover, .template-button:hover {
       background-color: #2c2c2c;
     }
     input, textarea, button {
@@ -45,68 +42,114 @@
       color: white;
       cursor: pointer;
     }
+    .template-button {
+      background-color: #2a2a2a;
+      cursor: pointer;
+      text-align: center;
+    }
+    #videoPreview {
+      width: 100%;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
-  <div class="title">Здравствуйте, Эдвард!</div>
-  <div class="vin">Ваш подективн VIN — коннектов<br><code>5YJ3E1EAXKF317650</code></div>
-
-  <div class="card">📊 Статистика поездок</div>
-  <div class="card">⚠️ Актуальные ошибки (2)</div>
-  <div class="card">🛠 История обслуживания</div>
-  <div class="card">🚨 Уведомление о неисправности</div>
-  <div class="card">🚗 Автомобиль будет проверяться каждые 3 часа</div>
-  <div class="card">📅 Запланирован визит на 21 мая, 14:00</div>
+  <div class="title">Вітаємо у Tesla Service!</div>
 
   <div class="form-card">
-    <h3>📩 Отправить заявку на сервис</h3>
-    <input type="text" id="vin" placeholder="Введите VIN">
-    <textarea id="issue" placeholder="Опишите проблему"></textarea>
-    <button onclick="sendRequest()">Отправить</button>
+    <h3>🚗 Ваш VIN</h3>
+
+    <div id="vinDisplay" style="display: none;">
+      <div class="card" id="savedVin"></div>
+      <button onclick="resetVin()">🔄 Змінити VIN</button>
+    </div>
+
+    <div id="vinInputArea">
+      <input type="text" id="vin" placeholder="Введіть VIN-код вручну">
+      <button onclick="scanVin()">📷 Сканувати VIN</button>
+      <video id="videoPreview" autoplay muted playsinline style="display: none;"></video>
+    </div>
+
+    <textarea id="issue" placeholder="Опишіть проблему або залиште коментар (необов’язково)"></textarea>
+    <button onclick="sendRequest()">Надіслати заявку</button>
   </div>
 
   <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
+    const userId = tg.initDataUnsafe?.user?.id;
+
+    window.onload = () => {
+      fetch(`https://tesla-service-dashboard-eda44e4816de.herokuapp.com/api/get_vin?user_id=${userId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.vin) {
+            document.getElementById('vinDisplay').style.display = 'block';
+            document.getElementById('vinInputArea').style.display = 'none';
+            document.getElementById('savedVin').innerText = data.vin;
+          }
+        });
+    };
+
+    function resetVin() {
+      document.getElementById('vinDisplay').style.display = 'none';
+      document.getElementById('vinInputArea').style.display = 'block';
+    }
+
+    function scanVin() {
+      const video = document.getElementById('videoPreview');
+      video.style.display = 'block';
+      navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+        video.srcObject = stream;
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+
+        const interval = setInterval(() => {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
+          Tesseract.recognize(canvas, 'eng').then(({ data: { text } }) => {
+            const vinMatch = text.match(/[A-HJ-NPR-Z0-9]{17}/);
+            if (vinMatch) {
+              clearInterval(interval);
+              stream.getTracks().forEach(t => t.stop());
+              video.style.display = 'none';
+              document.getElementById('vin').value = vinMatch[0];
+            }
+          });
+        }, 1500);
+      });
+    }
 
     function sendRequest() {
-      const vin = document.getElementById('vin').value;
-      const issue = document.getElementById('issue').value;
+      const vin = document.getElementById('vin').value || document.getElementById('savedVin').innerText;
+      const issue = document.getElementById('issue').value.trim();
       if (!vin || !issue) {
-        alert("Пожалуйста, заполните все поля.");
+        alert("Будь ласка, заповніть VIN та опишіть проблему.");
         return;
       }
-      const data = {
-        vin,
-        issue,
-        user: tg.initDataUnsafe?.user?.username || tg.initDataUnsafe?.user?.id
-      };
 
-      console.log("📤 Отправка данных:", data);
+      fetch("https://tesla-service-dashboard-eda44e4816de.herokuapp.com/api/save_vin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ vin: vin.trim(), user_id: userId })
+      });
 
       fetch("https://tesla-service-dashboard-eda44e4816de.herokuapp.com/api/save_request", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ vin: vin.trim(), issue, user: userId })
       })
-      .then(res => {
-        console.log("📥 Ответ от сервера:", res);
-        return res.json();
-      })
+      .then(res => res.json())
       .then(json => {
-        console.log("✅ Ответ JSON:", json);
         if (json.status === "ok") {
-          alert("Заявка отправлена!");
+          alert("Заявку надіслано!");
         } else {
-          alert("Сервер ответил с ошибкой: " + json.message);
+          alert("Помилка: " + json.message);
         }
       })
-      .catch(err => {
-        console.error("❌ Ошибка запроса:", err);
-        alert("Ошибка при отправке");
-      });
+      .catch(() => alert("Не вдалося відправити заявку."));
     }
   </script>
 </body>
