@@ -227,6 +227,20 @@
       tip.classList.toggle('active');
     });
 
+    // Скрываем клавиатуру при тапе вне полей
+    function hideKeyboard(e) {
+      const tag = e.target.tagName;
+      if (tag !== 'INPUT' && tag !== 'TEXTAREA') {
+        if (document.activeElement &&
+           (document.activeElement.tagName === 'INPUT' ||
+            document.activeElement.tagName === 'TEXTAREA')) {
+          document.activeElement.blur();
+        }
+      }
+    }
+    document.addEventListener('click', hideKeyboard);
+    document.addEventListener('touchstart', hideKeyboard);
+
     // Сканер VIN
     async function startScan(fieldId) {
       activeVinField = fieldId;
