@@ -7,50 +7,111 @@
   <style>
     body {
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto;
-      background-color: #121212;
-      color: white;
       padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen;
+      background: linear-gradient(135deg, #0f1e3a, #1a2a52);
+      background-attachment: fixed;
+      color: #fff;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 20px;
     }
     .card {
-      background-color: #1e1e1e;
+      background-color: rgba(30, 30, 30, 0.85);
       border-radius: 12px;
       padding: 20px;
       width: 100%;
       max-width: 400px;
       text-align: center;
       cursor: pointer;
-      transition: background 0.2s ease;
+      transition: background 0.2s ease, box-shadow 0.2s ease;
+      position: relative;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
     }
     .card:hover {
-      background-color: #2c2c2c;
+      background-color: rgba(40, 40, 40, 0.85);
+      box-shadow: 0 6px 24px rgba(0,0,0,0.7);
     }
     .card h2 {
       margin: 0;
       font-size: 20px;
     }
+
+    /* контактное всплывающее окно */
+    #contacts-popup {
+      display: none;
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.95);
+      border-radius: 12px;
+      padding: 20px;
+      box-sizing: border-box;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    #contacts-popup button {
+      margin: 10px 0;
+      width: 100%;
+      background: #03c75a;
+      border: none;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 16px;
+      color: #121212;
+      cursor: pointer;
+      transition: opacity 0.2s ease;
+    }
+    #contacts-popup button:hover {
+      opacity: 0.8;
+    }
+    #contacts-popup .close-btn {
+      position: absolute;
+      top: 10px; right: 10px;
+      background: #d32f2f;
+      color: #fff;
+      padding: 6px 12px;
+      font-size: 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: opacity 0.2s ease;
+    }
+    #contacts-popup .close-btn:hover {
+      opacity: 0.8;
+    }
   </style>
 </head>
 <body>
-  <!-- Ваш заголовок/приветствие -->
-  <div class="header">Ласкаво просимо, Maks!</div>
 
-  <!-- Три карточки-маршрута -->
   <div class="card" onclick="location.href='create.html'">
     <h2>📩 Створити заявку</h2>
   </div>
+
   <div class="card" onclick="location.href='history.html'">
     <h2>📜 Історія заявок</h2>
   </div>
-  <div class="card" onclick="location.href='contacts.html'">
+
+  <div class="card" onclick="toggleContacts(event)">
     <h2>📞 Контактна інформація</h2>
+    <div id="contacts-popup">
+      <button class="close-btn" onclick="toggleContacts(event)">✖ Закрити</button>
+      <button onclick="window.location.href='tel:+380674679495'">📞 +38 067 467 94 95</button>
+      <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=Столичне+шосе+103,+Київ+03026','_blank')">
+        📍 Столичне шосе, 103, Київ, 03026
+      </button>
+    </div>
   </div>
 
-  <!-- Остальной ваш скрипт / футер и т.д. -->
-</body>
+  <script>
+    function toggleContacts(e) {
+      e.stopPropagation();
+      const popup = document.getElementById('contacts-popup');
+      popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
+    }
+  </script>
 
+</body>
 </html>
