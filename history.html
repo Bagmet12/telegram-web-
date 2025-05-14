@@ -17,7 +17,6 @@
       margin-bottom: 20px;
       font-size: 24px;
     }
-
     .back-btn {
       display: block;
       margin: 0 auto 20px;
@@ -29,7 +28,6 @@
       font-size: 16px;
       cursor: pointer;
     }
-
     .history-container {
       max-width: 500px;
       margin: auto;
@@ -37,7 +35,6 @@
       flex-direction: column;
       gap: 16px;
     }
-
     .request-card {
       background: #03c75a;
       border-radius: 12px;
@@ -63,7 +60,6 @@
       font-size: 14px;
       color: #121212;
     }
-
     .request-body {
       display: none;
       padding: 0 16px 16px;
@@ -78,24 +74,35 @@
       text-decoration: underline;
     }
 
-    .stepper {
+    /* Стил для шагов */
+    .steps {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
       margin-top: 16px;
     }
-    .step, .step-button {
-      background: #03c75a;
-      color: #121212;
-      padding: 12px;
+    .step-block {
+      background: #121212;
       border-radius: 8px;
-      font-size: 16px;
-      text-align: center;
-      border: none;
-      cursor: pointer;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #fff;
+      font-size: 15px;
     }
-    .step-button {
+    .step-block.completed {
+      background: #028f46;
+    }
+    .step-block.active {
+      background: #04d165;
+    }
+    .step-block .name {
       font-weight: bold;
+    }
+    .step-block .time {
+      font-size: 13px;
+      color: #ddd;
     }
   </style>
 </head>
@@ -110,21 +117,33 @@
   <div class="history-container" id="history"></div>
 
   <script>
-    // Пример данных — замените на реальные из вашей CRM
+    // Демо-дані з історією статусів
     const requestsData = [
       {
         vin: '5YJ3E1EA7LF000001',
         date: '2025-05-12 14:30',
         problem: 'Не відкриваються двері.',
         phone: '+380501234567',
-        fileUrl: '#'
+        fileUrl: '#',
+        statusHistory: [
+          {name: '1. Створена', time: '2025-05-12 14:30', state: 'completed'},
+          {name: '2. Переддіагностика', time: '2025-05-12 16:45', state: 'active'},
+          {name: '3. Висновок', time: '', state: ''},
+          {name: '4. Завершено', time: '', state: ''}
+        ]
       },
       {
         vin: '5YJ3E1EA7LF000002',
         date: '2025-05-13 10:15',
         problem: 'Дрімає автопілот.',
         phone: '+380671112233',
-        fileUrl: '#'
+        fileUrl: '#',
+        statusHistory: [
+          {name: '1. Створена', time: '2025-05-13 10:15', state: 'completed'},
+          {name: '2. Переддіагностика', time: '', state: ''},
+          {name: '3. Висновок', time: '', state: ''},
+          {name: '4. Завершено', time: '', state: ''}
+        ]
       }
     ];
 
@@ -132,12 +151,10 @@
 
     requestsData.forEach((req, idx) => {
       const num = idx + 1;
-
-      // Создаём карточку
       const card = document.createElement('div');
       card.className = 'request-card';
 
-      // Заголовок
+      // Заголовок карточки
       const hdr = document.createElement('div');
       hdr.className = 'request-header';
       hdr.innerHTML = `
@@ -147,36 +164,49 @@
         </div>
         <p class="request-sub">${req.date}</p>
       `;
-      // Переключаем тело
-      hdr.addEventListener('click', () => {
-        bodyDiv.style.display = bodyDiv.style.display === 'block' ? 'none' : 'block';
-      });
       card.appendChild(hdr);
 
-      // Тело заявки
+      // Тіло карточки
       const bodyDiv = document.createElement('div');
       bodyDiv.className = 'request-body';
       bodyDiv.innerHTML = `
         <p><strong>Опис проблеми:</strong> ${req.problem}</p>
         <p><strong>Телефон:</strong> <a href="tel:${req.phone}">${req.phone}</a></p>
         <p><strong>Файл:</strong> <a href="${req.fileUrl}" target="_blank">Переглянути</a></p>
-        <div class="stepper">
-          <div class="step">1. Створена</div>
-          <button class="step-button" onclick="downloadPDF('${req.vin}')">
-            2. Переддіагностика — Завантажити PDF
-          </button>
-          <div class="step">3. Висновок</div>
-          <div class="step">4. Завершено</div>
-        </div>
       `;
+
+      // Блок кроків
+      const stepsDiv = document.createElement('div');
+      stepsDiv.className = 'steps';
+      req.statusHistory.forEach(step => {
+        const sb = document.createElement('div');
+        sb.className = 'step-block ' + (step.state || '');
+        sb.innerHTML = `
+          <span class="name">${step.name}</span>
+          <span class="time">${step.time || ''}</span>
+        `;
+        // Для активного шага добавляем кликабельность
+        if (step.state === 'active') {
+          sb.style.cursor = 'pointer';
+          sb.addEventListener('click', () => downloadPDF(req.vin));
+        }
+        stepsDiv.appendChild(sb);
+      });
+
+      bodyDiv.appendChild(stepsDiv);
       card.appendChild(bodyDiv);
+
+      // Переключатель видимости тела
+      hdr.addEventListener('click', () => {
+        bodyDiv.style.display = bodyDiv.style.display === 'block' ? 'none' : 'block';
+      });
 
       histContainer.appendChild(card);
     });
 
     function downloadPDF(vin) {
-      // Ваша логика получения PDF из CRM
-      alert('Завантажити PDF для VIN ' + vin);
+      alert('Завантажити PDF для ' + vin);
+      // Реальный fetch к вашему API
     }
   </script>
 </body>
