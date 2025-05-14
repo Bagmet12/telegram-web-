@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Історія заявок</title>
   <style>
-    /* Тёмный фон страницы */
     body {
       margin: 0;
       padding: 0;
@@ -13,37 +12,50 @@
       background: #121212;
       color: #fff;
     }
-
-    /* Контейнер с отступом сверху */
     .history-container {
       max-width: 500px;
       margin: 0 auto;
       padding: 60px 20px 40px;
     }
-
-    /* Заголовок */
     h1 {
       text-align: center;
       font-size: 28px;
-      margin-bottom: 40px;
+      margin: 0;
+      padding-top: 20px;
     }
 
-    /* Карточка заявки — зелёный фон */
+    /* Кнопка назад */
+    .back-card {
+      background: #03c75a;
+      color: #121212;
+      border-radius: 12px;
+      padding: 10px 0;
+      text-align: center;
+      margin: 20px auto;
+      max-width: 180px;
+      cursor: pointer;
+      font-weight: 600;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .back-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.5);
+    }
+
     .request-card {
       background: #03c75a;
       border-radius: 16px;
       margin-bottom: 24px;
       overflow: hidden;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
       box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
     }
     .request-card:hover {
       transform: translateY(-4px);
       box-shadow: 0 12px 24px rgba(0,0,0,0.5);
     }
-
-    /* Заголовок карточки */
     .request-header {
       padding: 20px;
       display: flex;
@@ -62,8 +74,6 @@
     .request-sub.vin {
       margin-top: 4px;
     }
-
-    /* Тело карточки */
     .request-body {
       display: none;
       padding: 0 20px 20px;
@@ -80,21 +90,21 @@
       text-decoration: none;
     }
 
-    /* Шаги (здесь они уже приглушённые, чтобы не выбивались) */
+    /* Вертикальный степпер */
     .stepper {
       display: flex;
-      justify-content: space-between;
+      flex-direction: column;
+      gap: 12px;
       margin-top: 20px;
-      gap: 8px;
     }
     .step {
-      flex: 1;
-      padding: 10px 6px;
-      border-radius: 8px;
-      font-size: 12px;
-      text-align: center;
+      padding: 12px;
+      border-radius: 12px;
       background: rgba(18,18,18,0.4);
       color: #ccc;
+      text-align: center;
+      font-size: 14px;
+      position: relative;
     }
     .step.completed {
       background: #121212;
@@ -107,8 +117,8 @@
       font-weight: bold;
     }
     .step-button {
-      display: block;
-      margin: 8px auto 0;
+      display: inline-block;
+      margin-top: 8px;
       padding: 6px 12px;
       background: #121212;
       color: #03c75a;
@@ -122,10 +132,15 @@
 </head>
 <body>
   <h1>Історія заявок</h1>
+
+  <!-- Кнопка повернення на головну -->
+  <div class="back-card" onclick="location.href='index.html'">
+    ← Головна
+  </div>
+
   <div class="history-container" id="history"></div>
 
   <script>
-    // Пример данных
     const requestsData = [
       {
         vin: '5YJ3E1EA7LF000001',
@@ -150,7 +165,7 @@
       const card = document.createElement('div');
       card.className = 'request-card';
 
-      // Заголовок
+      // Header
       const hdr = document.createElement('div');
       hdr.className = 'request-header';
       hdr.innerHTML = `
@@ -160,13 +175,9 @@
         </div>
         <div class="request-sub">${req.date}</div>
       `;
-      // Переключатель тела
-      hdr.addEventListener('click', () => {
-        body.style.display = body.style.display === 'block' ? 'none' : 'block';
-      });
       card.appendChild(hdr);
 
-      // Тело
+      // Body
       const body = document.createElement('div');
       body.className = 'request-body';
       body.innerHTML = `
@@ -184,6 +195,11 @@
         </div>
       `;
       card.appendChild(body);
+
+      // Toggle body on header click
+      hdr.addEventListener('click', () => {
+        body.style.display = body.style.display === 'block' ? 'none' : 'block';
+      });
 
       container.appendChild(card);
     });
