@@ -2,9 +2,8 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Tesla Assistant</title>
-  <!-- Telegram WebApp -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     body {
@@ -25,6 +24,7 @@
       margin-top: 20px;
     }
     .card {
+      position: relative; /* добавили, чтобы popup позиционировался внутри карточки */
       background-color: #03c75a;
       border-radius: 12px;
       width: 100%;
@@ -43,9 +43,9 @@
       font-size: 22px;
       color: #121212;
     }
-    /* popup contacts */
+    /* вот здесь убрали второе display:flex */
     #contacts-popup {
-      display: none;
+      display: none;          /* изначально скрыто */
       position: absolute;
       top: 0; left: 0;
       width: 100%; height: 100%;
@@ -53,7 +53,6 @@
       border-radius: 12px;
       padding: 20px;
       box-sizing: border-box;
-      display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
@@ -82,7 +81,7 @@
   </style>
 </head>
 <body>
-  <div id="greeting">Вітаємо!</div>
+  <div id="greeting">Вітаємо, користувач!</div>
 
   <div class="card" onclick="location.href='create.html'">
     <h2>📩 Створити заявку</h2>
@@ -111,14 +110,13 @@
   <script>
     const tg = window.Telegram.WebApp;
     tg.ready();
-
-    // Вставляем имя пользователя
     const firstName = tg.initDataUnsafe?.user?.first_name || 'користувач';
     document.getElementById('greeting').innerText = `Вітаємо, ${firstName}!`;
 
     function toggleContacts(e) {
       e.stopPropagation();
       const popup = document.getElementById('contacts-popup');
+      // если скрыто — показываем flex, иначе — скрываем
       popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
     }
   </script>
