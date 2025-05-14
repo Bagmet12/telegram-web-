@@ -14,109 +14,78 @@
       color: #fff;
       background: url('tesla-bg.png') no-repeat center center fixed;
       background-size: cover;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      display: flex; flex-direction: column; align-items: center;
     }
 
-    /* Верхній «квадратик» */
     .header-card {
       background: rgba(0,0,0,0.7);
       border: 2px solid #E53935;
       border-radius: 16px;
       padding: 24px;
-      width: 90%;
-      max-width: 400px;
+      width: 90%; max-width: 400px;
       margin: 40px 0 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;       /* Центруем по горизонтали */
-      justify-content: center;   /* Центруем по вертикали */
+      text-align: center;
     }
     .header-card .name {
-      font-size: 32px;
-      font-weight: 600;
-      margin: 0;
+      font-size: 32px; font-weight: 600; margin: 0;
     }
     .header-card .subtitle {
-      font-size: 16px;
-      color: #CCCCCC;
-      margin: 4px 0 0;
+      font-size: 16px; color: #CCCCCC; margin-top: 4px;
     }
 
-    /* Кнопка «Назад» в стилі карточки */
     .back-card {
-      width: 90%;
-      max-width: 400px;
-      margin-bottom: 20px;
-      cursor: pointer;
+      width: 90%; max-width: 400px;
+      margin-bottom: 20px; cursor: pointer;
     }
     .back-card .card {
-      display: flex;
-      align-items: center;
+      display: flex; align-items: center;
       background: rgba(0,0,0,0.7);
-      border: 2px solid #E53935;
-      border-radius: 16px;
-      padding: 16px 24px;
-      transition: transform .1s;
+      border: 2px solid #E53935; border-radius: 16px;
+      padding: 16px 24px; transition: transform .1s;
     }
     .back-card .card:hover { transform: scale(1.03); }
     .back-card .icon { font-size: 24px; margin-right: 12px; }
     .back-card .text { font-size: 18px; }
 
-    /* Контейнер історії */
     .history-container {
-      width: 90%;
-      max-width: 400px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
+      width: 90%; max-width: 400px;
+      display: flex; flex-direction: column; gap: 16px;
       margin-bottom: 40px;
     }
 
-    /* Карточка заявки */
     .request-card {
       background: rgba(0,0,0,0.7);
-      border: 2px solid #E53935;
-      border-radius: 16px;
+      border: 2px solid #E53935; border-radius: 16px;
       overflow: hidden;
     }
     .request-header {
       padding: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: pointer;
-      transition: background .2s;
+      display: flex; justify-content: space-between; align-items: center;
+      cursor: pointer; transition: background .2s;
     }
     .request-header:hover {
       background: rgba(0,0,0,0.85);
     }
     .request-title {
-      margin: 0;
-      font-size: 18px;
-      font-weight: bold;
+      margin: 0; font-size: 18px; font-weight: bold;
     }
     .request-sub {
-      margin: 0;
-      font-size: 14px;
-      color: #CCCCCC;
+      margin: 0; font-size: 14px; color: #CCCCCC;
     }
+
     .request-body {
       display: none;
       padding: 0 16px 16px;
       border-top: 1px solid #E53935;
     }
     .request-body p {
-      margin: 8px 0;
-      font-size: 15px;
+      margin: 8px 0; font-size: 15px;
     }
     .request-body a {
-      color: #E53935;
-      text-decoration: underline;
+      color: #E53935; text-decoration: underline;
     }
 
-    /* Блоки статусів у стиле карточек */
+    /* === Шаги в стиле карточек === */
     .steps {
       display: flex;
       flex-direction: column;
@@ -124,39 +93,34 @@
       margin-top: 16px;
     }
     .step-block {
+      display: flex; justify-content: space-between; align-items: center;
       background: rgba(0,0,0,0.7);
-      border: 2px solid #E53935;
-      border-radius: 16px;
+      border: 2px solid #E53935; border-radius: 16px;
       padding: 12px 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 15px;
-      color: #fff;
-      position: relative;
     }
     .step-block.completed {
-      border-color: #04d165;   /* Зеленая обводка */
+      border-color: #04d165;
     }
     .step-block.active {
-      border-color: #D32F2F;   /* Красная обводка */
+      border-color: #D32F2F;
     }
-    .step-block .name {
-      font-weight: bold;
+    .step-block .left {
+      display: flex; flex-direction: column; /* чтобы название и время можно было разнести */
     }
-    .step-block .time {
-      font-size: 13px;
-      color: #ddd;
+    .step-block .left .name {
+      font-weight: bold; font-size: 15px;
     }
-
-    /* Кнопка скачивания PDF в активном блоке */
+    .step-block .left .time {
+      font-size: 13px; color: #ddd; margin-top: 4px;
+    }
+    .step-block .right {
+      display: flex; align-items: center; gap: 8px;
+    }
     .step-block .pdf-btn {
-      background: transparent;
-      border: none;
-      color: #E53935;
-      font-size: 18px;
+      background: transparent; border: none;
+      color: #E53935; font-size: 14px; font-weight: bold;
       cursor: pointer;
-      margin-left: 8px;
+      transition: transform .1s;
     }
     .step-block .pdf-btn:hover {
       transform: scale(1.1);
@@ -165,21 +129,17 @@
 </head>
 <body>
 
-  <!-- Header -->
   <div class="header-card">
     <div class="name">TeslaAssistantBot</div>
     <div class="subtitle">mini-додаток</div>
   </div>
 
-  <!-- Back button -->
   <div class="back-card" onclick="location.href='index.html'">
     <div class="card">
-      <div class="icon">←</div>
-      <div class="text">На головну</div>
+      <div class="icon">←</div><div class="text">На головну</div>
     </div>
   </div>
 
-  <!-- Історія заявок -->
   <div class="history-container" id="history"></div>
 
   <script>
@@ -194,10 +154,10 @@
         phone: '+380501234567',
         fileUrl: '#',
         statusHistory: [
-          {name: '1. Створена',      time: '2025-05-12 14:30', state: 'completed'},
-          {name: '2. Діагностування', time: '2025-05-12 16:45', state: 'active'},
-          {name: '3. Висновок',      time: '',              state: ''},
-          {name: '4. Завершено',     time: '',              state: ''}
+          {name: '1. Створена',      time: '14:30', state: 'completed'},
+          {name: '2. Діагностування', time: '16:45', state: 'active'},
+          {name: '3. Висновок',      time: '',       state: ''},
+          {name: '4. Завершено',     time: '',       state: ''}
         ]
       },
       {
@@ -207,10 +167,10 @@
         phone: '+380671112233',
         fileUrl: '#',
         statusHistory: [
-          {name: '1. Створена',      time: '2025-05-13 10:15', state: 'completed'},
-          {name: '2. Діагностування', time: '',              state: 'active'},
-          {name: '3. Висновок',      time: '',              state: ''},
-          {name: '4. Завершено',     time: '',              state: ''}
+          {name: '1. Створена',      time: '10:15', state: 'completed'},
+          {name: '2. Діагностування', time: '',       state: 'active'},
+          {name: '3. Висновок',      time: '',       state: ''},
+          {name: '4. Завершено',     time: '',       state: ''}
         ]
       }
     ];
@@ -218,23 +178,20 @@
     const histContainer = document.getElementById('history');
 
     requestsData.forEach((req, idx) => {
-      const num = idx + 1;
       const card = document.createElement('div');
       card.className = 'request-card';
 
-      // Header
       const hdr = document.createElement('div');
       hdr.className = 'request-header';
       hdr.innerHTML = `
         <div>
-          <p class="request-title">Заявка №${num}</p>
+          <p class="request-title">Заявка №${idx+1}</p>
           <p class="request-sub">VIN: ${req.vin}</p>
         </div>
         <p class="request-sub">${req.date}</p>
       `;
-      card.appendChild(hdr);
+      card.append(hdr);
 
-      // Body
       const body = document.createElement('div');
       body.className = 'request-body';
       body.innerHTML = `
@@ -243,40 +200,46 @@
         <p><strong>Файл:</strong> <a href="${req.fileUrl}" target="_blank">Переглянути</a></p>
       `;
 
-      // Steps
       const steps = document.createElement('div');
       steps.className = 'steps';
       req.statusHistory.forEach(step => {
         const sb = document.createElement('div');
         sb.className = `step-block ${step.state}`;
-        const name = document.createElement('span');
-        name.className = 'name';
-        name.textContent = step.name;
-        const time = document.createElement('span');
-        time.className = 'time';
-        time.textContent = step.time || '';
-        sb.append(name, time);
 
+        const left = document.createElement('div');
+        left.className = 'left';
+        const nm = document.createElement('span');
+        nm.className = 'name'; nm.textContent = step.name;
+        left.append(nm);
+        if (step.time) {
+          const tm = document.createElement('span');
+          tm.className = 'time'; tm.textContent = step.time;
+          left.append(tm);
+        }
+
+        const right = document.createElement('div');
+        right.className = 'right';
         if (step.state === 'active') {
-          // клик по блоку
-          sb.addEventListener('click', () => downloadPDF(req.vin));
-          // маленькая кнопка PDF
-          const pdfBtn = document.createElement('button');
-          pdfBtn.className = 'pdf-btn';
-          pdfBtn.textContent = '📄';
-          pdfBtn.addEventListener('click', e => {
+          const btn = document.createElement('button');
+          btn.className = 'pdf-btn';
+          btn.textContent = 'PDF';
+          btn.addEventListener('click', e => {
             e.stopPropagation();
             downloadPDF(req.vin);
           });
-          sb.append(pdfBtn);
+          right.append(btn);
+        }
+
+        sb.append(left, right);
+        if (step.state === 'active') {
+          sb.addEventListener('click', () => downloadPDF(req.vin));
         }
         steps.append(sb);
       });
-      body.append(steps);
 
+      body.append(steps);
       card.append(body);
 
-      // Toggle
       hdr.addEventListener('click', () => {
         body.style.display = body.style.display === 'block' ? 'none' : 'block';
       });
@@ -286,7 +249,7 @@
 
     function downloadPDF(vin) {
       alert('Завантажити PDF для ' + vin);
-      // TODO: ваш API–виклик
+      // TODO: ваш API-виклик
     }
   </script>
 </body>
