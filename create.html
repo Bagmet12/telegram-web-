@@ -10,20 +10,15 @@
     /* === Общие === */
     * { box-sizing: border-box; }
     html, body {
-      margin: 0;
-      padding: 0;
+      margin: 0; padding: 20px;
       min-height: 100vh;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      color: #FFFFFF;
+      color: #ffffff;
       background: url('tesla-bg.png') no-repeat center center fixed;
       background-size: cover;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
+      display: flex; flex-direction: column; align-items: center;
     }
 
-    /* Заголовок страницы */
     .page-header {
       font-size: 32px;
       font-weight: 500;
@@ -31,7 +26,6 @@
       text-align: center;
     }
 
-    /* Карточка формы */
     .form-card {
       background: rgba(0,0,0,0.7);
       border: 2px solid #E53935;
@@ -39,22 +33,18 @@
       padding: 24px;
       width: 100%;
       max-width: 400px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
+      display: flex; flex-direction: column; gap: 16px;
     }
 
-    /* Ряды формы */
     .form-row label {
-      display: block;
+      display: flex;
+      align-items: center;
+      gap: 4px;
       margin-bottom: 6px;
       font-size: 14px;
       color: #CCCCCC;
     }
-
-    .form-row input[type="text"],
-    .form-row input[type="tel"],
-    .form-row input[type="file"],
+    .form-row input,
     .form-row textarea {
       width: 100%;
       padding: 10px 12px;
@@ -65,52 +55,68 @@
       font-size: 16px;
     }
 
-    /* VIN row */
     .vin-row {
       display: flex;
       gap: 8px;
     }
-    .vin-row input {
-      flex: 1;
-    }
+    .vin-row input { flex: 1; }
     .vin-row button {
-      width: 48px;
-      height: 48px;
+      width: 48px; height: 48px;
       border: 2px solid #E53935;
       background: rgba(0,0,0,0.7);
       color: #fff;
       border-radius: 12px;
       font-size: 24px;
       cursor: pointer;
-      transition: transform 0.1s;
+      transition: transform .1s;
     }
-    .vin-row button:hover {
-      transform: scale(1.05);
+    .vin-row button:hover { transform: scale(1.05); }
+
+    /* Tooltip */
+    .tooltip {
+      position: relative;
+      display: inline-block;
+      cursor: help;
+      color: #03c75a;
+      font-weight: bold;
+    }
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: 220px;
+      background-color: rgba(0,0,0,0.9);
+      color: #fff;
+      text-align: left;
+      border-radius: 6px;
+      padding: 8px;
+      position: absolute;
+      z-index: 100;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity .3s;
+      font-size: 13px;
+      line-height: 1.3;
+    }
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+      opacity: 1;
     }
 
-    /* Видео скан и закрыть скан */
+    /* Видео скан */
     #video {
-      width: 100%;
-      border-radius: 8px;
-      display: none;
-      margin-top: 8px;
+      width: 100%; border-radius: 8px;
+      display: none; margin-top: 8px;
     }
     .close-scan {
-      display: none;
-      padding: 10px;
-      border: none;
-      border-radius: 12px;
-      background: #D32F2F;
-      color: #fff;
-      font-size: 16px;
-      cursor: pointer;
-      transition: transform 0.1s;
+      display: none; padding: 10px;
+      border: none; border-radius: 12px;
+      background: #D32F2F; color: #fff;
+      font-size: 16px; cursor: pointer;
+      transition: transform .1s;
     }
-    .close-scan:hover {
-      transform: scale(1.05);
-    }
+    .close-scan:hover { transform: scale(1.05); }
 
-    /* Кнопка отправить */
     .submit-btn {
       padding: 14px;
       border: 2px solid #E53935;
@@ -119,46 +125,29 @@
       font-size: 18px;
       border-radius: 16px;
       cursor: pointer;
-      transition: transform 0.1s;
+      transition: transform .1s;
     }
-    .submit-btn:hover {
-      transform: scale(1.03);
-    }
+    .submit-btn:hover { transform: scale(1.03); }
 
-    /* Ссылка назад */
     .back-card {
-      margin-top: 20px;
-      width: 100%;
-      max-width: 400px;
-      cursor: pointer;
+      margin-top: 20px; width: 100%; max-width: 400px; cursor: pointer;
     }
     .back-card .card {
-      display: flex;
-      align-items: center;
+      display: flex; align-items: center;
       background: rgba(0,0,0,0.7);
       border: 2px solid #E53935;
       border-radius: 16px;
       padding: 14px 20px;
-      transition: transform 0.1s;
+      transition: transform .1s;
     }
-    .back-card .card:hover {
-      transform: scale(1.03);
-    }
-    .back-card .icon {
-      font-size: 24px;
-      margin-right: 12px;
-    }
-    .back-card .text {
-      font-size: 18px;
-    }
+    .back-card .card:hover { transform: scale(1.03); }
+    .back-card .icon { font-size: 24px; margin-right: 12px; }
+    .back-card .text { font-size: 18px; }
   </style>
 </head>
 <body>
-
-  <!-- Заголовок -->
   <div class="page-header">Створити заявку</div>
 
-  <!-- Кнопка Назад -->
   <div class="back-card" onclick="location.href='index.html'">
     <div class="card">
       <div class="icon">←</div>
@@ -166,9 +155,7 @@
     </div>
   </div>
 
-  <!-- Форма -->
   <div class="form-card">
-
     <!-- VIN автомобіля -->
     <div class="form-row">
       <label for="vin-input-car">VIN автомобіля (17 символів)</label>
@@ -180,9 +167,16 @@
       </div>
     </div>
 
-    <!-- VIN комп’ютера -->
+    <!-- VIN комп’ютера з подсказкой -->
     <div class="form-row">
-      <label for="vin-input-ecu">VIN комп’ютера (17 символів)</label>
+      <label for="vin-input-ecu">
+        VIN комп’ютера (17 символів)
+        <span class="tooltip">ℹ
+          <span class="tooltiptext">
+            Якщо встановлено ECU від іншого автомобіля – введіть його VIN. Якщо ж це рідний блок управління вашого авто, просто скопіюйте та вставте його VIN.
+          </span>
+        </span>
+      </label>
       <div class="vin-row">
         <input id="vin-input-ecu" type="text" maxlength="17"
                placeholder="Введіть VIN комп’ютера..."
@@ -191,7 +185,7 @@
       </div>
     </div>
 
-    <!-- Видео и кнопка закрыть скан -->
+    <!-- Видео и закрыть скан -->
     <video id="video" autoplay playsinline></video>
     <button class="close-scan" onclick="stopScan()">✖ Закрити скан</button>
 
@@ -213,7 +207,7 @@
       <input id="phone-input" type="tel" placeholder="+380XXXXXXXXX">
     </div>
 
-    <!-- Отправить -->
+    <!-- Надіслати -->
     <button class="submit-btn" onclick="submitForm()">Надіслати</button>
   </div>
 
@@ -226,9 +220,7 @@
     async function startScan(fieldId) {
       activeVinField = fieldId;
       try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment' }
-        });
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
         const videoEl = document.getElementById('video');
         videoEl.srcObject = stream;
         videoEl.style.display = 'block';
@@ -239,10 +231,7 @@
         let attempts = 0;
 
         const interval = setInterval(async () => {
-          if (++attempts > 15) {
-            clearInterval(interval);
-            return;
-          }
+          if (++attempts > 15) { clearInterval(interval); return; }
           canvas.width = videoEl.videoWidth;
           canvas.height = videoEl.videoHeight;
           ctx.drawImage(videoEl, 0, 0);
@@ -281,7 +270,7 @@
       if (vinCar.length !== 17) return alert('VIN автомобіля має містити 17 символів');
       if (vinEcu.length !== 17) return alert('VIN комп’ютера має містити 17 символів');
       if (!problem) return alert('Опишіть проблему');
-      // TODO: ваш API–вызов с vinCar, vinEcu, problem, phone, файлом
+      // TODO: ваш API–виклик
       window.location.href = 'history.html';
     }
   </script>
