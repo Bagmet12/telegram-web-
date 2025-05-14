@@ -76,9 +76,10 @@
     .tooltip {
       position: relative;
       display: inline-block;
-      cursor: help;
+      cursor: pointer;
       color: #03c75a;
       font-weight: bold;
+      user-select: none;
     }
     .tooltip .tooltiptext {
       visibility: hidden;
@@ -97,10 +98,12 @@
       transition: opacity .3s;
       font-size: 13px;
       line-height: 1.3;
+      pointer-events: none;
     }
-    .tooltip:hover .tooltiptext {
+    .tooltip .tooltiptext.active {
       visibility: visible;
       opacity: 1;
+      pointer-events: auto;
     }
 
     /* Видео скан */
@@ -167,13 +170,14 @@
       </div>
     </div>
 
-    <!-- VIN комп’ютера з подсказкой -->
+    <!-- VIN комп’ютера з кликабельным Tooltip -->
     <div class="form-row">
       <label for="vin-input-ecu">
         VIN комп’ютера (17 символів)
-        <span class="tooltip">ℹ
+        <span class="tooltip" id="info-ecu">ℹ
           <span class="tooltiptext">
-            Якщо встановлено ECU від іншого автомобіля – введіть його VIN. Якщо ж це рідний блок управління вашого авто, просто скопіюйте та вставте його VIN.
+            Якщо встановлено ECU від іншого автомобіля – введіть його VIN. 
+            Якщо це рідний блок управління вашого авто, просто скопіюйте та вставте свій VIN.
           </span>
         </span>
       </label>
@@ -216,7 +220,14 @@
     tg.ready(); tg.expand();
 
     let stream, activeVinField;
+    // Tooltip toggle
+    document.getElementById('info-ecu').addEventListener('click', function(e) {
+      e.stopPropagation();
+      const tip = this.querySelector('.tooltiptext');
+      tip.classList.toggle('active');
+    });
 
+    // Сканер VIN
     async function startScan(fieldId) {
       activeVinField = fieldId;
       try {
