@@ -4,120 +4,138 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Історія заявок</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    body {
-      margin: 0;
-      padding: 20px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen;
-      background: #121212;
-      color: #fff;
+    /* === Общие === */
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 20px;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #FFFFFF;
+      background: url('tesla-bg.png') no-repeat center center fixed;
+      background-size: cover;
     }
-    h1 {
+
+    /* Заголовок страницы */
+    .page-header {
       text-align: center;
-      margin-bottom: 20px;
-      font-size: 24px;
+      font-size: 32px;
+      font-weight: 500;
+      margin-bottom: 16px;
     }
-    .back-btn {
-      display: block;
-      margin: 0 auto 20px;
-      padding: 10px 20px;
-      background: #03c75a;
-      color: #121212;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
+
+    /* Кнопка “На головну” */
+    .back-card {
+      width: 100%; max-width: 400px;
+      margin: 0 auto 24px;
       cursor: pointer;
     }
-    .history-container {
-      max-width: 500px;
-      margin: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
+    .back-card .card {
+      display: flex; align-items: center;
+      background: rgba(0,0,0,0.7);
+      border: 2px solid #E53935;
+      border-radius: 16px;
+      padding: 16px 24px;
+      transition: transform .1s;
     }
+    .back-card .card:hover { transform: scale(1.03); }
+    .back-card .icon {
+      font-size: 24px; margin-right: 12px;
+      color: #fff;
+    }
+    .back-card .text {
+      font-size: 18px; color: #fff;
+    }
+
+    /* Контейнер истории */
+    .history-container {
+      width: 100%; max-width: 400px;
+      margin: 0 auto;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+
+    /* Карточка заявки */
     .request-card {
-      background: #03c75a;
-      border-radius: 12px;
+      background: rgba(0,0,0,0.7);
+      border: 2px solid #E53935;
+      border-radius: 16px;
       overflow: hidden;
-      color: #121212;
     }
     .request-header {
       padding: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      display: flex; justify-content: space-between; align-items: center;
       cursor: pointer;
+      transition: background .2s;
     }
     .request-header:hover {
-      background: #04d165;
+      background: rgba(0,0,0,0.85);
     }
     .request-title {
-      font-size: 18px;
-      font-weight: bold;
       margin: 0;
+      font-size: 20px;
+      font-weight: 600;
+      color: #fff;
     }
     .request-sub {
       font-size: 14px;
-      color: #121212;
+      color: #CCCCCC;
+      margin: 0;
     }
+
+    /* Тело заявки */
     .request-body {
       display: none;
       padding: 0 16px 16px;
-      border-top: 1px solid #029e49;
+      border-top: 1px solid #E53935;
     }
     .request-body p {
       margin: 8px 0;
       font-size: 15px;
+      color: #fff;
     }
     .request-body a {
-      color: #121212;
+      color: #03c75a;
       text-decoration: underline;
     }
 
-    /* Стил для шагов */
+    /* Шаги статуса */
     .steps {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+      display: flex; flex-direction: column; gap: 12px;
       margin-top: 16px;
     }
     .step-block {
-      background: #121212;
+      background: rgba(0,0,0,0.7);
       border-radius: 8px;
       padding: 12px 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      color: #fff;
+      display: flex; justify-content: space-between; align-items: center;
       font-size: 15px;
+      color: #fff;
     }
     .step-block.completed {
-      background: #028f46;
+      border: 2px solid #03c75a;
     }
     .step-block.active {
-      background: #04d165;
+      border: 2px solid #E53935;
+      cursor: pointer;
     }
-    .step-block .name {
-      font-weight: bold;
-    }
-    .step-block .time {
-      font-size: 13px;
-      color: #ddd;
-    }
+    .step-block .name { font-weight: 600; }
+    .step-block .time { font-size: 13px; color: #CCCCCC; }
   </style>
 </head>
 <body>
+  <div class="page-header">Історія заявок</div>
 
-  <button class="back-btn" onclick="location.href='index.html'">
-    ← Головна
-  </button>
-
-  <h1>Історія заявок</h1>
+  <div class="back-card" onclick="location.href='index.html'">
+    <div class="card">
+      <div class="icon">←</div>
+      <div class="text">На головну</div>
+    </div>
+  </div>
 
   <div class="history-container" id="history"></div>
 
   <script>
-    // Демо-дані з історією статусів
     const requestsData = [
       {
         vin: '5YJ3E1EA7LF000001',
@@ -154,7 +172,7 @@
       const card = document.createElement('div');
       card.className = 'request-card';
 
-      // Заголовок карточки
+      // header
       const hdr = document.createElement('div');
       hdr.className = 'request-header';
       hdr.innerHTML = `
@@ -166,7 +184,7 @@
       `;
       card.appendChild(hdr);
 
-      // Тіло карточки
+      // body
       const bodyDiv = document.createElement('div');
       bodyDiv.className = 'request-body';
       bodyDiv.innerHTML = `
@@ -175,7 +193,7 @@
         <p><strong>Файл:</strong> <a href="${req.fileUrl}" target="_blank">Переглянути</a></p>
       `;
 
-      // Блок кроків
+      // steps
       const stepsDiv = document.createElement('div');
       stepsDiv.className = 'steps';
       req.statusHistory.forEach(step => {
@@ -185,9 +203,7 @@
           <span class="name">${step.name}</span>
           <span class="time">${step.time || ''}</span>
         `;
-        // Для активного шага добавляем кликабельность
         if (step.state === 'active') {
-          sb.style.cursor = 'pointer';
           sb.addEventListener('click', () => downloadPDF(req.vin));
         }
         stepsDiv.appendChild(sb);
@@ -196,7 +212,6 @@
       bodyDiv.appendChild(stepsDiv);
       card.appendChild(bodyDiv);
 
-      // Переключатель видимости тела
       hdr.addEventListener('click', () => {
         bodyDiv.style.display = bodyDiv.style.display === 'block' ? 'none' : 'block';
       });
@@ -206,7 +221,7 @@
 
     function downloadPDF(vin) {
       alert('Завантажити PDF для ' + vin);
-      // Реальный fetch к вашему API
+      // TODO: ваш API-запит
     }
   </script>
 </body>
