@@ -1,92 +1,172 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Tesla Assistant</title>
   <!-- Telegram WebApp -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    body {
-      margin: 0; padding: 20px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
-      background-color: #121212; color: #fff;
-      display: flex; flex-direction: column;
-      align-items: center; gap: 20px;
+    /* Общие */
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #FFFFFF;
+      background: url('tesla-bg.png') no-repeat center center fixed;
+      background-size: cover;
+      position: relative;
     }
-    .header {
-      font-size: 24px; font-weight: bold;
-      margin-top: 10px;
+
+    /* Кнопка “Закрити” */
+    #close-btn {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      background: transparent;
+      border: none;
+      color: #E53935;
+      font-size: 18px;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    /* Заголовок приложения */
+    .app-title {
+      margin-top: 60px;
+      text-align: center;
+      line-height: 1.2;
+    }
+    .app-title .name {
+      font-size: 28px;
+      font-weight: 600;
+    }
+    .app-title .subtitle {
+      font-size: 14px;
+      color: #CCCCCC;
+    }
+
+    /* Привітання */
+    #greeting {
+      margin: 24px 0;
+      font-size: 36px;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    /* Меню-карточки */
+    .menu {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto 40px;
+      padding: 0 16px;
     }
     .card {
-      background-color: #03c75a;
-      border-radius: 12px;
-      padding: 16px 24px;
-      width: 100%; max-width: 400px;
-      text-align: center; cursor: pointer;
-      transition: transform .1s ease-in-out;
+      display: flex;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.7);
+      border: 2px solid #E53935;
+      border-radius: 16px;
+      padding: 14px 20px;
+      cursor: pointer;
+      transition: transform 0.1s ease-in-out;
     }
-    .card:hover { transform: scale(1.02); }
-    .card h2 {
-      margin: 0; font-size: 20px; color: #121212;
+    .card:hover {
+      transform: scale(1.03);
     }
-    /* Popup-контакти */
+    .card .icon {
+      font-size: 24px;
+      margin-right: 14px;
+      width: 28px;
+      text-align: center;
+    }
+    .card .text {
+      font-size: 20px;
+      flex: 1;
+    }
+
+    /* Popup контакты */
     #contacts-popup {
       display: none;
       position: absolute;
-      top: 80px;
+      top: 100px;
+      left: 50%;
+      transform: translateX(-50%);
       background: rgba(0,0,0,0.9);
       padding: 20px;
       border-radius: 12px;
-      max-width: 300px;
+      width: calc(100% - 40px);
+      max-width: 320px;
+      z-index: 9;
       text-align: center;
     }
-    #contacts-popup button {
-      margin: 8px 0;
+    #contacts-popup .close-btn {
+      background: #E53935;
+      color: #FFFFFF;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 12px;
+    }
+    #contacts-popup button.contact {
+      display: block;
       width: 100%;
-      background: #03c75a;
-      color: #121212;
+      margin: 8px 0;
+      background: #1F1F1F;
+      color: #FFFFFF;
       border: none;
       padding: 10px;
       border-radius: 8px;
       cursor: pointer;
-    }
-    #contacts-popup .close-btn {
-      background: #d32f2f;
-      color: #fff;
-      padding: 6px 12px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      margin-bottom: 12px;
+      font-size: 16px;
     }
   </style>
 </head>
 <body>
 
-  <!-- Привітання з ім’ям -->
-  <div class="header" id="greeting">Вітаємо!</div>
+  <!-- Кнопка Закрити -->
+  <button id="close-btn" onclick="tg.close()">✖ Закрити</button>
+
+  <!-- Заголовок -->
+  <div class="app-title">
+    <div class="name">TeslaAssistantBot</div>
+    <div class="subtitle">mini-додаток</div>
+  </div>
+
+  <!-- Привітання -->
+  <div id="greeting">Вітаємо!</div>
 
   <!-- Меню -->
-  <div class="card" onclick="location.href='create.html'">
-    <h2>📩 Створити заявку</h2>
-  </div>
-  <div class="card" onclick="location.href='history.html'">
-    <h2>📜 Історія заявок</h2>
-  </div>
-  <div class="card" onclick="toggleContacts(event)">
-    <h2>📞 Контактна інформація</h2>
+  <div class="menu">
+    <div class="card" onclick="location.href='create.html'">
+      <div class="icon">📩</div>
+      <div class="text">Створити заявку</div>
+    </div>
+    <div class="card" onclick="location.href='history.html'">
+      <div class="icon">📜</div>
+      <div class="text">Історія заявок</div>
+    </div>
+    <div class="card" onclick="toggleContacts(event)">
+      <div class="icon">📞</div>
+      <div class="text">Контактна інформація</div>
+    </div>
   </div>
 
   <!-- Popup з контактами -->
   <div id="contacts-popup">
     <button class="close-btn" onclick="toggleContacts(event)">✖ Закрити</button>
-    <button onclick="window.location.href='tel:+380674679495'">
+    <button class="contact" onclick="window.location.href='tel:+380674679495'">
       📞 +38 067 467 94 95
     </button>
-    <button onclick="window.open(
+    <button class="contact" onclick="window.open(
         'https://www.google.com/maps/dir/?api=1&destination=Столичне+шосе+103,+Київ+03026','_blank')">
-      📍 Столичне шосе, 103, Київ, 03026
+      📍 Столичне шосе, 103, Київ
     </button>
   </div>
 
@@ -105,8 +185,13 @@
     function toggleContacts(e) {
       e.stopPropagation();
       const pop = document.getElementById('contacts-popup');
-      pop.style.display = pop.style.display === 'block' ? 'none' : 'block';
+      pop.style.display = (pop.style.display === 'block') ? 'none' : 'block';
     }
+
+    // Чтобы закрывать popup при клике вне
+    document.body.addEventListener('click', () => {
+      document.getElementById('contacts-popup').style.display = 'none';
+    });
   </script>
 </body>
 </html>
