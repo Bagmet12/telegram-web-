@@ -194,7 +194,7 @@
       if (!vin || vin==='Не вказано') return alert('Вкажіть VIN');
       localStorage.setItem('issue', document.getElementById('issue-type').value);
       const data = { vin, issue, user: tg.initDataUnsafe.user.first_name };
-      fetch('https://tesla-service-dashboard-eda44e4816de.herokuapp.com/api/save_request',{
+      fetch('https://crm.dolce.kyiv.ua/api/save_request',{
         method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)
       }).then(r=>r.json()).then(j=>alert(j.status==='ok'?'Заявку надіслано':'Помилка: '+j.message))
       .catch(()=>alert('Не вдалося надіслати заявку'));
