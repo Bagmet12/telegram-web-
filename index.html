@@ -4,38 +4,32 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Tesla Assistant</title>
-  <!-- Telegram WebApp -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    /* Общие */
     * { box-sizing: border-box; }
     html, body {
-      margin: 0;
-      padding: 0;
+      margin: 0; padding: 0;
       height: 100%;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      color: #FFFFFF;
+      color: #fff;
       background: url('tesla-bg.png') no-repeat center center fixed;
       background-size: cover;
       position: relative;
     }
 
-    /* Заголовок приложения */
     .app-title {
-      margin-top: 60px;
+      margin-top: 40px;
       text-align: center;
-      line-height: 1.2;
     }
     .app-title .name {
-      font-size: 28px;
+      font-size: 32px;
       font-weight: 600;
     }
     .app-title .subtitle {
-      font-size: 14px;
+      font-size: 16px;
       color: #CCCCCC;
     }
 
-    /* Привітання */
     #greeting {
       margin: 24px 0;
       font-size: 36px;
@@ -43,14 +37,14 @@
       text-align: center;
     }
 
-    /* Меню-карточки */
     .menu {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 24px;
       width: 100%;
-      max-width: 400px;
-      margin: 0 auto 40px;
+      max-width: 90%;
+      margin: 0 auto;
+      margin-top: 120px; /* опустили блок вниз */
       padding: 0 16px;
     }
     .card {
@@ -59,71 +53,69 @@
       background: rgba(0, 0, 0, 0.7);
       border: 2px solid #E53935;
       border-radius: 16px;
-      padding: 14px 20px;
+      padding: 24px 32px; /* увеличили паддинги */
       cursor: pointer;
       transition: transform 0.1s ease-in-out;
     }
-    .card:hover { transform: scale(1.03); }
+    .card:hover { transform: scale(1.04); }
     .card .icon {
-      font-size: 24px;
-      margin-right: 14px;
-      width: 28px;
+      font-size: 32px; /* увеличили иконку */
+      margin-right: 20px;
+      width: 36px;
       text-align: center;
     }
     .card .text {
-      font-size: 20px;
+      font-size: 22px; /* увеличили текст */
       flex: 1;
     }
 
-    /* Popup контакты */
     #contacts-popup {
       display: none;
       position: absolute;
-      top: 100px;
+      top: 300px; /* опустили popup ниже */
       left: 50%;
       transform: translateX(-50%);
       background: rgba(0,0,0,0.9);
-      padding: 20px;
-      border-radius: 12px;
-      width: calc(100% - 40px);
-      max-width: 320px;
+      padding: 24px;
+      border-radius: 16px;
+      width: calc(100% - 60px);
+      max-width: 360px;
       z-index: 9;
       text-align: center;
     }
     #contacts-popup .close-btn {
       background: #E53935;
-      color: #FFFFFF;
+      color: #FFF;
       border: none;
-      padding: 8px 12px;
-      border-radius: 6px;
+      padding: 10px 14px;
+      border-radius: 8px;
       cursor: pointer;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
+      font-size: 16px;
     }
     #contacts-popup button.contact {
       display: block;
       width: 100%;
-      margin: 8px 0;
+      margin: 10px 0;
       background: #1F1F1F;
-      color: #FFFFFF;
+      color: #FFF;
       border: none;
-      padding: 10px;
-      border-radius: 8px;
+      padding: 14px;
+      border-radius: 10px;
       cursor: pointer;
-      font-size: 16px;
+      font-size: 18px;
     }
   </style>
 </head>
 <body>
-  <!-- Заголовок -->
+
   <div class="app-title">
     <div class="name">TeslaAssistantBot</div>
     <div class="subtitle">mini-додаток</div>
   </div>
 
-  <!-- Привітання -->
   <div id="greeting">Вітаємо!</div>
 
-  <!-- Меню -->
   <div class="menu">
     <div class="card" onclick="location.href='create.html'">
       <div class="icon">📩</div>
@@ -139,7 +131,6 @@
     </div>
   </div>
 
-  <!-- Popup з контактами -->
   <div id="contacts-popup">
     <button class="close-btn" onclick="toggleContacts(event)">✖ Закрити</button>
     <button class="contact" onclick="window.location.href='tel:+380674679495'">
@@ -156,7 +147,6 @@
     tg.ready();
     tg.expand();
 
-    // Подтягуємо тільки ім'я
     const user = tg.initDataUnsafe?.user;
     if (user?.first_name) {
       document.getElementById('greeting').innerText =
@@ -168,11 +158,10 @@
       const pop = document.getElementById('contacts-popup');
       pop.style.display = (pop.style.display === 'block') ? 'none' : 'block';
     }
-
-    // Закрываем попап при клике вне его
     document.body.addEventListener('click', () => {
       document.getElementById('contacts-popup').style.display = 'none';
     });
   </script>
+
 </body>
 </html>
