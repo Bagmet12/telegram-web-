@@ -166,12 +166,9 @@
             Tesseract.recognize(canvas,'eng',{ tessedit_char_whitelist:'0123456789' })
               .then(({ data })=>{
                 const d = data.text.replace(/\D/g,'');
-                if (d.length>=6) {
-                  const l6 = d.slice(-6);
-                  document.getElementById('vin-input').value = l6;
-                  updateVin(l6);
-                  fi.style.display = 'none';
-                }
+          
+                 
+              
               });
           };
         };
