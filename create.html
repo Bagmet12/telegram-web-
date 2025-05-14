@@ -6,133 +6,169 @@
   <title>Створити заявку</title>
   <!-- Telegram WebApp -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- Tesseract OCR -->
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
   <style>
-    body {
+    /* === Общие === */
+    * { box-sizing: border-box; }
+    html, body {
       margin: 0;
-      padding: 20px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
-      background-color: #121212;
-      color: #fff;
+      padding: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #FFFFFF;
+      background: url('tesla-bg.png') no-repeat center center fixed;
+      background-size: cover;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 20px;
-    }
-    .back-btn {
-      align-self: flex-start;
-      background: #03c75a;
-      color: #121212;
-      border: none;
-      border-radius: 8px;
-      padding: 10px 16px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .back-btn:hover {
-      background: #02b14e;
-    }
-    .form-card {
-      background: #1e1e1e;
-      border-radius: 12px;
       padding: 20px;
-      max-width: 400px;
+    }
+
+    /* Заголовок страницы */
+    .page-header {
+      font-size: 32px;
+      font-weight: 500;
+      margin: 40px 0 20px;
+      text-align: center;
+    }
+
+    /* Карточка формы */
+    .form-card {
+      background: rgba(0,0,0,0.7);
+      border: 2px solid #E53935;
+      border-radius: 16px;
+      padding: 24px;
       width: 100%;
-      box-sizing: border-box;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
     }
-    .form-row {
-      margin-bottom: 15px;
-    }
+
+    /* Ряды формы */
     .form-row label {
       display: block;
-      margin-bottom: 5px;
-      color: #ccc;
+      margin-bottom: 6px;
+      font-size: 14px;
+      color: #CCCCCC;
     }
+
+    .form-row input[type="text"],
+    .form-row input[type="tel"],
+    .form-row input[type="file"],
+    .form-row textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #444;
+      background: #121212;
+      color: #fff;
+      font-size: 16px;
+    }
+
+    /* VIN row */
     .vin-row {
       display: flex;
       gap: 8px;
     }
     .vin-row input {
       flex: 1;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #333;
-      background: #121212;
-      color: #fff;
-      font-size: 16px;
     }
     .vin-row button {
       width: 48px;
-      background: #03c75a;
-      border: none;
-      border-radius: 8px;
-      font-size: 20px;
-      color: #121212;
+      height: 48px;
+      border: 2px solid #E53935;
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+      border-radius: 12px;
+      font-size: 24px;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: transform 0.1s;
     }
     .vin-row button:hover {
-      background: #02b14e;
+      transform: scale(1.05);
     }
-    textarea,
-    input[type="tel"],
-    input[type="file"] {
+
+    /* Видео скан и закрыть скан */
+    #video {
       width: 100%;
-      padding: 10px;
       border-radius: 8px;
-      border: 1px solid #333;
-      background: #121212;
+      display: none;
+      margin-top: 8px;
+    }
+    .close-scan {
+      display: none;
+      padding: 10px;
+      border: none;
+      border-radius: 12px;
+      background: #D32F2F;
       color: #fff;
       font-size: 16px;
-      box-sizing: border-box;
+      cursor: pointer;
+      transition: transform 0.1s;
     }
-    button.submit-btn {
-      width: 100%;
-      padding: 12px;
-      background: #03c75a;
-      border: none;
-      border-radius: 8px;
+    .close-scan:hover {
+      transform: scale(1.05);
+    }
+
+    /* Кнопка отправить */
+    .submit-btn {
+      padding: 14px;
+      border: 2px solid #E53935;
+      background: rgba(0,0,0,0.7);
+      color: #fff;
       font-size: 18px;
-      color: #121212;
+      border-radius: 16px;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: transform 0.1s;
     }
-    button.submit-btn:hover {
-      background: #02b14e;
+    .submit-btn:hover {
+      transform: scale(1.03);
     }
-    video {
+
+    /* Ссылка назад */
+    .back-card {
+      margin-top: 20px;
       width: 100%;
-      border-radius: 8px;
-      margin-top: 10px;
-      display: none;
-    }
-    button.close-scan {
-      display: none;
-      width: 100%;
-      padding: 10px;
-      background: #d32f2f;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      color: #fff;
+      max-width: 400px;
       cursor: pointer;
-      margin-top: 10px;
-      transition: background 0.2s;
     }
-    button.close-scan:hover {
-      background: #b02727;
+    .back-card .card {
+      display: flex;
+      align-items: center;
+      background: rgba(0,0,0,0.7);
+      border: 2px solid #E53935;
+      border-radius: 16px;
+      padding: 14px 20px;
+      transition: transform 0.1s;
+    }
+    .back-card .card:hover {
+      transform: scale(1.03);
+    }
+    .back-card .icon {
+      font-size: 24px;
+      margin-right: 12px;
+    }
+    .back-card .text {
+      font-size: 18px;
     }
   </style>
 </head>
 <body>
-  <!-- Кнопка назад -->
-  <button class="back-btn" onclick="location.href='index.html'">
-    ← Головна
-  </button>
 
+  <!-- Заголовок -->
+  <div class="page-header">Створити заявку</div>
+
+  <!-- Кнопка Назад -->
+  <div class="back-card" onclick="location.href='index.html'">
+    <div class="card">
+      <div class="icon">←</div>
+      <div class="text">На головну</div>
+    </div>
+  </div>
+
+  <!-- Форма -->
   <div class="form-card">
+
     <!-- VIN -->
     <div class="form-row">
       <label for="vin-input">VIN (17 символів)</label>
@@ -150,7 +186,7 @@
       <textarea id="problem" rows="4" placeholder="Опишіть проблему..."></textarea>
     </div>
 
-    <!-- Додати файл -->
+    <!-- Фото/видео -->
     <div class="form-row">
       <label for="file-input">Додати фото/відео</label>
       <input id="file-input" type="file" accept="image/*,video/*">
@@ -162,7 +198,7 @@
       <input id="phone-input" type="tel" placeholder="+380XXXXXXXXX">
     </div>
 
-    <!-- Кнопка Надіслати -->
+    <!-- Отправить -->
     <button class="submit-btn" onclick="submitForm()">Надіслати</button>
   </div>
 
@@ -174,9 +210,9 @@
     async function startScan() {
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-        const video = document.getElementById('video');
-        video.srcObject = stream;
-        video.style.display = 'block';
+        const videoEl = document.getElementById('video');
+        videoEl.srcObject = stream;
+        videoEl.style.display = 'block';
         document.querySelector('.close-scan').style.display = 'block';
 
         const canvas = document.createElement('canvas');
@@ -185,9 +221,9 @@
 
         const interval = setInterval(async () => {
           if (++attempts > 15) return clearInterval(interval);
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          ctx.drawImage(video, 0, 0);
+          canvas.width = videoEl.videoWidth;
+          canvas.height = videoEl.videoHeight;
+          ctx.drawImage(videoEl, 0, 0);
           const { data } = await Tesseract.recognize(canvas, 'eng', {
             tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
           });
@@ -199,7 +235,7 @@
           }
         }, 1000);
 
-      } catch (e) {
+      } catch {
         document.getElementById('file-input').click();
       }
     }
@@ -221,7 +257,7 @@
       const phone = document.getElementById('phone-input').value.trim();
       if (vin.length !== 17) return alert('VIN має містити 17 символів');
       if (!problem) return alert('Опишіть проблему');
-      // TODO: відправити на ваш API
+      // TODO: ваш API–вызов
       window.location.href = 'history.html';
     }
   </script>
