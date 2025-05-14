@@ -1,146 +1,116 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Історія заявок</title>
   <style>
     body {
       margin: 0;
-      padding: 0;
+      padding: 20px;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen;
       background: #121212;
       color: #fff;
     }
-    .history-container {
-      max-width: 500px;
-      margin: 0 auto;
-      padding: 60px 20px 40px;
-    }
     h1 {
       text-align: center;
-      font-size: 28px;
-      margin: 0;
-      padding-top: 20px;
+      margin-bottom: 20px;
+      font-size: 24px;
     }
 
-    /* Кнопка назад */
-    .back-card {
+    .back-btn {
+      display: block;
+      margin: 0 auto 20px;
+      padding: 10px 20px;
       background: #03c75a;
       color: #121212;
-      border-radius: 12px;
-      padding: 10px 0;
-      text-align: center;
-      margin: 20px auto;
-      max-width: 180px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
       cursor: pointer;
-      font-weight: 600;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.4);
-      transition: transform 0.2s, box-shadow 0.2s;
     }
-    .back-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 12px rgba(0,0,0,0.5);
+
+    .history-container {
+      max-width: 500px;
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
     }
 
     .request-card {
       background: #03c75a;
-      border-radius: 16px;
-      margin-bottom: 24px;
+      border-radius: 12px;
       overflow: hidden;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.4);
-      transition: transform 0.2s, box-shadow 0.2s;
-      cursor: pointer;
-    }
-    .request-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 24px rgba(0,0,0,0.5);
+      color: #121212;
     }
     .request-header {
-      padding: 20px;
+      padding: 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      cursor: pointer;
+    }
+    .request-header:hover {
+      background: #04d165;
     }
     .request-title {
       font-size: 18px;
-      font-weight: 600;
-      color: #121212;
+      font-weight: bold;
+      margin: 0;
     }
     .request-sub {
       font-size: 14px;
-      color: rgba(18,18,18,0.8);
+      color: #121212;
     }
-    .request-sub.vin {
-      margin-top: 4px;
-    }
+
     .request-body {
       display: none;
-      padding: 0 20px 20px;
-      background: rgba(0,0,0,0.1);
-      border-top: 1px solid rgba(18,18,18,0.5);
+      padding: 0 16px 16px;
+      border-top: 1px solid #029e49;
     }
     .request-body p {
-      margin: 12px 0;
-      color: #fff;
+      margin: 8px 0;
+      font-size: 15px;
     }
     .request-body a {
       color: #121212;
-      font-weight: bold;
-      text-decoration: none;
+      text-decoration: underline;
     }
 
-    /* Вертикальный степпер */
     .stepper {
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      margin-top: 20px;
+      gap: 10px;
+      margin-top: 16px;
     }
-    .step {
-      padding: 12px;
-      border-radius: 12px;
-      background: rgba(18,18,18,0.4);
-      color: #ccc;
-      text-align: center;
-      font-size: 14px;
-      position: relative;
-    }
-    .step.completed {
-      background: #121212;
-      color: #03c75a;
-      font-weight: bold;
-    }
-    .step.active {
-      background: #fff;
+    .step, .step-button {
+      background: #03c75a;
       color: #121212;
-      font-weight: bold;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 16px;
+      text-align: center;
+      border: none;
+      cursor: pointer;
     }
     .step-button {
-      display: inline-block;
-      margin-top: 8px;
-      padding: 6px 12px;
-      background: #121212;
-      color: #03c75a;
-      border: none;
-      border-radius: 6px;
-      font-size: 13px;
-      cursor: pointer;
-      text-decoration: none;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <h1>Історія заявок</h1>
 
-  <!-- Кнопка повернення на головну -->
-  <div class="back-card" onclick="location.href='index.html'">
+  <button class="back-btn" onclick="location.href='index.html'">
     ← Головна
-  </div>
+  </button>
+
+  <h1>Історія заявок</h1>
 
   <div class="history-container" id="history"></div>
 
   <script>
+    // Пример данных — замените на реальные из вашей CRM
     const requestsData = [
       {
         vin: '5YJ3E1EA7LF000001',
@@ -158,54 +128,55 @@
       }
     ];
 
-    const container = document.getElementById('history');
+    const histContainer = document.getElementById('history');
 
     requestsData.forEach((req, idx) => {
       const num = idx + 1;
+
+      // Создаём карточку
       const card = document.createElement('div');
       card.className = 'request-card';
 
-      // Header
+      // Заголовок
       const hdr = document.createElement('div');
       hdr.className = 'request-header';
       hdr.innerHTML = `
         <div>
-          <div class="request-title">Заявка №${num}</div>
-          <div class="request-sub vin">VIN: ${req.vin}</div>
+          <p class="request-title">Заявка №${num}</p>
+          <p class="request-sub">VIN: ${req.vin}</p>
         </div>
-        <div class="request-sub">${req.date}</div>
+        <p class="request-sub">${req.date}</p>
       `;
+      // Переключаем тело
+      hdr.addEventListener('click', () => {
+        bodyDiv.style.display = bodyDiv.style.display === 'block' ? 'none' : 'block';
+      });
       card.appendChild(hdr);
 
-      // Body
-      const body = document.createElement('div');
-      body.className = 'request-body';
-      body.innerHTML = `
+      // Тело заявки
+      const bodyDiv = document.createElement('div');
+      bodyDiv.className = 'request-body';
+      bodyDiv.innerHTML = `
         <p><strong>Опис проблеми:</strong> ${req.problem}</p>
         <p><strong>Телефон:</strong> <a href="tel:${req.phone}">${req.phone}</a></p>
         <p><strong>Файл:</strong> <a href="${req.fileUrl}" target="_blank">Переглянути</a></p>
         <div class="stepper">
-          <div class="step completed">1. Створена</div>
-          <div class="step active">
-            2. Переддіагностика
-            <a class="step-button" onclick="downloadPDF('${req.vin}')">Завантажити PDF</a>
-          </div>
+          <div class="step">1. Створена</div>
+          <button class="step-button" onclick="downloadPDF('${req.vin}')">
+            2. Переддіагностика — Завантажити PDF
+          </button>
           <div class="step">3. Висновок</div>
           <div class="step">4. Завершено</div>
         </div>
       `;
-      card.appendChild(body);
+      card.appendChild(bodyDiv);
 
-      // Toggle body on header click
-      hdr.addEventListener('click', () => {
-        body.style.display = body.style.display === 'block' ? 'none' : 'block';
-      });
-
-      container.appendChild(card);
+      histContainer.appendChild(card);
     });
 
     function downloadPDF(vin) {
-      alert('Завантажити PDF для ' + vin);
+      // Ваша логика получения PDF из CRM
+      alert('Завантажити PDF для VIN ' + vin);
     }
   </script>
 </body>
