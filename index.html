@@ -36,6 +36,10 @@
   </style>
 </head>
 <body>
+  <!-- Ваш заголовок/приветствие -->
+  <div class="header">Ласкаво просимо, Maks!</div>
+
+  <!-- Три карточки-маршрута -->
   <div class="card" onclick="location.href='create.html'">
     <h2>📩 Створити заявку</h2>
   </div>
@@ -45,21 +49,8 @@
   <div class="card" onclick="location.href='contacts.html'">
     <h2>📞 Контактна інформація</h2>
   </div>
+
+  <!-- Остальной ваш скрипт / футер и т.д. -->
 </body>
+
 </html>
-'''
-
-# Дополнительные пустые страницы-заглушки
-pages = {
-    "index.html": html_code,
-    "create.html": "<h1>Створення заявки</h1>",
-    "history.html": "<h1>Історія заявок</h1>",
-    "contacts.html": "<h1>Контактна інформація</h1>"
-}
-
-output_dir = "/mnt/data/webapp_blocks"
-os.makedirs(output_dir, exist_ok=True)
-
-for filename, content in pages.items():
-    with open(os.path.join(output_dir, filename), "w", encoding="utf-8") as f:
-        f.write(content)
