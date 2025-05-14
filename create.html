@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Створити заявку</title>
   <!-- Telegram WebApp -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -13,22 +13,34 @@
       margin: 0;
       padding: 20px;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
-      background: linear-gradient(135deg, #0f1e3a, #1a2a52);
-      background-attachment: fixed;
+      background-color: #121212;
       color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+    .back-btn {
+      align-self: flex-start;
+      background: #03c75a;
+      color: #121212;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .back-btn:hover {
+      background: #02b14e;
     }
     .form-card {
-      background-color: rgba(30, 30, 30, 0.85);
+      background: #1e1e1e;
       border-radius: 12px;
       padding: 20px;
       max-width: 400px;
-      margin: auto;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-      transition: background 0.2s ease, box-shadow 0.2s ease;
-    }
-    .form-card:hover {
-      background-color: rgba(40, 40, 40, 0.85);
-      box-shadow: 0 6px 24px rgba(0,0,0,0.7);
+      width: 100%;
+      box-sizing: border-box;
     }
     .form-row {
       margin-bottom: 15px;
@@ -47,9 +59,9 @@
       padding: 10px;
       border-radius: 8px;
       border: 1px solid #333;
-      font-size: 16px;
       background: #121212;
       color: #fff;
+      font-size: 16px;
     }
     .vin-row button {
       width: 48px;
@@ -57,14 +69,16 @@
       border: none;
       border-radius: 8px;
       font-size: 20px;
+      color: #121212;
       cursor: pointer;
-      color: #fff;
-      transition: opacity 0.2s ease;
+      transition: background 0.2s;
     }
     .vin-row button:hover {
-      opacity: 0.8;
+      background: #02b14e;
     }
-    textarea, input[type="tel"], input[type="file"] {
+    textarea,
+    input[type="tel"],
+    input[type="file"] {
       width: 100%;
       padding: 10px;
       border-radius: 8px;
@@ -72,6 +86,7 @@
       background: #121212;
       color: #fff;
       font-size: 16px;
+      box-sizing: border-box;
     }
     button.submit-btn {
       width: 100%;
@@ -80,13 +95,12 @@
       border: none;
       border-radius: 8px;
       font-size: 18px;
+      color: #121212;
       cursor: pointer;
-      margin-top: 10px;
-      font-weight: bold;
-      transition: opacity 0.2s ease;
+      transition: background 0.2s;
     }
     button.submit-btn:hover {
-      opacity: 0.8;
+      background: #02b14e;
     }
     video {
       width: 100%;
@@ -102,17 +116,22 @@
       border: none;
       border-radius: 8px;
       font-size: 16px;
+      color: #fff;
       cursor: pointer;
       margin-top: 10px;
-      color: #fff;
-      transition: opacity 0.2s ease;
+      transition: background 0.2s;
     }
     button.close-scan:hover {
-      opacity: 0.8;
+      background: #b02727;
     }
   </style>
 </head>
 <body>
+  <!-- Кнопка назад -->
+  <button class="back-btn" onclick="location.href='index.html'">
+    ← Головна
+  </button>
+
   <div class="form-card">
     <!-- VIN -->
     <div class="form-row">
@@ -124,21 +143,25 @@
       <video id="video" autoplay playsinline></video>
       <button class="close-scan" onclick="stopScan()">✖ Закрити скан</button>
     </div>
+
     <!-- Опис проблеми -->
     <div class="form-row">
       <label for="problem">Опис проблеми</label>
       <textarea id="problem" rows="4" placeholder="Опишіть проблему..."></textarea>
     </div>
+
     <!-- Додати файл -->
     <div class="form-row">
       <label for="file-input">Додати фото/відео</label>
       <input id="file-input" type="file" accept="image/*,video/*">
     </div>
+
     <!-- Телефон -->
     <div class="form-row">
       <label for="phone-input">Номер телефону</label>
       <input id="phone-input" type="tel" placeholder="+380XXXXXXXXX">
     </div>
+
     <!-- Кнопка Надіслати -->
     <button class="submit-btn" onclick="submitForm()">Надіслати</button>
   </div>
@@ -165,7 +188,6 @@
           canvas.width = video.videoWidth;
           canvas.height = video.videoHeight;
           ctx.drawImage(video, 0, 0);
-
           const { data } = await Tesseract.recognize(canvas, 'eng', {
             tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
           });
@@ -189,7 +211,8 @@
     }
 
     function updateVin(val) {
-      document.getElementById('vin-input').value = val.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,17);
+      document.getElementById('vin-input').value =
+        val.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,17);
     }
 
     function submitForm() {
@@ -198,6 +221,7 @@
       const phone = document.getElementById('phone-input').value.trim();
       if (vin.length !== 17) return alert('VIN має містити 17 символів');
       if (!problem) return alert('Опишіть проблему');
+      // TODO: відправити на ваш API
       window.location.href = 'history.html';
     }
   </script>
