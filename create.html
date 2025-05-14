@@ -169,16 +169,31 @@
   <!-- Форма -->
   <div class="form-card">
 
-    <!-- VIN -->
+    <!-- VIN автомобіля -->
     <div class="form-row">
-      <label for="vin-input">VIN (17 символів)</label>
+      <label for="vin-input-car">VIN автомобіля (17 символів)</label>
       <div class="vin-row">
-        <input id="vin-input" type="text" maxlength="17" placeholder="Введіть VIN..." oninput="updateVin(this.value)">
-        <button onclick="startScan()">📷</button>
+        <input id="vin-input-car" type="text" maxlength="17"
+               placeholder="Введіть VIN авто..."
+               oninput="updateVin('vin-input-car', this.value)">
+        <button onclick="startScan('vin-input-car')">📷</button>
       </div>
-      <video id="video" autoplay playsinline></video>
-      <button class="close-scan" onclick="stopScan()">✖ Закрити скан</button>
     </div>
+
+    <!-- VIN комп’ютера -->
+    <div class="form-row">
+      <label for="vin-input-ecu">VIN комп’ютера (17 символів)</label>
+      <div class="vin-row">
+        <input id="vin-input-ecu" type="text" maxlength="17"
+               placeholder="Введіть VIN комп’ютера..."
+               oninput="updateVin('vin-input-ecu', this.value)">
+        <button onclick="startScan('vin-input-ecu')">📷</button>
+      </div>
+    </div>
+
+    <!-- Видео и кнопка закрыть скан -->
+    <video id="video" autoplay playsinline></video>
+    <button class="close-scan" onclick="stopScan()">✖ Закрити скан</button>
 
     <!-- Опис проблеми -->
     <div class="form-row">
@@ -186,7 +201,7 @@
       <textarea id="problem" rows="4" placeholder="Опишіть проблему..."></textarea>
     </div>
 
-    <!-- Фото/видео -->
+    <!-- Фото/відео -->
     <div class="form-row">
       <label for="file-input">Додати фото/відео</label>
       <input id="file-input" type="file" accept="image/*,video/*">
@@ -206,10 +221,14 @@
     const tg = window.Telegram.WebApp;
     tg.ready(); tg.expand();
 
-    let stream;
-    async function startScan() {
+    let stream, activeVinField;
+
+    async function startScan(fieldId) {
+      activeVinField = fieldId;
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' }
+        });
         const videoEl = document.getElementById('video');
         videoEl.srcObject = stream;
         videoEl.style.display = 'block';
@@ -220,7 +239,10 @@
         let attempts = 0;
 
         const interval = setInterval(async () => {
-          if (++attempts > 15) return clearInterval(interval);
+          if (++attempts > 15) {
+            clearInterval(interval);
+            return;
+          }
           canvas.width = videoEl.videoWidth;
           canvas.height = videoEl.videoHeight;
           ctx.drawImage(videoEl, 0, 0);
@@ -231,7 +253,7 @@
           if (txt.length >= 17) {
             clearInterval(interval);
             stopScan();
-            document.getElementById('vin-input').value = txt.slice(0,17);
+            document.getElementById(activeVinField).value = txt.slice(0,17);
           }
         }, 1000);
 
@@ -246,18 +268,20 @@
       document.querySelector('.close-scan').style.display = 'none';
     }
 
-    function updateVin(val) {
-      document.getElementById('vin-input').value =
+    function updateVin(fieldId, val) {
+      document.getElementById(fieldId).value =
         val.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,17);
     }
 
     function submitForm() {
-      const vin = document.getElementById('vin-input').value.trim();
+      const vinCar = document.getElementById('vin-input-car').value.trim();
+      const vinEcu = document.getElementById('vin-input-ecu').value.trim();
       const problem = document.getElementById('problem').value.trim();
       const phone = document.getElementById('phone-input').value.trim();
-      if (vin.length !== 17) return alert('VIN має містити 17 символів');
+      if (vinCar.length !== 17) return alert('VIN автомобіля має містити 17 символів');
+      if (vinEcu.length !== 17) return alert('VIN комп’ютера має містити 17 символів');
       if (!problem) return alert('Опишіть проблему');
-      // TODO: ваш API–вызов
+      // TODO: ваш API–вызов с vinCar, vinEcu, problem, phone, файлом
       window.location.href = 'history.html';
     }
   </script>
