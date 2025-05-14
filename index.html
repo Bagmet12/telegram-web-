@@ -1,124 +1,112 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Tesla Assistant</title>
+  <!-- Telegram WebApp -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     body {
-      margin: 0;
-      padding: 20px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen;
-      background: #121212;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 20px;
+      margin: 0; padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+      background-color: #121212; color: #fff;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 20px;
     }
-
     .header {
-      font-size: 24px;
-      font-weight: bold;
+      font-size: 24px; font-weight: bold;
+      margin-top: 10px;
     }
-
     .card {
-      width: 100%;
-      max-width: 400px;
-      background: #03c75a;
+      background-color: #03c75a;
       border-radius: 12px;
-      padding: 16px;
-      text-align: center;
-      font-size: 18px;
-      cursor: pointer;
-      transition: background 0.2s;
-      color: #121212;
+      padding: 16px 24px;
+      width: 100%; max-width: 400px;
+      text-align: center; cursor: pointer;
+      transition: transform .1s ease-in-out;
     }
-    .card:hover {
-      background: #04d165;
+    .card:hover { transform: scale(1.02); }
+    .card h2 {
+      margin: 0; font-size: 20px; color: #121212;
     }
-
-    /* всплывашка */
+    /* Popup-контакти */
     #contacts-popup {
       display: none;
-      position: fixed;
-      top:0; left:0; right:0; bottom:0;
-      background: rgba(0,0,0,0.8);
-      justify-content: center;
-      align-items: center;
-      z-index: 10;
-    }
-    #contacts-popup .popup {
-      background: #1e1e1e;
+      position: absolute;
+      top: 80px;
+      background: rgba(0,0,0,0.9);
       padding: 20px;
       border-radius: 12px;
-      text-align: center;
-      width: 90%;
       max-width: 300px;
+      text-align: center;
     }
-    #contacts-popup .popup button {
-      display: block;
+    #contacts-popup button {
+      margin: 8px 0;
       width: 100%;
-      margin-top: 12px;
-      padding: 10px;
-      font-size: 16px;
+      background: #03c75a;
+      color: #121212;
       border: none;
+      padding: 10px;
       border-radius: 8px;
       cursor: pointer;
     }
-    .close-btn { background: #d32f2f; color: #fff; }
-    .call-btn, .map-btn { background: #03c75a; color: #121212; }
+    #contacts-popup .close-btn {
+      background: #d32f2f;
+      color: #fff;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 12px;
+    }
   </style>
 </head>
 <body>
 
+  <!-- Привітання з ім’ям -->
   <div class="header" id="greeting">Вітаємо!</div>
 
-  <div class="card" onclick="location.href='create.html'">📩 Створити заявку</div>
-  <div class="card" onclick="location.href='history.html'">📜 Історія заявок</div>
-  <div class="card" id="contacts-card">📞 Контактна інформація</div>
+  <!-- Меню -->
+  <div class="card" onclick="location.href='create.html'">
+    <h2>📩 Створити заявку</h2>
+  </div>
+  <div class="card" onclick="location.href='history.html'">
+    <h2>📜 Історія заявок</h2>
+  </div>
+  <div class="card" onclick="toggleContacts(event)">
+    <h2>📞 Контактна інформація</h2>
+  </div>
 
+  <!-- Popup з контактами -->
   <div id="contacts-popup">
-    <div class="popup">
-      <button class="close-btn" id="contacts-close">✖ Закрити</button>
-      <button class="call-btn" onclick="location.href='tel:+380674679495'">
-        📞 +38 067 467 94 95
-      </button>
-      <button class="map-btn" onclick="window.open(
-        'https://www.google.com/maps/dir/?api=1&destination=Столичне+шосе,+103+Київ,+03026',
-        '_blank'
-      )">
-        📍 Столичне шосе, 103, Київ, 03026
-      </button>
-    </div>
+    <button class="close-btn" onclick="toggleContacts(event)">✖ Закрити</button>
+    <button onclick="window.location.href='tel:+380674679495'">
+      📞 +38 067 467 94 95
+    </button>
+    <button onclick="window.open(
+        'https://www.google.com/maps/dir/?api=1&destination=Столичне+шосе+103,+Київ+03026','_blank')">
+      📍 Столичне шосе, 103, Київ, 03026
+    </button>
   </div>
 
   <script>
-    // инициализируем WebApp
-    const tg = window.Telegram?.WebApp;
-    if (tg) {
-      tg.ready();
-      const user = tg.initDataUnsafe.user || {};
-      const name = user.first_name || 'Користувач';
-      const uid  = user.id          || '—';
-      document.getElementById('greeting')
-              .innerText = `Вітаємо, ${name}! (ID: ${uid})`;
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
+
+    // Подтягуємо тільки ім'я
+    const user = tg.initDataUnsafe?.user;
+    if (user?.first_name) {
+      document.getElementById('greeting').innerText =
+        `Вітаємо, ${user.first_name}!`;
     }
 
-    // попап контактов
-    const contactsCard = document.getElementById('contacts-card');
-    const popup = document.getElementById('contacts-popup');
-    const closeBtn = document.getElementById('contacts-close');
-
-    contactsCard.addEventListener('click', () => popup.style.display = 'flex');
-    closeBtn.addEventListener('click', e => {
+    function toggleContacts(e) {
       e.stopPropagation();
-      popup.style.display = 'none';
-    });
-    popup.addEventListener('click', e => {
-      if (e.target === popup) popup.style.display = 'none';
-    });
+      const pop = document.getElementById('contacts-popup');
+      pop.style.display = pop.style.display === 'block' ? 'none' : 'block';
+    }
   </script>
-
 </body>
 </html>
