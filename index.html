@@ -20,19 +20,6 @@
       position: relative;
     }
 
-    /* Кнопка “Закрити” */
-    #close-btn {
-      position: absolute;
-      top: 16px;
-      left: 16px;
-      background: transparent;
-      border: none;
-      color: #E53935;
-      font-size: 18px;
-      cursor: pointer;
-      z-index: 10;
-    }
-
     /* Заголовок приложения */
     .app-title {
       margin-top: 60px;
@@ -76,9 +63,7 @@
       cursor: pointer;
       transition: transform 0.1s ease-in-out;
     }
-    .card:hover {
-      transform: scale(1.03);
-    }
+    .card:hover { transform: scale(1.03); }
     .card .icon {
       font-size: 24px;
       margin-right: 14px;
@@ -129,10 +114,6 @@
   </style>
 </head>
 <body>
-
-  <!-- Кнопка Закрити -->
-  <button id="close-btn" onclick="tg.close()">✖ Закрити</button>
-
   <!-- Заголовок -->
   <div class="app-title">
     <div class="name">TeslaAssistantBot</div>
@@ -188,7 +169,7 @@
       pop.style.display = (pop.style.display === 'block') ? 'none' : 'block';
     }
 
-    // Чтобы закрывать popup при клике вне
+    // Закрываем попап при клике вне его
     document.body.addEventListener('click', () => {
       document.getElementById('contacts-popup').style.display = 'none';
     });
