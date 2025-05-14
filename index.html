@@ -17,22 +17,31 @@
       position: relative;
     }
 
-    .app-title {
-      margin-top: 40px;
-      text-align: center;
+    /* Статичный квадратик с заголовком */
+    .header-card {
+      background: rgba(0,0,0,0.7);
+      border: 2px solid #E53935;
+      border-radius: 16px;
+      padding: 24px 32px;
+      max-width: 90%;
+      width: 100%;
+      margin: 40px auto 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
     }
-    .app-title .name {
+
+    .header-card .name {
       font-size: 32px;
       font-weight: 600;
     }
-    .app-title .subtitle {
+    .header-card .subtitle {
       font-size: 16px;
       color: #CCCCCC;
     }
-
     #greeting {
-      margin: 24px 0;
-      font-size: 36px;
+      font-size: 28px;
       font-weight: 500;
       text-align: center;
     }
@@ -44,7 +53,7 @@
       width: 100%;
       max-width: 90%;
       margin: 0 auto;
-      margin-top: 120px; /* опустили блок вниз */
+      margin-top: 120px; /* опустили вниз */
       padding: 0 16px;
     }
     .card {
@@ -53,26 +62,26 @@
       background: rgba(0, 0, 0, 0.7);
       border: 2px solid #E53935;
       border-radius: 16px;
-      padding: 24px 32px; /* увеличили паддинги */
+      padding: 24px 32px;
       cursor: pointer;
       transition: transform 0.1s ease-in-out;
     }
     .card:hover { transform: scale(1.04); }
     .card .icon {
-      font-size: 32px; /* увеличили иконку */
+      font-size: 32px;
       margin-right: 20px;
       width: 36px;
       text-align: center;
     }
     .card .text {
-      font-size: 22px; /* увеличили текст */
+      font-size: 22px;
       flex: 1;
     }
 
     #contacts-popup {
       display: none;
       position: absolute;
-      top: 300px; /* опустили popup ниже */
+      top: 300px;
       left: 50%;
       transform: translateX(-50%);
       background: rgba(0,0,0,0.9);
@@ -109,13 +118,14 @@
 </head>
 <body>
 
-  <div class="app-title">
+  <!-- Статичный header-card -->
+  <div class="header-card">
     <div class="name">TeslaAssistantBot</div>
     <div class="subtitle">mini-додаток</div>
+    <div id="greeting">Вітаємо!</div>
   </div>
 
-  <div id="greeting">Вітаємо!</div>
-
+  <!-- Меню-карточки -->
   <div class="menu">
     <div class="card" onclick="location.href='create.html'">
       <div class="icon">📩</div>
@@ -131,13 +141,16 @@
     </div>
   </div>
 
+  <!-- Popup контактов -->
   <div id="contacts-popup">
     <button class="close-btn" onclick="toggleContacts(event)">✖ Закрити</button>
     <button class="contact" onclick="window.location.href='tel:+380674679495'">
       📞 +38 067 467 94 95
     </button>
     <button class="contact" onclick="window.open(
-        'https://www.google.com/maps/dir/?api=1&destination=Столичне+шосе+103,+Київ+03026','_blank')">
+      'https://www.google.com/maps/dir/?api=1&destination=Столичне+шосе+103,+Київ+03026',
+      '_blank'
+    )">
       📍 Столичне шосе, 103, Київ
     </button>
   </div>
