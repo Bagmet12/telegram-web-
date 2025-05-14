@@ -1,202 +1,65 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta name="format-detection" content="telephone=yes">
   <meta charset="UTF-8">
-  <title>Tesla Assistant</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Telegram WebApp script -->
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- Tesseract OCR -->
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+  <title>Tesla Assistant</title>
   <style>
     body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto;
       background-color: #121212;
-      color: #fff;
+      color: white;
       padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
     }
-    .header { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
-    .subtext { font-size: 14px; color: #bbb; }
-    .vin-display { font-size: 16px; font-weight: bold; margin: 5px 0 20px; }
-    .scanner-area { background: #1e1e1e; border-radius: 12px; padding: 12px; margin-bottom: 20px; }
-    #video { width: 100%; border-radius: 8px; margin-top: 10px; display: none; }
-    #close-scan { display: none; margin-top: 10px; background: #d32f2f; }
-    input[type=file] { display: none; margin-top: 10px; }
-    .card { background-color: #1e1e1e; border-radius: 12px; padding: 14px; margin-bottom: 0; font-size: 15px; cursor: pointer; }
-    .card + .section-content { margin-bottom: 12px; display: none; background-color: #1e1e1e; border-radius: 0 0 12px 12px; padding: 12px 14px; }
-    .card strong { display: block; }
-    button, input, select, textarea { width: 100%; padding: 10px; margin-top: 10px; border-radius: 8px; border: none; font-size: 16px; }
-    button { background-color: #03c75a; color: #fff; font-weight: bold; cursor: pointer; }
-    .form-card { background: #1e1e1e; border-radius: 12px; padding: 15px; margin-top: 20px; }
-    .form-row { margin-bottom: 15px; }
-    .form-row label { display: block; margin-bottom: 5px; color: #ccc; }
-    a { color: #03c75a; text-decoration: none; }
+    .card {
+      background-color: #1e1e1e;
+      border-radius: 12px;
+      padding: 20px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .card:hover {
+      background-color: #2c2c2c;
+    }
+    .card h2 {
+      margin: 0;
+      font-size: 20px;
+    }
   </style>
 </head>
 <body>
-  <div class="header" id="greeting">Вітаємо!</div>
-  <div class="subtext">Ваш VIN — коннектов</div>
-  <div class="vin-display" id="vin-display">Не вказано</div>
-
-  <!-- Scanner -->
-  <div class="scanner-area">
-    <div class="form-row">
-      <label for="vin-input">Останні 6 символів VIN</label>
-      <input type="text" id="vin-input" maxlength="6" placeholder="123456" oninput="updateVin(this.value)">
-    </div>
-    <button onclick="startScan()">📷 Сканувати VIN</button>
-    <button id="close-scan" onclick="stopScan()">✖ Закрити скан</button>
-    <video id="video" autoplay playsinline></video>
-    <button onclick="saveVin()">💾 Зберегти VIN</button>
-    <input type="file" id="file-input" accept="image/*;capture=camera">
+  <div class="card" onclick="location.href='create.html'">
+    <h2>📩 Створити заявку</h2>
   </div>
-
-  <!-- Sections -->
-  <div class="card" onclick="toggleSection('status-sec')">
-    <strong>🔧 Статус ремонту</strong>
+  <div class="card" onclick="location.href='history.html'">
+    <h2>📜 Історія заявок</h2>
   </div>
-  <div id="status-sec" class="section-content">
-    <p>🟡 В процесі</p>
+  <div class="card" onclick="location.href='contacts.html'">
+    <h2>📞 Контактна інформація</h2>
   </div>
-
-  <div class="card" onclick="toggleSection('pdf-sec')">
-    <strong>📄 Отримати PDF звіт</strong>
-  </div>
-  <div id="pdf-sec" class="section-content">
-    <button onclick="downloadPDF()">Завантажити PDF</button>
-  </div>
-
-  <div class="card" onclick="toggleSection('contact-sec')">
-    <strong>📞 Контактна інформація</strong>
-  </div>
-  <div id="contact-sec" class="section-content">
-    <div style="display:flex; flex-direction:column; gap:10px;">
-      <button onclick="tg.openLink('tel:+380674679495')">📞 +38 067 467 94 95</button>
-      <button onclick="tg.openLink('https://www.google.com/maps/dir/?api=1&destination=%D0%A1%D1%82%D0%BE%D0%BB%D0%B8%D1%87%D0%BD%D0%B5+%D1%88%D0%BE%D1%81%D0%B5,+103,+%D0%9A%D0%B8%D1%97%D0%B2,+03026')">📍 Столичне шосе, 103, Київ, 03026</button>
-    </div>
-  </div>
-  </div>
-  </div>
-  </div>
-
-  <div class="card" onclick="toggleSection('errors-sec')">
-    <strong>⚠️ Поточні помилки</strong>
-  </div>
-  <div id="errors-sec" class="section-content">
-    <p>• P1234 – зниження потужності (<em>можна їхати</em>)</p>
-    <p>• P5678 – проблема з гальмами (<strong>зупинитися</strong>)</p>
-  </div>
-
-  <!-- Form to admin -->
-  <div class="form-card">
-    <strong>📩 Надіслати адміну</strong>
-    <div class="form-row">
-      <label>Тип проблеми</label>
-      <select id="issue-type">
-        <option value="Заміна комп’ютера">Заміна комп’ютера</option>
-        <option value="Поломка автопілота">Поломка автопілота</option>
-        <option value="Оновлення ПЗ">Оновлення ПЗ</option>
-        <option value="Інше">Інше</option>
-      </select>
-    </div>
-    <div class="form-row">
-      <label for="custom-issue">Інша проблема (опис)</label>
-      <textarea id="custom-issue" placeholder="Опишіть проблему"></textarea>
-    </div>
-    <button onclick="submitForm()">Надіслати</button>
-  </div>
-
-  <script>
-    const tg = window.Telegram.WebApp; tg.ready(); tg.expand();
-    document.getElementById('greeting').innerText = `Вітаємо, ${tg.initDataUnsafe.user.first_name || 'користувач'}!`;
-
-    // Restore saved data
-    window.onload = () => {
-      const sv = localStorage.getItem('vin'); if (sv) updateVin(sv);
-      const si = localStorage.getItem('issue'); if (si) document.getElementById('issue-type').value = si;
-    };
-
-    function updateVin(val) {
-      document.getElementById('vin-display').innerText = val || 'Не вказано';
-    }
-
-    function toggleSection(id) {
-      const el = document.getElementById(id);
-      el.style.display = (el.style.display === 'block' ? 'none' : 'block');
-    }
-
-    let currentStream;
-    async function startScan() {
-      try {
-        currentStream = await navigator.mediaDevices.getUserMedia({ video:{facingMode:'environment'} });
-        const video = document.getElementById('video');
-        video.srcObject = currentStream; video.style.display = 'block';
-        document.getElementById('close-scan').style.display = 'block';
-        // OCR capture
-        const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d');
-        let attempts=0;
-        const max=20;
-        const interval = setInterval(async ()=>{
-          if (++attempts > max) return clearInterval(interval);
-          canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-          ctx.drawImage(video,0,0);
-          const { data } = await Tesseract.recognize(canvas,'eng',{ tessedit_char_whitelist:'0123456789' });
-          const digits = data.text.replace(/\D/g,'');
-          if (digits.length>=6) {
-            clearInterval(interval);
-            stopScan();
-            const last6 = digits.slice(-6);
-            document.getElementById('vin-input').value = last6;
-            updateVin(last6);
-          }
-        },1000);
-      } catch (err) {
-        // Fallback photo input
-        const fi = document.getElementById('file-input');
-        fi.style.display = 'block';
-        fi.onchange = e => {
-          const file = e.target.files[0];
-          const img = new Image(); img.src = URL.createObjectURL(file);
-          img.onload = ()=>{
-            const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d');
-            canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
-            ctx.drawImage(img,0,0);
-            Tesseract.recognize(canvas,'eng',{ tessedit_char_whitelist:'0123456789' })
-              .then(({ data })=>{
-                const d = data.text.replace(/\D/g,'');
-          
-                 
-              
-              });
-          };
-        };
-      }
-    }
-    function stopScan() {
-      if (currentStream) currentStream.getTracks().forEach(t=>t.stop());
-      document.getElementById('video').style.display='none';
-      document.getElementById('close-scan').style.display='none';
-    }
-    function saveVin() {
-      const vin = document.getElementById('vin-input').value.trim();
-      if (vin.length===6) { localStorage.setItem('vin',vin); updateVin(vin); alert('VIN збережено'); }
-      else alert('Введіть 6 символів VIN');
-    }
-    function submitForm() {
-      const vin = document.getElementById('vin-display').innerText;
-      let issue = document.getElementById('issue-type').value;
-      if (issue==='Інше') issue = document.getElementById('custom-issue').value.trim();
-      if (!vin || vin==='Не вказано') return alert('Вкажіть VIN');
-      localStorage.setItem('issue', document.getElementById('issue-type').value);
-      const data = { vin, issue, user: tg.initDataUnsafe.user.first_name };
-      fetch('https://crm.dolce.kyiv.ua/api/save_request',{
-        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)
-      }).then(r=>r.json()).then(j=>alert(j.status==='ok'?'Заявку надіслано':'Помилка: '+j.message))
-      .catch(()=>alert('Не вдалося надіслати заявку'));
-    }
-    function downloadPDF() { alert('PDF скоро буде доступний'); }
-  </script>
 </body>
 </html>
+'''
+
+# Дополнительные пустые страницы-заглушки
+pages = {
+    "index.html": html_code,
+    "create.html": "<h1>Створення заявки</h1>",
+    "history.html": "<h1>Історія заявок</h1>",
+    "contacts.html": "<h1>Контактна інформація</h1>"
+}
+
+output_dir = "/mnt/data/webapp_blocks"
+os.makedirs(output_dir, exist_ok=True)
+
+for filename, content in pages.items():
+    with open(os.path.join(output_dir, filename), "w", encoding="utf-8") as f:
+        f.write(content)
