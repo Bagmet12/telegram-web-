@@ -4,41 +4,46 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tesla Assistant</title>
+  <!-- Telegram WebApp -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     body {
       margin: 0;
-      padding: 20px;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen;
-      background: linear-gradient(135deg, #0f1e3a, #1a2a52);
-      background-attachment: fixed;
+      background-color: #121212;
       color: #fff;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 20px;
+      padding: 20px;
+      gap: 30px;
+    }
+    #greeting {
+      font-size: 24px;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 20px;
     }
     .card {
-      background-color: rgba(30, 30, 30, 0.85);
+      background-color: #03c75a;
       border-radius: 12px;
-      padding: 20px;
       width: 100%;
-      max-width: 400px;
+      max-width: 350px;
+      padding: 20px;
       text-align: center;
       cursor: pointer;
-      transition: background 0.2s ease, box-shadow 0.2s ease;
-      position: relative;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      transition: background 0.2s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
     }
     .card:hover {
-      background-color: rgba(40, 40, 40, 0.85);
-      box-shadow: 0 6px 24px rgba(0,0,0,0.7);
+      background-color: #02b14e;
     }
     .card h2 {
       margin: 0;
-      font-size: 20px;
+      font-size: 22px;
+      color: #121212;
     }
-
-    /* контактное всплывающее окно */
+    /* popup contacts */
     #contacts-popup {
       display: none;
       position: absolute;
@@ -48,6 +53,7 @@
       border-radius: 12px;
       padding: 20px;
       box-sizing: border-box;
+      display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
@@ -55,36 +61,28 @@
     #contacts-popup button {
       margin: 10px 0;
       width: 100%;
+      max-width: 300px;
       background: #03c75a;
       border: none;
       border-radius: 8px;
-      padding: 12px;
+      padding: 14px;
       font-size: 16px;
       color: #121212;
       cursor: pointer;
-      transition: opacity 0.2s ease;
-    }
-    #contacts-popup button:hover {
-      opacity: 0.8;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
     #contacts-popup .close-btn {
-      position: absolute;
-      top: 10px; right: 10px;
       background: #d32f2f;
-      color: #fff;
-      padding: 6px 12px;
+      position: absolute;
+      top: 20px; right: 20px;
+      padding: 8px 12px;
       font-size: 14px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: opacity 0.2s ease;
-    }
-    #contacts-popup .close-btn:hover {
-      opacity: 0.8;
+      color: #fff;
     }
   </style>
 </head>
 <body>
+  <div id="greeting">Вітаємо!</div>
 
   <div class="card" onclick="location.href='create.html'">
     <h2>📩 Створити заявку</h2>
@@ -98,20 +96,31 @@
     <h2>📞 Контактна інформація</h2>
     <div id="contacts-popup">
       <button class="close-btn" onclick="toggleContacts(event)">✖ Закрити</button>
-      <button onclick="window.location.href='tel:+380674679495'">📞 +38 067 467 94 95</button>
-      <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=Столичне+шосе+103,+Київ+03026','_blank')">
+      <button onclick="window.location.href='tel:+380674679495'">
+        📞 +38 067 467 94 95
+      </button>
+      <button onclick="window.open(
+          'https://www.google.com/maps/dir/?api=1&destination=Столичне+шосе+103,+Київ+03026',
+          '_blank'
+        )">
         📍 Столичне шосе, 103, Київ, 03026
       </button>
     </div>
   </div>
 
   <script>
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+
+    // Вставляем имя пользователя
+    const firstName = tg.initDataUnsafe?.user?.first_name || 'користувач';
+    document.getElementById('greeting').innerText = `Вітаємо, ${firstName}!`;
+
     function toggleContacts(e) {
       e.stopPropagation();
       const popup = document.getElementById('contacts-popup');
       popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
     }
   </script>
-
 </body>
 </html>
