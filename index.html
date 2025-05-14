@@ -1,124 +1,148 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Tesla Assistant</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     body {
       margin: 0;
+      padding: 20px;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen;
-      background-color: #121212;
+      background: #121212;
       color: #fff;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 20px;
-      gap: 30px;
+      gap: 20px;
     }
-    #greeting {
-      font-size: 24px;
+
+    .header {
+      font-size: 22px;
       font-weight: bold;
-      text-align: center;
-      margin-top: 20px;
     }
+
     .card {
-      position: relative; /* добавили, чтобы popup позиционировался внутри карточки */
-      background-color: #03c75a;
-      border-radius: 12px;
       width: 100%;
-      max-width: 350px;
-      padding: 20px;
+      max-width: 400px;
+      background: #03c75a;
+      border-radius: 12px;
+      padding: 16px;
       text-align: center;
+      font-size: 18px;
       cursor: pointer;
-      transition: background 0.2s ease;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      transition: background 0.2s;
+      color: #121212;
     }
     .card:hover {
-      background-color: #02b14e;
+      background: #04d165;
     }
-    .card h2 {
-      margin: 0;
-      font-size: 22px;
-      color: #121212;
-    }
-    /* вот здесь убрали второе display:flex */
+
+    /* Всплывающее окно */
     #contacts-popup {
-      display: none;          /* изначально скрыто */
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.95);
-      border-radius: 12px;
-      padding: 20px;
-      box-sizing: border-box;
-      flex-direction: column;
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
       justify-content: center;
       align-items: center;
+      z-index: 1000;
     }
-    #contacts-popup button {
-      margin: 10px 0;
-      width: 100%;
+    #contacts-popup .popup {
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 12px;
+      width: 90%;
       max-width: 300px;
-      background: #03c75a;
+      box-sizing: border-box;
+      text-align: center;
+      color: #fff;
+    }
+    #contacts-popup .popup button {
+      margin-top: 12px;
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
       border: none;
       border-radius: 8px;
-      padding: 14px;
-      font-size: 16px;
-      color: #121212;
       cursor: pointer;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
     #contacts-popup .close-btn {
       background: #d32f2f;
-      position: absolute;
-      top: 20px; right: 20px;
-      padding: 8px 12px;
-      font-size: 14px;
       color: #fff;
+    }
+    #contacts-popup .call-btn {
+      background: #03c75a;
+      color: #121212;
+    }
+    #contacts-popup .map-btn {
+      background: #03c75a;
+      color: #121212;
+      margin-top: 8px;
     }
   </style>
 </head>
 <body>
-  <div id="greeting">Вітаємо, користувач!</div>
+
+  <div class="header" id="greeting">Вітаємо!</div>
 
   <div class="card" onclick="location.href='create.html'">
-    <h2>📩 Створити заявку</h2>
+    📩 Створити заявку
   </div>
 
   <div class="card" onclick="location.href='history.html'">
-    <h2>📜 Історія заявок</h2>
+    📜 Історія заявок
   </div>
 
-  <div class="card" onclick="toggleContacts(event)">
-    <h2>📞 Контактна інформація</h2>
-    <div id="contacts-popup">
-      <button class="close-btn" onclick="toggleContacts(event)">✖ Закрити</button>
-      <button onclick="window.location.href='tel:+380674679495'">
+  <div class="card" id="contacts-card">
+    📞 Контактна інформація
+  </div>
+
+  <!-- Попап -->
+  <div id="contacts-popup">
+    <div class="popup">
+      <button class="close-btn" id="contacts-close">✖ Закрити</button>
+      <button class="call-btn" onclick="location.href='tel:+380674679495'">
         📞 +38 067 467 94 95
       </button>
-      <button onclick="window.open(
-          'https://www.google.com/maps/dir/?api=1&destination=Столичне+шосе+103,+Київ+03026',
-          '_blank'
-        )">
+      <button class="map-btn" onclick="window.open(
+        'https://www.google.com/maps/dir/?api=1&destination=Столичне+шосе,103+Київ+03026',
+        '_blank'
+      )">
         📍 Столичне шосе, 103, Київ, 03026
       </button>
     </div>
   </div>
 
   <script>
-    const tg = window.Telegram.WebApp;
-    tg.ready();
-    const firstName = tg.initDataUnsafe?.user?.first_name || 'користувач';
-    document.getElementById('greeting').innerText = `Вітаємо, ${firstName}!`;
-
-    function toggleContacts(e) {
-      e.stopPropagation();
-      const popup = document.getElementById('contacts-popup');
-      // если скрыто — показываем flex, иначе — скрываем
-      popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
+    // Вставляем имя пользователя из Telegram
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      const name = tg.initDataUnsafe?.user?.first_name || '';
+      document.getElementById('greeting').innerText = `Вітаємо, ${name}!`;
     }
+
+    const contactsCard = document.getElementById('contacts-card');
+    const popup = document.getElementById('contacts-popup');
+    const closeBtn = document.getElementById('contacts-close');
+
+    // Открываем попап
+    contactsCard.addEventListener('click', () => {
+      popup.style.display = 'flex';
+    });
+    // Закрытие по кнопке
+    closeBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      popup.style.display = 'none';
+    });
+    // Закрытие кликом по фону
+    popup.addEventListener('click', e => {
+      if (e.target === popup) {
+        popup.style.display = 'none';
+      }
+    });
   </script>
+
 </body>
 </html>
