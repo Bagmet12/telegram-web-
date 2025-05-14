@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Історія заявок</title>
+  <title>Tesla Assistant</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     * { box-sizing: border-box; }
@@ -14,243 +14,183 @@
       color: #fff;
       background: url('tesla-bg.png') no-repeat center center fixed;
       background-size: cover;
-      display: flex; flex-direction: column; align-items: center;
+      position: relative;
     }
 
+    /* Статичный header-card */
     .header-card {
       background: rgba(0,0,0,0.7);
       border: 2px solid #E53935;
       border-radius: 16px;
-      padding: 24px;
-      width: 90%; max-width: 400px;
-      margin: 40px 0 20px;
-      text-align: center;
+      width: 90%;
+      max-width: 400px;
+      height: 120px;               /* фиксированная высота */
+      margin: 40px auto 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;         /* центрируем по горизонтали */
+      justify-content: center;     /* центрируем по вертикали */
+      padding: 0;                  /* убираем внутренние отступы */
     }
     .header-card .name {
-      font-size: 32px; font-weight: 600; margin: 0;
+      font-size: 32px;
+      font-weight: 600;
+      margin: 0;
     }
     .header-card .subtitle {
-      font-size: 16px; color: #CCCCCC; margin-top: 4px;
+      font-size: 16px;
+      color: #CCCCCC;
+      margin: 4px 0 0;
     }
 
+    /* Кнопка «Назад» */
     .back-card {
-      width: 90%; max-width: 400px;
-      margin-bottom: 20px; cursor: pointer;
+      width: 90%;
+      max-width: 400px;
+      margin: 20px auto;
+      cursor: pointer;
     }
     .back-card .card {
-      display: flex; align-items: center;
+      display: flex;
+      align-items: center;
       background: rgba(0,0,0,0.7);
-      border: 2px solid #E53935; border-radius: 16px;
-      padding: 16px 24px; transition: transform .1s;
+      border: 2px solid #E53935;
+      border-radius: 16px;
+      padding: 16px 24px;
+      transition: transform .1s;
     }
     .back-card .card:hover { transform: scale(1.03); }
     .back-card .icon { font-size: 24px; margin-right: 12px; }
     .back-card .text { font-size: 18px; }
 
-    .history-container {
-      width: 90%; max-width: 400px;
-      display: flex; flex-direction: column; gap: 16px;
-      margin-bottom: 40px;
-    }
-
-    .request-card {
-      background: rgba(0,0,0,0.7);
-      border: 2px solid #E53935; border-radius: 16px;
-      overflow: hidden;
-    }
-    .request-header {
-      padding: 16px;
-      display: flex; justify-content: space-between; align-items: center;
-      cursor: pointer; transition: background .2s;
-    }
-    .request-header:hover {
-      background: rgba(0,0,0,0.85);
-    }
-    .request-title {
-      margin: 0; font-size: 18px; font-weight: bold;
-    }
-    .request-sub {
-      margin: 0; font-size: 14px; color: #CCCCCC;
-    }
-
-    .request-body {
-      display: none;
-      padding: 0 16px 16px;
-      border-top: 1px solid #E53935;
-    }
-    .request-body p {
-      margin: 8px 0; font-size: 15px;
-    }
-    .request-body a {
-      color: #E53935; text-decoration: underline;
-    }
-
-    /* === Шаги в стиле карточек === */
-    .steps {
+    /* Меню-карточки */
+    .menu {
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      margin-top: 16px;
+      gap: 24px;
+      width: 90%;
+      max-width: 400px;
+      margin: 40px auto;
+      padding: 0 16px;
     }
-    .step-block {
-      display: flex; justify-content: space-between; align-items: center;
+    .card {
+      display: flex;
+      align-items: center;
       background: rgba(0,0,0,0.7);
-      border: 2px solid #E53935; border-radius: 16px;
-      padding: 12px 16px;
-    }
-    .step-block.completed {
-      border-color: #04d165;
-    }
-    .step-block.active {
-      border-color: #D32F2F;
-    }
-    .step-block .left {
-      display: flex; flex-direction: column; /* чтобы название и время можно было разнести */
-    }
-    .step-block .left .name {
-      font-weight: bold; font-size: 15px;
-    }
-    .step-block .left .time {
-      font-size: 13px; color: #ddd; margin-top: 4px;
-    }
-    .step-block .right {
-      display: flex; align-items: center; gap: 8px;
-    }
-    .step-block .pdf-btn {
-      background: transparent; border: none;
-      color: #E53935; font-size: 14px; font-weight: bold;
+      border: 2px solid #E53935;
+      border-radius: 16px;
+      padding: 24px 32px;
       cursor: pointer;
-      transition: transform .1s;
+      transition: transform 0.1s ease-in-out;
     }
-    .step-block .pdf-btn:hover {
-      transform: scale(1.1);
+    .card:hover { transform: scale(1.04); }
+    .card .icon {
+      font-size: 32px;
+      margin-right: 20px;
+      width: 36px;
+      text-align: center;
+    }
+    .card .text {
+      font-size: 22px;
+      flex: 1;
+    }
+
+    /* Popup контактов */
+    #contacts-popup {
+      display: none;
+      position: absolute;
+      top: 300px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.9);
+      padding: 24px;
+      border-radius: 16px;
+      width: calc(100% - 60px);
+      max-width: 360px;
+      z-index: 9;
+      text-align: center;
+    }
+    #contacts-popup .close-btn {
+      background: #E53935;
+      color: #FFF;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 16px;
+      font-size: 16px;
+    }
+    #contacts-popup button.contact {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
+      background: #1F1F1F;
+      color: #FFF;
+      border: none;
+      padding: 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 18px;
     }
   </style>
 </head>
 <body>
 
+  <!-- Header -->
   <div class="header-card">
     <div class="name">TeslaAssistantBot</div>
     <div class="subtitle">mini-додаток</div>
   </div>
 
-  <div class="back-card" onclick="location.href='index.html'">
-    <div class="card">
-      <div class="icon">←</div><div class="text">На головну</div>
+  <!-- Меню -->
+  <div class="menu">
+    <div class="card" onclick="location.href='create.html'">
+      <div class="icon">📩</div>
+      <div class="text">Створити заявку</div>
+    </div>
+    <div class="card" onclick="location.href='history.html'">
+      <div class="icon">📜</div>
+      <div class="text">Історія заявок</div>
+    </div>
+    <div class="card" onclick="toggleContacts(event)">
+      <div class="icon">📞</div>
+      <div class="text">Контактна інформація</div>
     </div>
   </div>
 
-  <div class="history-container" id="history"></div>
+  <!-- Popup контактов -->
+  <div id="contacts-popup">
+    <button class="close-btn" onclick="toggleContacts(event)">✖ Закрити</button>
+    <button class="contact" onclick="window.location.href='tel:+380674679495'">
+      📞 +38 067 467 94 95
+    </button>
+    <button class="contact" onclick="window.open(
+      'https://www.google.com/maps/dir/?api=1&destination=Столичне+шосе+103,+Київ+03026',
+      '_blank'
+    )">
+      📍 Столичне шосе, 103, Київ
+    </button>
+  </div>
 
   <script>
     const tg = window.Telegram.WebApp;
-    tg.ready(); tg.expand();
+    tg.ready();
+    tg.expand();
 
-    const requestsData = [
-      {
-        vin: '5YJ3E1EA7LF000001',
-        date: '2025-05-12 14:30',
-        problem: 'Не відкриваються двері.',
-        phone: '+380501234567',
-        fileUrl: '#',
-        statusHistory: [
-          {name: '1. Створена',      time: '14:30', state: 'completed'},
-          {name: '2. Діагностування', time: '16:45', state: 'active'},
-          {name: '3. Висновок',      time: '',       state: ''},
-          {name: '4. Завершено',     time: '',       state: ''}
-        ]
-      },
-      {
-        vin: '5YJ3E1EA7LF000002',
-        date: '2025-05-13 10:15',
-        problem: 'Дрімає автопілот.',
-        phone: '+380671112233',
-        fileUrl: '#',
-        statusHistory: [
-          {name: '1. Створена',      time: '10:15', state: 'completed'},
-          {name: '2. Діагностування', time: '',       state: 'active'},
-          {name: '3. Висновок',      time: '',       state: ''},
-          {name: '4. Завершено',     time: '',       state: ''}
-        ]
-      }
-    ];
-
-    const histContainer = document.getElementById('history');
-
-    requestsData.forEach((req, idx) => {
-      const card = document.createElement('div');
-      card.className = 'request-card';
-
-      const hdr = document.createElement('div');
-      hdr.className = 'request-header';
-      hdr.innerHTML = `
-        <div>
-          <p class="request-title">Заявка №${idx+1}</p>
-          <p class="request-sub">VIN: ${req.vin}</p>
-        </div>
-        <p class="request-sub">${req.date}</p>
-      `;
-      card.append(hdr);
-
-      const body = document.createElement('div');
-      body.className = 'request-body';
-      body.innerHTML = `
-        <p><strong>Опис проблеми:</strong> ${req.problem}</p>
-        <p><strong>Телефон:</strong> <a href="tel:${req.phone}">${req.phone}</a></p>
-        <p><strong>Файл:</strong> <a href="${req.fileUrl}" target="_blank">Переглянути</a></p>
-      `;
-
-      const steps = document.createElement('div');
-      steps.className = 'steps';
-      req.statusHistory.forEach(step => {
-        const sb = document.createElement('div');
-        sb.className = `step-block ${step.state}`;
-
-        const left = document.createElement('div');
-        left.className = 'left';
-        const nm = document.createElement('span');
-        nm.className = 'name'; nm.textContent = step.name;
-        left.append(nm);
-        if (step.time) {
-          const tm = document.createElement('span');
-          tm.className = 'time'; tm.textContent = step.time;
-          left.append(tm);
-        }
-
-        const right = document.createElement('div');
-        right.className = 'right';
-        if (step.state === 'active') {
-          const btn = document.createElement('button');
-          btn.className = 'pdf-btn';
-          btn.textContent = 'PDF';
-          btn.addEventListener('click', e => {
-            e.stopPropagation();
-            downloadPDF(req.vin);
-          });
-          right.append(btn);
-        }
-
-        sb.append(left, right);
-        if (step.state === 'active') {
-          sb.addEventListener('click', () => downloadPDF(req.vin));
-        }
-        steps.append(sb);
-      });
-
-      body.append(steps);
-      card.append(body);
-
-      hdr.addEventListener('click', () => {
-        body.style.display = body.style.display === 'block' ? 'none' : 'block';
-      });
-
-      histContainer.append(card);
-    });
-
-    function downloadPDF(vin) {
-      alert('Завантажити PDF для ' + vin);
-      // TODO: ваш API-виклик
+    const user = tg.initDataUnsafe?.user;
+    if (user?.first_name) {
+      document.querySelector('.header-card .name').innerText = `TeslaAssistantBot`;
     }
+
+    function toggleContacts(e) {
+      e.stopPropagation();
+      const pop = document.getElementById('contacts-popup');
+      pop.style.display = (pop.style.display === 'block') ? 'none' : 'block';
+    }
+    document.body.addEventListener('click', () => {
+      document.getElementById('contacts-popup').style.display = 'none';
+    });
   </script>
+
 </body>
 </html>
