@@ -2,119 +2,130 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Історія заявок</title>
   <style>
+    /* Тёмный фон страницы */
     body {
       margin: 0;
-      padding: 20px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
-      background: linear-gradient(135deg, #0f1e3a, #1a2a52);
-      background-attachment: fixed;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen;
+      background: #121212;
       color: #fff;
     }
+
+    /* Контейнер с отступом сверху */
     .history-container {
       max-width: 500px;
-      margin: auto;
+      margin: 0 auto;
+      padding: 60px 20px 40px;
     }
+
+    /* Заголовок */
+    h1 {
+      text-align: center;
+      font-size: 28px;
+      margin-bottom: 40px;
+    }
+
+    /* Карточка заявки — зелёный фон */
     .request-card {
-      background-color: rgba(30, 30, 30, 0.85);
-      border-radius: 12px;
-      margin-bottom: 16px;
+      background: #03c75a;
+      border-radius: 16px;
+      margin-bottom: 24px;
       overflow: hidden;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-      transition: background 0.2s ease, box-shadow 0.2s ease;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.4);
     }
     .request-card:hover {
-      background-color: rgba(40, 40, 40, 0.85);
-      box-shadow: 0 6px 24px rgba(0,0,0,0.7);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(0,0,0,0.5);
     }
+
+    /* Заголовок карточки */
     .request-header {
-      padding: 16px;
+      padding: 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      cursor: pointer;
-    }
-    .request-header:hover {
-      background-color: rgba(50,50,50,0.85);
     }
     .request-title {
-      font-size: 16px;
-      font-weight: bold;
+      font-size: 18px;
+      font-weight: 600;
+      color: #121212;
     }
     .request-sub {
       font-size: 14px;
-      color: #ccc;
+      color: rgba(18,18,18,0.8);
     }
+    .request-sub.vin {
+      margin-top: 4px;
+    }
+
+    /* Тело карточки */
     .request-body {
       display: none;
-      padding: 0 16px 16px;
-      border-top: 1px solid #333;
+      padding: 0 20px 20px;
+      background: rgba(0,0,0,0.1);
+      border-top: 1px solid rgba(18,18,18,0.5);
     }
     .request-body p {
-      margin: 8px 0;
+      margin: 12px 0;
+      color: #fff;
     }
+    .request-body a {
+      color: #121212;
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    /* Шаги (здесь они уже приглушённые, чтобы не выбивались) */
     .stepper {
       display: flex;
       justify-content: space-between;
-      margin-top: 16px;
+      margin-top: 20px;
+      gap: 8px;
     }
     .step {
       flex: 1;
-      text-align: center;
-      padding: 8px 4px;
-      border-radius: 4px;
+      padding: 10px 6px;
+      border-radius: 8px;
       font-size: 12px;
-      background: #333;
-      color: #bbb;
-      position: relative;
-    }
-    .step:not(:last-child)::after {
-      content: "";
-      position: absolute;
-      top: 50%;
-      right: -50%;
-      transform: translateY(-50%);
-      width: 100%;
-      height: 2px;
-      background: #333;
-      z-index: -1;
+      text-align: center;
+      background: rgba(18,18,18,0.4);
+      color: #ccc;
     }
     .step.completed {
-      background: #03c75a;
-      color: #121212;
+      background: #121212;
+      color: #03c75a;
+      font-weight: bold;
     }
     .step.active {
-      background: #ffb300;
+      background: #fff;
       color: #121212;
-    }
-    .step.completed:not(:last-child)::after {
-      background: #03c75a;
+      font-weight: bold;
     }
     .step-button {
-      margin-top: 8px;
-      padding: 6px 10px;
-      font-size: 13px;
+      display: block;
+      margin: 8px auto 0;
+      padding: 6px 12px;
+      background: #121212;
+      color: #03c75a;
       border: none;
       border-radius: 6px;
-      background: #03c75a;
-      color: #121212;
+      font-size: 13px;
       cursor: pointer;
-      transition: opacity 0.2s ease;
+      text-decoration: none;
     }
-    .step-button:hover {
-      opacity: 0.8;
-    }
-    a { color: #03c75a; text-decoration: none; }
   </style>
 </head>
 <body>
-  <h1 style="text-align:center; margin-bottom:20px;">Історія заявок</h1>
+  <h1>Історія заявок</h1>
   <div class="history-container" id="history"></div>
 
   <script>
-    // Пример данных — замените на реальные запросы из CRM
+    // Пример данных
     const requestsData = [
       {
         vin: '5YJ3E1EA7LF000001',
@@ -132,11 +143,10 @@
       }
     ];
 
-    const histContainer = document.getElementById('history');
+    const container = document.getElementById('history');
 
     requestsData.forEach((req, idx) => {
       const num = idx + 1;
-      // Карточка
       const card = document.createElement('div');
       card.className = 'request-card';
 
@@ -146,19 +156,20 @@
       hdr.innerHTML = `
         <div>
           <div class="request-title">Заявка №${num}</div>
-          <div class="request-sub">VIN: ${req.vin}</div>
+          <div class="request-sub vin">VIN: ${req.vin}</div>
         </div>
         <div class="request-sub">${req.date}</div>
       `;
+      // Переключатель тела
       hdr.addEventListener('click', () => {
-        bodyDiv.style.display = bodyDiv.style.display === 'block' ? 'none' : 'block';
+        body.style.display = body.style.display === 'block' ? 'none' : 'block';
       });
       card.appendChild(hdr);
 
       // Тело
-      const bodyDiv = document.createElement('div');
-      bodyDiv.className = 'request-body';
-      bodyDiv.innerHTML = `
+      const body = document.createElement('div');
+      body.className = 'request-body';
+      body.innerHTML = `
         <p><strong>Опис проблеми:</strong> ${req.problem}</p>
         <p><strong>Телефон:</strong> <a href="tel:${req.phone}">${req.phone}</a></p>
         <p><strong>Файл:</strong> <a href="${req.fileUrl}" target="_blank">Переглянути</a></p>
@@ -166,15 +177,15 @@
           <div class="step completed">1. Створена</div>
           <div class="step active">
             2. Переддіагностика
-            <br><button class="step-button" onclick="downloadPDF('${req.vin}')">Завантажити PDF</button>
+            <a class="step-button" onclick="downloadPDF('${req.vin}')">Завантажити PDF</a>
           </div>
           <div class="step">3. Висновок</div>
           <div class="step">4. Завершено</div>
         </div>
       `;
-      card.appendChild(bodyDiv);
+      card.appendChild(body);
 
-      histContainer.appendChild(card);
+      container.appendChild(card);
     });
 
     function downloadPDF(vin) {
