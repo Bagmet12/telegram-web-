@@ -18,7 +18,7 @@
     }
 
     .header {
-      font-size: 22px;
+      font-size: 24px;
       font-weight: bold;
     }
 
@@ -38,67 +38,46 @@
       background: #04d165;
     }
 
-    /* Всплывающее окно */
+    /* всплывашка */
     #contacts-popup {
       display: none;
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
+      top:0; left:0; right:0; bottom:0;
       background: rgba(0,0,0,0.8);
       justify-content: center;
       align-items: center;
-      z-index: 1000;
+      z-index: 10;
     }
     #contacts-popup .popup {
       background: #1e1e1e;
       padding: 20px;
       border-radius: 12px;
+      text-align: center;
       width: 90%;
       max-width: 300px;
-      box-sizing: border-box;
-      text-align: center;
-      color: #fff;
     }
     #contacts-popup .popup button {
-      margin-top: 12px;
+      display: block;
       width: 100%;
+      margin-top: 12px;
       padding: 10px;
       font-size: 16px;
       border: none;
       border-radius: 8px;
       cursor: pointer;
     }
-    #contacts-popup .close-btn {
-      background: #d32f2f;
-      color: #fff;
-    }
-    #contacts-popup .call-btn {
-      background: #03c75a;
-      color: #121212;
-    }
-    #contacts-popup .map-btn {
-      background: #03c75a;
-      color: #121212;
-      margin-top: 8px;
-    }
+    .close-btn { background: #d32f2f; color: #fff; }
+    .call-btn, .map-btn { background: #03c75a; color: #121212; }
   </style>
 </head>
 <body>
 
   <div class="header" id="greeting">Вітаємо!</div>
 
-  <div class="card" onclick="location.href='create.html'">
-    📩 Створити заявку
-  </div>
+  <div class="card" onclick="location.href='create.html'">📩 Створити заявку</div>
+  <div class="card" onclick="location.href='history.html'">📜 Історія заявок</div>
+  <div class="card" id="contacts-card">📞 Контактна інформація</div>
 
-  <div class="card" onclick="location.href='history.html'">
-    📜 Історія заявок
-  </div>
-
-  <div class="card" id="contacts-card">
-    📞 Контактна інформація
-  </div>
-
-  <!-- Попап -->
   <div id="contacts-popup">
     <div class="popup">
       <button class="close-btn" id="contacts-close">✖ Закрити</button>
@@ -106,7 +85,7 @@
         📞 +38 067 467 94 95
       </button>
       <button class="map-btn" onclick="window.open(
-        'https://www.google.com/maps/dir/?api=1&destination=Столичне+шосе,103+Київ+03026',
+        'https://www.google.com/maps/dir/?api=1&destination=Столичне+шосе,+103+Київ,+03026',
         '_blank'
       )">
         📍 Столичне шосе, 103, Київ, 03026
@@ -115,32 +94,29 @@
   </div>
 
   <script>
-    // Вставляем имя пользователя из Telegram
+    // инициализируем WebApp
     const tg = window.Telegram?.WebApp;
     if (tg) {
       tg.ready();
-      const name = tg.initDataUnsafe?.user?.first_name || '';
-      document.getElementById('greeting').innerText = `Вітаємо, ${name}!`;
+      const user = tg.initDataUnsafe.user || {};
+      const name = user.first_name || 'Користувач';
+      const uid  = user.id          || '—';
+      document.getElementById('greeting')
+              .innerText = `Вітаємо, ${name}! (ID: ${uid})`;
     }
 
+    // попап контактов
     const contactsCard = document.getElementById('contacts-card');
     const popup = document.getElementById('contacts-popup');
     const closeBtn = document.getElementById('contacts-close');
 
-    // Открываем попап
-    contactsCard.addEventListener('click', () => {
-      popup.style.display = 'flex';
-    });
-    // Закрытие по кнопке
+    contactsCard.addEventListener('click', () => popup.style.display = 'flex');
     closeBtn.addEventListener('click', e => {
       e.stopPropagation();
       popup.style.display = 'none';
     });
-    // Закрытие кликом по фону
     popup.addEventListener('click', e => {
-      if (e.target === popup) {
-        popup.style.display = 'none';
-      }
+      if (e.target === popup) popup.style.display = 'none';
     });
   </script>
 
