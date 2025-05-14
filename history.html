@@ -24,19 +24,24 @@
       background: rgba(0,0,0,0.7);
       border: 2px solid #E53935;
       border-radius: 16px;
-      padding: 24px 32px;
+      padding: 24px;
       width: 90%;
       max-width: 400px;
       margin: 40px 0 20px;
-      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;       /* Центруем по горизонтали */
+      justify-content: center;   /* Центруем по вертикали */
     }
     .header-card .name {
       font-size: 32px;
       font-weight: 600;
+      margin: 0;
     }
     .header-card .subtitle {
       font-size: 16px;
       color: #CCCCCC;
+      margin: 4px 0 0;
     }
 
     /* Кнопка «Назад» в стилі карточки */
@@ -55,16 +60,9 @@
       padding: 16px 24px;
       transition: transform .1s;
     }
-    .back-card .card:hover {
-      transform: scale(1.03);
-    }
-    .back-card .icon {
-      font-size: 24px;
-      margin-right: 12px;
-    }
-    .back-card .text {
-      font-size: 18px;
-    }
+    .back-card .card:hover { transform: scale(1.03); }
+    .back-card .icon { font-size: 24px; margin-right: 12px; }
+    .back-card .text { font-size: 18px; }
 
     /* Контейнер історії */
     .history-container {
@@ -94,17 +92,16 @@
     .request-header:hover {
       background: rgba(0,0,0,0.85);
     }
-    .request-header .request-title {
+    .request-title {
       margin: 0;
       font-size: 18px;
       font-weight: bold;
     }
-    .request-header .request-sub {
+    .request-sub {
       margin: 0;
       font-size: 14px;
       color: #CCCCCC;
     }
-
     .request-body {
       display: none;
       padding: 0 16px 16px;
@@ -119,7 +116,7 @@
       text-decoration: underline;
     }
 
-    /* Кроки */
+    /* Блоки статусів у стиле карточек */
     .steps {
       display: flex;
       flex-direction: column;
@@ -127,21 +124,22 @@
       margin-top: 16px;
     }
     .step-block {
-      background: #121212;
-      border-radius: 8px;
+      background: rgba(0,0,0,0.7);
+      border: 2px solid #E53935;
+      border-radius: 16px;
       padding: 12px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       font-size: 15px;
       color: #fff;
+      position: relative;
     }
     .step-block.completed {
-      background: #028f46;
+      border-color: #04d165;   /* Зеленая обводка */
     }
     .step-block.active {
-      background: #04d165;
-      cursor: pointer;
+      border-color: #D32F2F;   /* Красная обводка */
     }
     .step-block .name {
       font-weight: bold;
@@ -149,6 +147,19 @@
     .step-block .time {
       font-size: 13px;
       color: #ddd;
+    }
+
+    /* Кнопка скачивания PDF в активном блоке */
+    .step-block .pdf-btn {
+      background: transparent;
+      border: none;
+      color: #E53935;
+      font-size: 18px;
+      cursor: pointer;
+      margin-left: 8px;
+    }
+    .step-block .pdf-btn:hover {
+      transform: scale(1.1);
     }
   </style>
 </head>
@@ -173,10 +184,8 @@
 
   <script>
     const tg = window.Telegram.WebApp;
-    tg.ready();
-    tg.expand();
+    tg.ready(); tg.expand();
 
-    // Демодані
     const requestsData = [
       {
         vin: '5YJ3E1EA7LF000001',
@@ -185,10 +194,10 @@
         phone: '+380501234567',
         fileUrl: '#',
         statusHistory: [
-          {name: '1. Створена', time: '2025-05-12 14:30', state: 'completed'},
-          {name: '2. Переддіагностика', time: '2025-05-12 16:45', state: 'active'},
-          {name: '3. Висновок', time: '', state: ''},
-          {name: '4. Завершено', time: '', state: ''}
+          {name: '1. Створена',      time: '2025-05-12 14:30', state: 'completed'},
+          {name: '2. Діагностування', time: '2025-05-12 16:45', state: 'active'},
+          {name: '3. Висновок',      time: '',              state: ''},
+          {name: '4. Завершено',     time: '',              state: ''}
         ]
       },
       {
@@ -198,10 +207,10 @@
         phone: '+380671112233',
         fileUrl: '#',
         statusHistory: [
-          {name: '1. Створена', time: '2025-05-13 10:15', state: 'completed'},
-          {name: '2. Переддіагностика', time: '', state: ''},
-          {name: '3. Висновок', time: '', state: ''},
-          {name: '4. Завершено', time: '', state: ''}
+          {name: '1. Створена',      time: '2025-05-13 10:15', state: 'completed'},
+          {name: '2. Діагностування', time: '',              state: 'active'},
+          {name: '3. Висновок',      time: '',              state: ''},
+          {name: '4. Завершено',     time: '',              state: ''}
         ]
       }
     ];
@@ -226,43 +235,58 @@
       card.appendChild(hdr);
 
       // Body
-      const bodyDiv = document.createElement('div');
-      bodyDiv.className = 'request-body';
-      bodyDiv.innerHTML = `
+      const body = document.createElement('div');
+      body.className = 'request-body';
+      body.innerHTML = `
         <p><strong>Опис проблеми:</strong> ${req.problem}</p>
         <p><strong>Телефон:</strong> <a href="tel:${req.phone}">${req.phone}</a></p>
         <p><strong>Файл:</strong> <a href="${req.fileUrl}" target="_blank">Переглянути</a></p>
       `;
 
       // Steps
-      const stepsDiv = document.createElement('div');
-      stepsDiv.className = 'steps';
+      const steps = document.createElement('div');
+      steps.className = 'steps';
       req.statusHistory.forEach(step => {
         const sb = document.createElement('div');
         sb.className = `step-block ${step.state}`;
-        sb.innerHTML = `
-          <span class="name">${step.name}</span>
-          <span class="time">${step.time || ''}</span>
-        `;
+        const name = document.createElement('span');
+        name.className = 'name';
+        name.textContent = step.name;
+        const time = document.createElement('span');
+        time.className = 'time';
+        time.textContent = step.time || '';
+        sb.append(name, time);
+
         if (step.state === 'active') {
+          // клик по блоку
           sb.addEventListener('click', () => downloadPDF(req.vin));
+          // маленькая кнопка PDF
+          const pdfBtn = document.createElement('button');
+          pdfBtn.className = 'pdf-btn';
+          pdfBtn.textContent = '📄';
+          pdfBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            downloadPDF(req.vin);
+          });
+          sb.append(pdfBtn);
         }
-        stepsDiv.appendChild(sb);
+        steps.append(sb);
       });
-      bodyDiv.appendChild(stepsDiv);
-      card.appendChild(bodyDiv);
+      body.append(steps);
 
-      // Toggle body
+      card.append(body);
+
+      // Toggle
       hdr.addEventListener('click', () => {
-        bodyDiv.style.display = bodyDiv.style.display === 'block' ? 'none' : 'block';
+        body.style.display = body.style.display === 'block' ? 'none' : 'block';
       });
 
-      histContainer.appendChild(card);
+      histContainer.append(card);
     });
 
     function downloadPDF(vin) {
       alert('Завантажити PDF для ' + vin);
-      // TODO: виклик вашого API
+      // TODO: ваш API–виклик
     }
   </script>
 </body>
