@@ -19,7 +19,7 @@
       align-items: center;
     }
 
-    /* Header */
+    /* Верхній «квадратик» */
     .header-card {
       background: rgba(0,0,0,0.7);
       border: 2px solid #E53935;
@@ -39,7 +39,7 @@
       color: #CCCCCC;
     }
 
-    /* Back button */
+    /* Кнопка «Назад» в стилі карточки */
     .back-card {
       width: 90%;
       max-width: 400px;
@@ -55,11 +55,18 @@
       padding: 16px 24px;
       transition: transform .1s;
     }
-    .back-card .card:hover { transform: scale(1.03); }
-    .back-card .icon { font-size: 24px; margin-right: 12px; }
-    .back-card .text { font-size: 18px; }
+    .back-card .card:hover {
+      transform: scale(1.03);
+    }
+    .back-card .icon {
+      font-size: 24px;
+      margin-right: 12px;
+    }
+    .back-card .text {
+      font-size: 18px;
+    }
 
-    /* History container */
+    /* Контейнер історії */
     .history-container {
       width: 90%;
       max-width: 400px;
@@ -69,7 +76,7 @@
       margin-bottom: 40px;
     }
 
-    /* Request card */
+    /* Карточка заявки */
     .request-card {
       background: rgba(0,0,0,0.7);
       border: 2px solid #E53935;
@@ -87,16 +94,17 @@
     .request-header:hover {
       background: rgba(0,0,0,0.85);
     }
-    .request-title {
+    .request-header .request-title {
       margin: 0;
       font-size: 18px;
       font-weight: bold;
     }
-    .request-sub {
+    .request-header .request-sub {
       margin: 0;
       font-size: 14px;
       color: #CCCCCC;
     }
+
     .request-body {
       display: none;
       padding: 0 16px 16px;
@@ -111,7 +119,7 @@
       text-decoration: underline;
     }
 
-    /* Steps */
+    /* Кроки */
     .steps {
       display: flex;
       flex-direction: column;
@@ -142,26 +150,6 @@
       font-size: 13px;
       color: #ddd;
     }
-
-    /* Download PDF button */
-    .download-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      margin-top: 16px;
-      padding: 12px;
-      background: rgba(0,0,0,0.7);
-      border: 2px solid #E53935;
-      border-radius: 12px;
-      cursor: pointer;
-      font-size: 16px;
-      color: #fff;
-      transition: transform .1s;
-    }
-    .download-btn:hover {
-      transform: scale(1.03);
-    }
   </style>
 </head>
 <body>
@@ -180,7 +168,7 @@
     </div>
   </div>
 
-  <!-- History -->
+  <!-- Історія заявок -->
   <div class="history-container" id="history"></div>
 
   <script>
@@ -188,7 +176,7 @@
     tg.ready();
     tg.expand();
 
-    // Демо-дані
+    // Демодані
     const requestsData = [
       {
         vin: '5YJ3E1EA7LF000001',
@@ -198,7 +186,7 @@
         fileUrl: '#',
         statusHistory: [
           {name: '1. Створена', time: '2025-05-12 14:30', state: 'completed'},
-          {name: '2. Діагностування', time: '2025-05-12 16:45', state: 'active'},
+          {name: '2. Переддіагностика', time: '2025-05-12 16:45', state: 'active'},
           {name: '3. Висновок', time: '', state: ''},
           {name: '4. Завершено', time: '', state: ''}
         ]
@@ -211,7 +199,7 @@
         fileUrl: '#',
         statusHistory: [
           {name: '1. Створена', time: '2025-05-13 10:15', state: 'completed'},
-          {name: '2. Діагностування', time: '', state: ''},
+          {name: '2. Переддіагностика', time: '', state: ''},
           {name: '3. Висновок', time: '', state: ''},
           {name: '4. Завершено', time: '', state: ''}
         ]
@@ -262,17 +250,9 @@
         stepsDiv.appendChild(sb);
       });
       bodyDiv.appendChild(stepsDiv);
-
-      // Download PDF button
-      const downloadBtn = document.createElement('div');
-      downloadBtn.className = 'download-btn';
-      downloadBtn.innerHTML = `📄 Завантажити PDF`;
-      downloadBtn.addEventListener('click', () => downloadPDF(req.vin));
-      bodyDiv.appendChild(downloadBtn);
-
       card.appendChild(bodyDiv);
 
-      // Toggle visibility
+      // Toggle body
       hdr.addEventListener('click', () => {
         bodyDiv.style.display = bodyDiv.style.display === 'block' ? 'none' : 'block';
       });
@@ -282,7 +262,7 @@
 
     function downloadPDF(vin) {
       alert('Завантажити PDF для ' + vin);
-      // TODO: ваш API–виклик
+      // TODO: виклик вашого API
     }
   </script>
 </body>
