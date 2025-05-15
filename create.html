@@ -17,17 +17,22 @@
       background-size: cover;
     }
 
+    .container {
+      width: 100%;
+      padding: 0 8px;
+    }
+
     .page-header {
       font-size: 32px;
       font-weight: 500;
-      padding: 20px 16px 0;
+      padding: 20px 0 10px;
       text-align: center;
     }
 
     .back-card {
-      margin: 16px auto;
+      margin-bottom: 20px;
       width: 100%;
-      padding: 0 16px;
+      cursor: pointer;
     }
 
     .back-card .card {
@@ -37,7 +42,6 @@
       border-radius: 16px;
       padding: 14px 20px;
       transition: transform .1s;
-      cursor: pointer;
     }
 
     .back-card .card:hover {
@@ -57,7 +61,7 @@
       background: rgba(0,0,0,0.7);
       border-radius: 16px;
       padding: 24px 16px;
-      margin: 0 auto 40px;
+      margin-bottom: 40px;
       width: 100%;
     }
 
@@ -188,58 +192,60 @@
   </style>
 </head>
 <body>
-  <div class="page-header">Створити заявку</div>
+  <div class="container">
+    <div class="page-header">Створити заявку</div>
 
-  <div class="back-card" onclick="location.href='index.html'">
-    <div class="card">
-      <div class="icon">←</div>
-      <div class="text">На головну</div>
-    </div>
-  </div>
-
-  <div class="form-card">
-    <div class="form-row">
-      <label for="vin-input-car">VIN автомобіля (17 символів)</label>
-      <div class="vin-row">
-        <input id="vin-input-car" type="text" maxlength="17" placeholder="Введіть VIN авто..." oninput="updateVin('vin-input-car', this.value)">
-        <button onclick="startScan('vin-input-car')">📷</button>
+    <div class="back-card" onclick="location.href='index.html'">
+      <div class="card">
+        <div class="icon">←</div>
+        <div class="text">На головну</div>
       </div>
     </div>
 
-    <div class="form-row">
-      <label for="vin-input-ecu">
-        VIN комп’ютера (17 символів)
-        <span class="tooltip" id="info-ecu">ℹ
-          <span class="tooltiptext">
-            Якщо встановлено ECU від іншого автомобіля – введіть його VIN. Якщо це рідний блок управління вашого авто, просто скопіюйте та вставте свій VIN.
+    <div class="form-card">
+      <div class="form-row">
+        <label for="vin-input-car">VIN автомобіля (17 символів)</label>
+        <div class="vin-row">
+          <input id="vin-input-car" type="text" maxlength="17" placeholder="Введіть VIN авто..." oninput="updateVin('vin-input-car', this.value)">
+          <button onclick="startScan('vin-input-car')">📷</button>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label for="vin-input-ecu">
+          VIN комп’ютера (17 символів)
+          <span class="tooltip" id="info-ecu">ℹ
+            <span class="tooltiptext">
+              Якщо встановлено ECU від іншого автомобіля – введіть його VIN. Якщо це рідний блок управління вашого авто, просто скопіюйте та вставте свій VIN.
+            </span>
           </span>
-        </span>
-      </label>
-      <div class="vin-row">
-        <input id="vin-input-ecu" type="text" maxlength="17" placeholder="Введіть VIN комп’ютера..." oninput="updateVin('vin-input-ecu', this.value)">
-        <button onclick="startScan('vin-input-ecu')">📷</button>
+        </label>
+        <div class="vin-row">
+          <input id="vin-input-ecu" type="text" maxlength="17" placeholder="Введіть VIN комп’ютера..." oninput="updateVin('vin-input-ecu', this.value)">
+          <button onclick="startScan('vin-input-ecu')">📷</button>
+        </div>
       </div>
+
+      <video id="video" autoplay playsinline></video>
+      <button class="close-scan" onclick="stopScan()">✖ Закрити скан</button>
+
+      <div class="form-row">
+        <label for="problem">Опис проблеми</label>
+        <textarea id="problem" rows="4" placeholder="Опишіть проблему..."></textarea>
+      </div>
+
+      <div class="form-row">
+        <label for="file-input">Додати фото/відео</label>
+        <input id="file-input" type="file" accept="image/*,video/*">
+      </div>
+
+      <div class="form-row">
+        <label for="phone-input">Номер телефону</label>
+        <input id="phone-input" type="tel" placeholder="+380XXXXXXXXX">
+      </div>
+
+      <button class="submit-btn" onclick="submitForm()">Надіслати</button>
     </div>
-
-    <video id="video" autoplay playsinline></video>
-    <button class="close-scan" onclick="stopScan()">✖ Закрити скан</button>
-
-    <div class="form-row">
-      <label for="problem">Опис проблеми</label>
-      <textarea id="problem" rows="4" placeholder="Опишіть проблему..."></textarea>
-    </div>
-
-    <div class="form-row">
-      <label for="file-input">Додати фото/відео</label>
-      <input id="file-input" type="file" accept="image/*,video/*">
-    </div>
-
-    <div class="form-row">
-      <label for="phone-input">Номер телефону</label>
-      <input id="phone-input" type="tel" placeholder="+380XXXXXXXXX">
-    </div>
-
-    <button class="submit-btn" onclick="submitForm()">Надіслати</button>
   </div>
 
   <script>
