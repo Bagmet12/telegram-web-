@@ -4,10 +4,8 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Створити заявку</title>
-  <!-- Telegram WebApp -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    /* === Общие === */
     * { box-sizing: border-box; }
     html, body {
       margin: 0; padding: 20px;
@@ -28,12 +26,14 @@
 
     .form-card {
       background: rgba(0,0,0,0.7);
-      border: 2px solid #E53935;
+      border: none;
       border-radius: 16px;
       padding: 24px;
-      width: 100%;
-      max-width: 400px;
-      display: flex; flex-direction: column; gap: 16px;
+      width: calc(100% - 10px);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin: 0 auto;
     }
 
     .form-row label {
@@ -62,7 +62,7 @@
     .vin-row input { flex: 1; }
     .vin-row button {
       width: 48px; height: 48px;
-      border: 2px solid #E53935;
+      border: none;
       background: rgba(0,0,0,0.7);
       color: #fff;
       border-radius: 12px;
@@ -72,7 +72,6 @@
     }
     .vin-row button:hover { transform: scale(1.05); }
 
-    /* Tooltip */
     .tooltip {
       position: relative;
       display: inline-block;
@@ -106,39 +105,50 @@
       pointer-events: auto;
     }
 
-    /* Видео скан */
     #video {
-      width: 100%; border-radius: 8px;
-      display: none; margin-top: 8px;
+      width: 100%;
+      border-radius: 8px;
+      display: none;
+      margin-top: 8px;
     }
     .close-scan {
-      display: none; padding: 10px;
-      border: none; border-radius: 12px;
-      background: #D32F2F; color: #fff;
-      font-size: 16px; cursor: pointer;
+      display: none;
+      padding: 10px;
+      border: none;
+      border-radius: 12px;
+      background: #D32F2F;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
       transition: transform .1s;
     }
     .close-scan:hover { transform: scale(1.05); }
 
     .submit-btn {
       padding: 14px;
-      border: 2px solid #E53935;
+      border: none;
       background: rgba(0,0,0,0.7);
       color: #fff;
       font-size: 18px;
       border-radius: 16px;
       cursor: pointer;
       transition: transform .1s;
+      width: 100%;
     }
     .submit-btn:hover { transform: scale(1.03); }
 
     .back-card {
-      margin-top: 20px; width: 100%; max-width: 400px; cursor: pointer;
+      margin-top: 20px;
+      width: calc(100% - 10px);
+      cursor: pointer;
+      margin-left: auto;
+      margin-right: auto;
     }
     .back-card .card {
-      display: flex; align-items: center;
+      display: flex;
+      align-items: center;
       background: rgba(0,0,0,0.7);
-      border: 2px solid #E53935;
+      border: none;
       border-radius: 16px;
       padding: 14px 20px;
       transition: transform .1s;
@@ -170,7 +180,7 @@
       </div>
     </div>
 
-    <!-- VIN комп’ютера з кликабельным Tooltip -->
+    <!-- VIN комп’ютера з tooltip -->
     <div class="form-row">
       <label for="vin-input-ecu">
         VIN комп’ютера (17 символів)
@@ -189,29 +199,24 @@
       </div>
     </div>
 
-    <!-- Видео и закрыть скан -->
     <video id="video" autoplay playsinline></video>
     <button class="close-scan" onclick="stopScan()">✖ Закрити скан</button>
 
-    <!-- Опис проблеми -->
     <div class="form-row">
       <label for="problem">Опис проблеми</label>
       <textarea id="problem" rows="4" placeholder="Опишіть проблему..."></textarea>
     </div>
 
-    <!-- Фото/відео -->
     <div class="form-row">
       <label for="file-input">Додати фото/відео</label>
       <input id="file-input" type="file" accept="image/*,video/*">
     </div>
 
-    <!-- Телефон -->
     <div class="form-row">
       <label for="phone-input">Номер телефону</label>
       <input id="phone-input" type="tel" placeholder="+380XXXXXXXXX">
     </div>
 
-    <!-- Надіслати -->
     <button class="submit-btn" onclick="submitForm()">Надіслати</button>
   </div>
 
@@ -220,14 +225,13 @@
     tg.ready(); tg.expand();
 
     let stream, activeVinField;
-    // Tooltip toggle
+
     document.getElementById('info-ecu').addEventListener('click', function(e) {
       e.stopPropagation();
       const tip = this.querySelector('.tooltiptext');
       tip.classList.toggle('active');
     });
 
-    // Скрываем клавиатуру при тапе вне полей
     function hideKeyboard(e) {
       const tag = e.target.tagName;
       if (tag !== 'INPUT' && tag !== 'TEXTAREA') {
@@ -241,7 +245,6 @@
     document.addEventListener('click', hideKeyboard);
     document.addEventListener('touchstart', hideKeyboard);
 
-    // Сканер VIN
     async function startScan(fieldId) {
       activeVinField = fieldId;
       try {
