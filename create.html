@@ -9,35 +9,60 @@
     * { box-sizing: border-box; }
     html, body {
       margin: 0;
-      padding: 20px;
+      padding: 0;
       min-height: 100vh;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       color: #ffffff;
       background: url('tesla-bg.png') no-repeat center center fixed;
       background-size: cover;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
     }
 
     .page-header {
       font-size: 32px;
       font-weight: 500;
-      margin: 40px 0 20px;
+      padding: 20px 16px 0;
       text-align: center;
+    }
+
+    .back-card {
+      margin: 16px auto;
+      width: 100%;
+      padding: 0 16px;
+    }
+
+    .back-card .card {
+      display: flex;
+      align-items: center;
+      background: rgba(0,0,0,0.7);
+      border-radius: 16px;
+      padding: 14px 20px;
+      transition: transform .1s;
+      cursor: pointer;
+    }
+
+    .back-card .card:hover {
+      transform: scale(1.03);
+    }
+
+    .back-card .icon {
+      font-size: 24px;
+      margin-right: 12px;
+    }
+
+    .back-card .text {
+      font-size: 18px;
     }
 
     .form-card {
       background: rgba(0,0,0,0.7);
-      border: none;
       border-radius: 16px;
-      padding: 24px;
+      padding: 24px 16px;
+      margin: 0 auto 40px;
       width: 100%;
-      max-width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      margin: 0 auto 40px auto;
+    }
+
+    .form-row {
+      margin-bottom: 16px;
     }
 
     .form-row label {
@@ -137,6 +162,8 @@
       font-size: 16px;
       cursor: pointer;
       transition: transform .1s;
+      width: 100%;
+      margin-top: 8px;
     }
 
     .close-scan:hover {
@@ -157,37 +184,6 @@
 
     .submit-btn:hover {
       transform: scale(1.03);
-    }
-
-    .back-card {
-      margin-top: 20px;
-      margin-bottom: 30px;
-      width: 100%;
-      max-width: 100%;
-      cursor: pointer;
-    }
-
-    .back-card .card {
-      display: flex;
-      align-items: center;
-      background: rgba(0,0,0,0.7);
-      border: none;
-      border-radius: 16px;
-      padding: 14px 20px;
-      transition: transform .1s;
-    }
-
-    .back-card .card:hover {
-      transform: scale(1.03);
-    }
-
-    .back-card .icon {
-      font-size: 24px;
-      margin-right: 12px;
-    }
-
-    .back-card .text {
-      font-size: 18px;
     }
   </style>
 </head>
@@ -259,18 +255,19 @@
       tip.classList.toggle('active');
     });
 
+    document.addEventListener('click', hideKeyboard);
+    document.addEventListener('touchstart', hideKeyboard);
+
     function hideKeyboard(e) {
       const tag = e.target.tagName;
       if (tag !== 'INPUT' && tag !== 'TEXTAREA') {
         if (document.activeElement &&
-           (document.activeElement.tagName === 'INPUT' ||
-            document.activeElement.tagName === 'TEXTAREA')) {
+            (document.activeElement.tagName === 'INPUT' ||
+             document.activeElement.tagName === 'TEXTAREA')) {
           document.activeElement.blur();
         }
       }
     }
-    document.addEventListener('click', hideKeyboard);
-    document.addEventListener('touchstart', hideKeyboard);
 
     async function startScan(fieldId) {
       activeVinField = fieldId;
