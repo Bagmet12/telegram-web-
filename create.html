@@ -8,13 +8,16 @@
   <style>
     * { box-sizing: border-box; }
     html, body {
-      margin: 0; padding: 20px;
+      margin: 0;
+      padding: 20px;
       min-height: 100vh;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       color: #ffffff;
       background: url('tesla-bg.png') no-repeat center center fixed;
       background-size: cover;
-      display: flex; flex-direction: column; align-items: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     .page-header {
@@ -29,12 +32,14 @@
       border: none;
       border-radius: 16px;
       padding: 24px;
-      width: calc(100% - 10px);
+      width: 100%;
+      max-width: 100%;
       display: flex;
       flex-direction: column;
       gap: 16px;
-      margin: 0 auto;
+      margin: 0 auto 40px auto;
     }
+
     .form-row label {
       display: flex;
       align-items: center;
@@ -43,6 +48,7 @@
       font-size: 14px;
       color: #CCCCCC;
     }
+
     .form-row input,
     .form-row textarea {
       width: 100%;
@@ -58,9 +64,14 @@
       display: flex;
       gap: 8px;
     }
-    .vin-row input { flex: 1; }
+
+    .vin-row input {
+      flex: 1;
+    }
+
     .vin-row button {
-      width: 48px; height: 48px;
+      width: 48px;
+      height: 48px;
       border: none;
       background: rgba(0,0,0,0.7);
       color: #fff;
@@ -69,7 +80,10 @@
       cursor: pointer;
       transition: transform .1s;
     }
-    .vin-row button:hover { transform: scale(1.05); }
+
+    .vin-row button:hover {
+      transform: scale(1.05);
+    }
 
     .tooltip {
       position: relative;
@@ -79,6 +93,7 @@
       font-weight: bold;
       user-select: none;
     }
+
     .tooltip .tooltiptext {
       visibility: hidden;
       width: 220px;
@@ -98,6 +113,7 @@
       line-height: 1.3;
       pointer-events: none;
     }
+
     .tooltip .tooltiptext.active {
       visibility: visible;
       opacity: 1;
@@ -110,6 +126,7 @@
       display: none;
       margin-top: 8px;
     }
+
     .close-scan {
       display: none;
       padding: 10px;
@@ -121,7 +138,10 @@
       cursor: pointer;
       transition: transform .1s;
     }
-    .close-scan:hover { transform: scale(1.05); }
+
+    .close-scan:hover {
+      transform: scale(1.05);
+    }
 
     .submit-btn {
       padding: 14px;
@@ -134,16 +154,19 @@
       transition: transform .1s;
       width: 100%;
     }
-    .submit-btn:hover { transform: scale(1.03); }
+
+    .submit-btn:hover {
+      transform: scale(1.03);
+    }
 
     .back-card {
       margin-top: 20px;
-      margin-bottom: 20px;
-      width: calc(100% - 10px);
+      margin-bottom: 30px;
+      width: 100%;
+      max-width: 100%;
       cursor: pointer;
-      margin-left: auto;
-      margin-right: auto;
     }
+
     .back-card .card {
       display: flex;
       align-items: center;
@@ -153,9 +176,19 @@
       padding: 14px 20px;
       transition: transform .1s;
     }
-    .back-card .card:hover { transform: scale(1.03); }
-    .back-card .icon { font-size: 24px; margin-right: 12px; }
-    .back-card .text { font-size: 18px; }
+
+    .back-card .card:hover {
+      transform: scale(1.03);
+    }
+
+    .back-card .icon {
+      font-size: 24px;
+      margin-right: 12px;
+    }
+
+    .back-card .text {
+      font-size: 18px;
+    }
   </style>
 </head>
 <body>
@@ -169,32 +202,25 @@
   </div>
 
   <div class="form-card">
-    <!-- VIN автомобіля -->
     <div class="form-row">
       <label for="vin-input-car">VIN автомобіля (17 символів)</label>
       <div class="vin-row">
-        <input id="vin-input-car" type="text" maxlength="17"
-               placeholder="Введіть VIN авто..."
-               oninput="updateVin('vin-input-car', this.value)">
+        <input id="vin-input-car" type="text" maxlength="17" placeholder="Введіть VIN авто..." oninput="updateVin('vin-input-car', this.value)">
         <button onclick="startScan('vin-input-car')">📷</button>
       </div>
     </div>
 
-    <!-- VIN комп’ютера з tooltip -->
     <div class="form-row">
       <label for="vin-input-ecu">
         VIN комп’ютера (17 символів)
         <span class="tooltip" id="info-ecu">ℹ
           <span class="tooltiptext">
-            Якщо встановлено ECU від іншого автомобіля – введіть його VIN. 
-            Якщо це рідний блок управління вашого авто, просто скопіюйте та вставте свій VIN.
+            Якщо встановлено ECU від іншого автомобіля – введіть його VIN. Якщо це рідний блок управління вашого авто, просто скопіюйте та вставте свій VIN.
           </span>
         </span>
       </label>
       <div class="vin-row">
-        <input id="vin-input-ecu" type="text" maxlength="17"
-               placeholder="Введіть VIN комп’ютера..."
-               oninput="updateVin('vin-input-ecu', this.value)">
+        <input id="vin-input-ecu" type="text" maxlength="17" placeholder="Введіть VIN комп’ютера..." oninput="updateVin('vin-input-ecu', this.value)">
         <button onclick="startScan('vin-input-ecu')">📷</button>
       </div>
     </div>
@@ -222,7 +248,8 @@
 
   <script>
     const tg = window.Telegram.WebApp;
-    tg.ready(); tg.expand();
+    tg.ready();
+    tg.expand();
 
     let stream, activeVinField;
 
@@ -298,7 +325,6 @@
       if (vinCar.length !== 17) return alert('VIN автомобіля має містити 17 символів');
       if (vinEcu.length !== 17) return alert('VIN комп’ютера має містити 17 символів');
       if (!problem) return alert('Опишіть проблему');
-      // TODO: ваш API–виклик
       window.location.href = 'history.html';
     }
   </script>
