@@ -20,17 +20,17 @@
     /* Статичный квадратик с заголовком */
     .header-card {
       background: rgba(0,0,0,0.7);
-      border: 2px solid #E53935;
+      border: none;
       border-radius: 16px;
       padding: 24px 32px;
-      max-width: 90%;
-      width: 100%;
+      width: calc(100% - 10px);
       margin: 40px auto 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 8px;
     }
+
 
     .header-card .name {
       font-size: 32px;
@@ -52,20 +52,22 @@
       flex-direction: column;
       gap: 24px;
       width: 100%;
-      max-width: 90%;
       margin: 0 auto;
-      margin-top: 80px; /* уменьшили отступ сверху */
-      padding: 0 16px;
-    }
+      margin-top: 80px;
+      padding: 0 5px;
+     }
+
     .card {
       display: flex;
       align-items: center;
       background: rgba(0, 0, 0, 0.7);
-      border: 2px solid #E53935;
+      border: none;
       border-radius: 16px;
       padding: 24px 32px;
       cursor: pointer;
       transition: transform 0.1s ease-in-out;
+      width: calc(100% - 10px);
+      margin: 0 auto;
     }
     .card:hover { transform: scale(1.04); }
     .card .icon {
