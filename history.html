@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <!-- … ваш <head> … -->
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Історія заявок</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    /* … ваше CSS … */
+    /* ваше существующее CSS */
     .delete-btn {
       background: #a00;
       color: #fff;
@@ -20,65 +23,72 @@
   </style>
 </head>
 <body>
-  <div class="history-container" id="history"></div>
+  <div class="container">
+    <h2>Ваша історія заявок</h2>
+    <div class="history-container" id="history"></div>
+  </div>
 
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script>
-  const tg = window.Telegram.WebApp;
-  tg.ready(); tg.expand();
+    const tg = window.Telegram.WebApp;
+    tg.ready(); tg.expand();
 
-  async function submitForm() {
-    const vinCar = document.getElementById('vin-input-car').value.trim();
-    const vinEcu = document.getElementById('vin-input-ecu').value.trim();
-    const problem = document.getElementById('problem').value.trim();
-    const phone = document.getElementById('phone-input').value.trim();
-    const chat_id = String(tg.initDataUnsafe.user.id);
-    const owner_name = tg.initDataUnsafe.user.first_name || "гость";
-
-    if (vinCar.length !== 17) return alert('VIN автомобіля має містити 17 символів');
-    if (vinEcu.length !== 17) return alert('VIN комп’ютера має містити 17 символів');
-    if (!problem) return alert('Опишіть проблему');
-
-    // --- здесь поправка на ваш часовой пояс ---
-    const now = new Date();
-    const offsetMs = now.getTimezoneOffset() * 60000;
-    const clientDate = new Date(now.getTime() - offsetMs).toISOString();
-    // ------------------------
-
-    const payload = {
-      vin:         vinEcu,
-      car_vin:     vinCar,
-      problem:     problem,
-      phone:       phone,
-      owner:       "telegram",
-      owner_name:  owner_name,
-      chat_id:     chat_id,
-      date:        clientDate
-    };
-
-    console.log("📤 Payload:", payload);
-
-    try {
-      const res = await fetch("https://crm.dolce.kyiv.ua/api/create_request", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify(payload)
-      });
-      const result = await res.json();
-      console.log("✅ Server response:", result);
-
-      if (result.status === "ok") {
-        alert("Заявка успішно надіслана!");
-        window.location.href = 'history.html';
-      } else {
-        alert("Помилка: " + result.message);
-      }
-    } catch (err) {
-      alert("Помилка з'єднання: " + err.message);
+    // helper: отформатировать ISO → локальную строку "YYYY-MM-DD HH:mm"
+    function formatLocal(iso) {
+      const d = new Date(iso);
+      const pad = n=>n<10?'0'+n:n;
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`
+           + ` ${pad(d.getHours())}:${pad(d.getMinutes())}`;
     }
-  }
-</script>
 
+    async function fetchHistory(){
+      const chatId = String(tg.initDataUnsafe.user.id);
+      const res = await fetch(`https://crm.dolce.kyiv.ua/api/get_requests?chat_id=${chatId}`);
+      const body = await res.json();
+      if(body.status==="ok") render(body.requests);
+      else document.getElementById('history').innerText = body.message;
+    }
+
+    function render(list){
+      const out = document.getElementById('history');
+      out.innerHTML = "";
+      list.forEach((r,i)=>{
+        const card = document.createElement('div');
+        card.className = 'request-card';
+        // кнопка «Удалить»
+        const del = document.createElement('button');
+        del.className = 'delete-btn';
+        del.textContent = 'Видалити';
+        del.onclick = () => deleteRequest(r.id);
+
+        // собираем тело карточки
+        card.innerHTML = `
+          <div>
+            <b>Заявка №${i+1}</b><br>
+            VIN: ${r.vin}<br>
+            Дата: ${formatLocal(r.date)}<br>
+            Проблема: ${r.problem}
+          </div>
+        `;
+        card.appendChild(del);
+        out.appendChild(card);
+      });
+    }
+
+    async function deleteRequest(id){
+      if(!confirm(`Видалити заявку №${id}?`)) return;
+      const res = await fetch(`https://crm.dolce.kyiv.ua/api/delete_request/${id}`, {
+        method: "DELETE"
+      });
+      const body = await res.json();
+      if(body.status==="ok"){
+        alert(body.message);
+        fetchHistory();
+      } else {
+        alert("Помилка: " + body.message);
+      }
+    }
+
+    fetchHistory();
   </script>
 </body>
 </html>
