@@ -191,97 +191,82 @@
     tg.ready();
     tg.expand();
 
-    const requestsData = [
-      {
-        vin: '5YJ3E1EA7LF000001',
-        date: '2025-05-12 14:30',
-        problem: 'Не відкриваються двері.',
-        phone: '+380501234567',
-        fileUrl: '#',
-        statusHistory: [
-          {name: '1. Створена',      time: '14:30', state: 'completed'},
-          {name: '2. Діагностування', time: '16:45', state: 'active'},
-          {name: '3. Висновок',      time: '',       state: ''},
-          {name: '4. Завершено',     time: '',       state: ''}
-        ]
+    async function fetchHistory() {
+      try {
+        const chatId = tg.initDataUnsafe?.user?.id?.toString() || "";
+        const res = await fetch("https://tgbot.dolce.kyiv.ua/api/get_requests?chat_id=" + chatId);
+        const { requests } = await res.json();
+        renderRequests(requests);
+      } catch (e) {
+        document.getElementById('history').innerHTML = '<p>Не вдалося завантажити історію.</p>';
       }
-    ];
+    }
 
-    const histContainer = document.getElementById('history');
+    function renderRequests(requestsData) {
+      const histContainer = document.getElementById('history');
+      histContainer.innerHTML = '';
 
-    requestsData.forEach((req, idx) => {
-      const card = document.createElement('div');
-      card.className = 'request-card';
+      requestsData.forEach((req, idx) => {
+        const card = document.createElement('div');
+        card.className = 'request-card';
 
-      const hdr = document.createElement('div');
-      hdr.className = 'request-header';
-      hdr.innerHTML = `
-        <div>
-          <p class="request-title">Заявка №${idx+1}</p>
-          <p class="request-sub">VIN: ${req.vin}</p>
-        </div>
-        <p class="request-sub">${req.date}</p>
-      `;
-      card.append(hdr);
+        const hdr = document.createElement('div');
+        hdr.className = 'request-header';
+        hdr.innerHTML = `
+          <div>
+            <p class="request-title">Заявка №${idx+1}</p>
+            <p class="request-sub">VIN: ${req.vin}</p>
+          </div>
+          <p class="request-sub">${req.date}</p>
+        `;
+        card.append(hdr);
 
-      const body = document.createElement('div');
-      body.className = 'request-body';
-      body.innerHTML = `
-        <p><strong>Опис проблеми:</strong> ${req.problem}</p>
-        <p><strong>Телефон:</strong> <a href="tel:${req.phone}">${req.phone}</a></p>
-        <p><strong>Файл:</strong> <a href="${req.fileUrl}" target="_blank">Переглянути</a></p>
-      `;
+        const body = document.createElement('div');
+        body.className = 'request-body';
+        body.innerHTML = `
+          <p><strong>Опис проблеми:</strong> ${req.problem}</p>
+          <p><strong>Телефон:</strong> <a href="tel:${req.phone}">${req.phone}</a></p>
+          <p><strong>Файл:</strong> <a href="${req.fileUrl || '#'}" target="_blank">Переглянути</a></p>
+        `;
 
-      const steps = document.createElement('div');
-      steps.className = 'steps';
-      req.statusHistory.forEach(step => {
-        const sb = document.createElement('div');
-        sb.className = `step-block ${step.state}`;
+        const steps = document.createElement('div');
+        steps.className = 'steps';
 
-        const left = document.createElement('div');
-        left.className = 'left';
-        const nm = document.createElement('span');
-        nm.className = 'name'; nm.textContent = step.name;
-        left.append(nm);
-        if (step.time) {
-          const tm = document.createElement('span');
-          tm.className = 'time'; tm.textContent = step.time;
-          left.append(tm);
-        }
+        const statuses = ['Створена', 'Діагностування', 'Висновок', 'Завершено'];
+        statuses.forEach((s, i) => {
+          const sb = document.createElement('div');
+          sb.className = 'step-block';
+          if (i === 0) sb.classList.add('completed');
+          else if (i === 1) sb.classList.add('active');
 
-        const right = document.createElement('div');
-        right.className = 'right';
-        if (step.state === 'active') {
-          const btn = document.createElement('button');
-          btn.className = 'pdf-btn';
-          btn.textContent = 'PDF';
-          btn.addEventListener('click', e => {
-            e.stopPropagation();
-            downloadPDF(req.vin);
-          });
-          right.append(btn);
-        }
+          sb.innerHTML = `
+            <div class="left">
+              <span class="name">${i + 1}. ${s}</span>
+              <span class="time">${i === 0 ? req.date : ''}</span>
+            </div>
+            <div class="right">
+              ${i === 1 ? '<button class="pdf-btn" onclick="downloadPDF(\'' + req.vin + '\')">PDF</button>' : ''}
+            </div>
+          `;
+          steps.append(sb);
+        });
 
-        sb.append(left, right);
-        if (step.state === 'active') {
-          sb.addEventListener('click', () => downloadPDF(req.vin));
-        }
-        steps.append(sb);
+        body.append(steps);
+        card.append(body);
+
+        hdr.addEventListener('click', () => {
+          body.style.display = body.style.display === 'block' ? 'none' : 'block';
+        });
+
+        histContainer.append(card);
       });
-
-      body.append(steps);
-      card.append(body);
-
-      hdr.addEventListener('click', () => {
-        body.style.display = body.style.display === 'block' ? 'none' : 'block';
-      });
-
-      histContainer.append(card);
-    });
+    }
 
     function downloadPDF(vin) {
-      alert('Завантажити PDF для ' + vin);
+      window.open("https://tgbot.dolce.kyiv.ua/download/" + vin, "_blank");
     }
+
+    fetchHistory();
   </script>
 </body>
 </html>
