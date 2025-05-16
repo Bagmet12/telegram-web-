@@ -6,175 +6,38 @@
   <title>Створити заявку</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    * { box-sizing: border-box; }
-    html, body {
+    body {
       margin: 0;
-      padding: 0;
-      min-height: 100vh;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       color: #ffffff;
       background: url('tesla-bg.png') no-repeat center center fixed;
       background-size: cover;
     }
-
-    .container {
-      width: 100%;
-      padding: 0 8px;
-    }
-
+    .container { padding: 0 8px; }
     .page-header {
       font-size: 32px;
-      font-weight: 500;
       padding: 20px 0 10px;
       text-align: center;
     }
-
-    .back-card {
-      margin-bottom: 20px;
-      width: 100%;
-      cursor: pointer;
-    }
-
-    .back-card .card {
-      display: flex;
-      align-items: center;
-      background: rgba(0,0,0,0.7);
-      border-radius: 16px;
-      padding: 14px 20px;
-      transition: transform .1s;
-    }
-
-    .back-card .card:hover {
-      transform: scale(1.03);
-    }
-
-    .back-card .icon {
-      font-size: 24px;
-      margin-right: 12px;
-    }
-
-    .back-card .text {
-      font-size: 18px;
-    }
-
     .form-card {
       background: rgba(0,0,0,0.7);
       border-radius: 16px;
       padding: 24px 16px;
-      margin-bottom: 40px;
+      margin: 20px 0;
+    }
+    .form-row { margin-bottom: 16px; }
+    .form-row label { font-size: 14px; color: #ccc; margin-bottom: 6px; display: block; }
+    .form-row input, .form-row textarea {
       width: 100%;
-    }
-
-    .form-row {
-      margin-bottom: 16px;
-    }
-
-    .form-row label {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      margin-bottom: 6px;
-      font-size: 14px;
-      color: #CCCCCC;
-    }
-
-    .form-row input,
-    .form-row textarea {
-      width: 100%;
-      padding: 10px 12px;
+      padding: 10px;
       border-radius: 8px;
       border: 1px solid #444;
       background: #121212;
       color: #fff;
       font-size: 16px;
     }
-
-    .vin-row {
-      display: flex;
-      gap: 8px;
-    }
-
-    .vin-row input {
-      flex: 1;
-    }
-
-    .vin-row button {
-      width: 48px;
-      height: 48px;
-      border: none;
-      background: rgba(0,0,0,0.7);
-      color: #fff;
-      border-radius: 12px;
-      font-size: 24px;
-      cursor: pointer;
-      transition: transform .1s;
-    }
-
-    .vin-row button:hover {
-      transform: scale(1.05);
-    }
-
-    .tooltip {
-      position: relative;
-      display: inline-block;
-      cursor: pointer;
-      color: #03c75a;
-      font-weight: bold;
-      user-select: none;
-    }
-
-    .tooltip .tooltiptext {
-      visibility: hidden;
-      width: 220px;
-      background-color: rgba(0,0,0,0.9);
-      color: #fff;
-      text-align: left;
-      border-radius: 6px;
-      padding: 8px;
-      position: absolute;
-      z-index: 100;
-      bottom: 125%;
-      left: 50%;
-      transform: translateX(-50%);
-      opacity: 0;
-      transition: opacity .3s;
-      font-size: 13px;
-      line-height: 1.3;
-      pointer-events: none;
-    }
-
-    .tooltip .tooltiptext.active {
-      visibility: visible;
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    #video {
-      width: 100%;
-      border-radius: 8px;
-      display: none;
-      margin-top: 8px;
-    }
-
-    .close-scan {
-      display: none;
-      padding: 10px;
-      border: none;
-      border-radius: 12px;
-      background: #D32F2F;
-      color: #fff;
-      font-size: 16px;
-      cursor: pointer;
-      transition: transform .1s;
-      width: 100%;
-      margin-top: 8px;
-    }
-
-    .close-scan:hover {
-      transform: scale(1.05);
-    }
-
     .submit-btn {
+      width: 100%;
       padding: 14px;
       border: none;
       background: rgba(0,0,0,0.7);
@@ -182,185 +45,77 @@
       font-size: 18px;
       border-radius: 16px;
       cursor: pointer;
-      transition: transform .1s;
-      width: 100%;
-    }
-
-    .submit-btn:hover {
-      transform: scale(1.03);
     }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="page-header">Створити заявку</div>
-
-    <div class="back-card" onclick="location.href='index.html'">
-      <div class="card">
-        <div class="icon">←</div>
-        <div class="text">На головну</div>
-      </div>
-    </div>
-
     <div class="form-card">
       <div class="form-row">
-        <label for="vin-input-car">VIN автомобіля (17 символів)</label>
-        <div class="vin-row">
-          <input id="vin-input-car" type="text" maxlength="17" placeholder="Введіть VIN авто..." oninput="updateVin('vin-input-car', this.value)">
-          <button onclick="startScan('vin-input-car')">📷</button>
-        </div>
+        <label for="vin-input-car">VIN автомобіля</label>
+        <input id="vin-input-car" type="text" maxlength="17" placeholder="Введіть VIN авто">
       </div>
-
       <div class="form-row">
-        <label for="vin-input-ecu">
-          VIN комп’ютера (17 символів)
-          <span class="tooltip" id="info-ecu">ℹ
-            <span class="tooltiptext">
-              Якщо встановлено ECU від іншого автомобіля – введіть його VIN. Якщо це рідний блок управління вашого авто, просто скопіюйте та вставте свій VIN.
-            </span>
-          </span>
-        </label>
-        <div class="vin-row">
-          <input id="vin-input-ecu" type="text" maxlength="17" placeholder="Введіть VIN комп’ютера..." oninput="updateVin('vin-input-ecu', this.value)">
-          <button onclick="startScan('vin-input-ecu')">📷</button>
-        </div>
+        <label for="vin-input-ecu">VIN комп’ютера</label>
+        <input id="vin-input-ecu" type="text" maxlength="17" placeholder="Введіть VIN комп’ютера">
       </div>
-
-      <video id="video" autoplay playsinline></video>
-      <button class="close-scan" onclick="stopScan()">✖ Закрити скан</button>
-
       <div class="form-row">
         <label for="problem">Опис проблеми</label>
         <textarea id="problem" rows="4" placeholder="Опишіть проблему..."></textarea>
       </div>
-
-      <div class="form-row">
-        <label for="file-input">Додати фото/відео</label>
-        <input id="file-input" type="file" accept="image/*,video/*">
-      </div>
-
       <div class="form-row">
         <label for="phone-input">Номер телефону</label>
         <input id="phone-input" type="tel" placeholder="+380XXXXXXXXX">
       </div>
-
       <button class="submit-btn" onclick="submitForm()">Надіслати</button>
     </div>
   </div>
   <script>
-  const tg = window.Telegram.WebApp;
-  tg.ready();
-  tg.expand();
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
 
-  let stream, activeVinField;
+    async function submitForm() {
+      const vinCar = document.getElementById('vin-input-car').value.trim();
+      const vinEcu = document.getElementById('vin-input-ecu').value.trim();
+      const problem = document.getElementById('problem').value.trim();
+      const phone = document.getElementById('phone-input').value.trim();
+      const chat_id = tg.initDataUnsafe?.user?.id?.toString() || "unknown";
+      const owner_name = tg.initDataUnsafe?.user?.first_name || "гость";
 
-  document.getElementById('info-ecu').addEventListener('click', function(e) {
-    e.stopPropagation();
-    const tip = this.querySelector('.tooltiptext');
-    tip.classList.toggle('active');
-  });
-
-  document.addEventListener('click', hideKeyboard);
-  document.addEventListener('touchstart', hideKeyboard);
-
-  function hideKeyboard(e) {
-    const tag = e.target.tagName;
-    if (tag !== 'INPUT' && tag !== 'TEXTAREA') {
-      if (document.activeElement &&
-        (document.activeElement.tagName === 'INPUT' ||
-         document.activeElement.tagName === 'TEXTAREA')) {
-        document.activeElement.blur();
+      if (vinCar.length !== 17 || vinEcu.length !== 17 || !problem) {
+        alert("Перевірте правильність введення VIN та опису проблеми");
+        return;
       }
-    }
-  }
 
-  async function startScan(fieldId) {
-    activeVinField = fieldId;
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-      const videoEl = document.getElementById('video');
-      videoEl.srcObject = stream;
-      videoEl.style.display = 'block';
-      document.querySelector('.close-scan').style.display = 'block';
+      const payload = {
+        vin: vinEcu,
+        car_vin: vinCar,
+        problem: problem,
+        phone: phone,
+        owner: "telegram",
+        owner_name: owner_name,
+        chat_id: chat_id
+      };
 
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      let attempts = 0;
-
-      const interval = setInterval(async () => {
-        if (++attempts > 15) { clearInterval(interval); return; }
-        canvas.width = videoEl.videoWidth;
-        canvas.height = videoEl.videoHeight;
-        ctx.drawImage(videoEl, 0, 0);
-        const { data } = await Tesseract.recognize(canvas, 'eng', {
-          tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+      try {
+        const res = await fetch("https://tgbot.dolce.kyiv.ua/api/create_request", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
         });
-        const txt = data.text.replace(/\s/g, '').toUpperCase();
-        if (txt.length >= 17) {
-          clearInterval(interval);
-          stopScan();
-          document.getElementById(activeVinField).value = txt.slice(0,17);
+
+        const result = await res.json();
+        if (result.status === "ok") {
+          alert("Заявка успішно надіслана!");
+        } else {
+          alert("Помилка: " + result.message);
         }
-      }, 1000);
-
-    } catch {
-      document.getElementById('file-input').click();
-    }
-  }
-
-  function stopScan() {
-    if (stream) stream.getTracks().forEach(t => t.stop());
-    document.getElementById('video').style.display = 'none';
-    document.querySelector('.close-scan').style.display = 'none';
-  }
-
-  function updateVin(fieldId, val) {
-    document.getElementById(fieldId).value =
-      val.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,17);
-  }
-
-  async function submitForm() {
-    const vinCar = document.getElementById('vin-input-car').value.trim();
-    const vinEcu = document.getElementById('vin-input-ecu').value.trim();
-    const problem = document.getElementById('problem').value.trim();
-    const phone = document.getElementById('phone-input').value.trim();
-    const chat_id = tg.initDataUnsafe?.user?.id?.toString() || "unknown";
-    const owner_name = tg.initDataUnsafe?.user?.first_name || "гость";
-
-    if (vinCar.length !== 17) return alert('VIN автомобіля має містити 17 символів');
-    if (vinEcu.length !== 17) return alert('VIN комп’ютера має містити 17 символів');
-    if (!problem) return alert('Опишіть проблему');
-
-    const payload = {
-      vin: vinEcu,
-      car_vin: vinCar,
-      problem: problem,
-      phone: phone,
-      owner: "telegram",
-      owner_name: owner_name,
-      chat_id: chat_id
-    };
-
-    try {
-      const res = await fetch("https://tgbot.dolce.kyiv.ua/api/create_request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      const result = await res.json();
-
-      if (result.status === "ok") {
-        alert("Заявка успішно надіслана!");
-        window.location.href = 'history.html';
-      } else {
-        alert("Помилка: " + result.message);
+      } catch (err) {
+        alert("Помилка з'єднання: " + err.message);
       }
-
-    } catch (err) {
-      alert("Помилка з'єднання: " + err.message);
     }
-  }
-</script>
+  </script>
 </body>
 </html>
