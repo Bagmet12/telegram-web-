@@ -6,36 +6,184 @@
   <title>Історія заявок</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    body {
+    * { box-sizing: border-box; }
+    html, body {
       margin: 0;
+      padding: 0;
+      height: 100%;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #121212;
       color: #fff;
+      background: url('tesla-bg.png') no-repeat center center fixed;
+      background-size: cover;
     }
+
     .container {
-      padding: 16px;
+      width: 100%;
+      padding: 0 8px;
     }
+
+    .header-card {
+      background: rgba(0,0,0,0.7);
+      border-radius: 16px;
+      width: 100%;
+      height: 120px;
+      margin: 40px 0 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .header-card .name {
+      font-size: 32px;
+      font-weight: 600;
+      margin: 0;
+    }
+    .header-card .subtitle {
+      font-size: 16px;
+      color: #CCCCCC;
+      margin: 4px 0 0;
+    }
+
+    .back-card {
+      width: 100%;
+      margin-bottom: 20px;
+      cursor: pointer;
+    }
+    .back-card .card {
+      display: flex;
+      align-items: center;
+      background: rgba(0,0,0,0.7);
+      border-radius: 16px;
+      padding: 16px 24px;
+      transition: transform .1s;
+    }
+    .back-card .card:hover {
+      transform: scale(1.03);
+    }
+    .back-card .icon {
+      font-size: 24px;
+      margin-right: 12px;
+    }
+    .back-card .text {
+      font-size: 18px;
+    }
+
+    .history-container {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
     .request-card {
-      background: #1e1e1e;
-      border: 1px solid #333;
-      border-radius: 12px;
+      background: rgba(0,0,0,0.7);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .request-header {
       padding: 16px;
-      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .request-header:hover {
+      background: rgba(0,0,0,0.85);
+    }
+    .request-title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .request-sub {
+      margin: 0;
+      font-size: 14px;
+      color: #CCCCCC;
+    }
+
+    .request-body {
+      display: none;
+      padding: 0 16px 16px;
+      border-top: 1px solid #444;
+    }
+    .request-body p {
+      margin: 8px 0;
+      font-size: 15px;
+    }
+    .request-body a {
+      color: #03c75a;
+      text-decoration: underline;
+    }
+
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 16px;
     }
     .step-block {
-      margin-top: 8px;
-      padding: 8px;
-      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0,0,0,0.7);
+      border-radius: 16px;
+      padding: 12px 16px;
     }
-    .completed { background: #2e7d32; }
-    .active { background: #c62828; }
+    .step-block.completed {
+      background: #045b32;
+    }
+    .step-block.active {
+      background: #6d1c1c;
+    }
+    .step-block .left {
+      display: flex;
+      flex-direction: column;
+    }
+    .step-block .left .name {
+      font-weight: bold;
+      font-size: 15px;
+    }
+    .step-block .left .time {
+      font-size: 13px;
+      color: #ddd;
+      margin-top: 4px;
+    }
+    .step-block .right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .step-block .pdf-btn {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform .1s;
+    }
+    .step-block .pdf-btn:hover {
+      transform: scale(1.1);
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>Історія заявок</h2>
-    <div id="log"></div>
-    <div id="history"></div>
+    <div class="header-card">
+      <div class="name">TeslaAssistantBot</div>
+      <div class="subtitle">mini-додаток</div>
+    </div>
+
+    <div class="back-card" onclick="location.href='index.html'">
+      <div class="card">
+        <div class="icon">←</div><div class="text">На головну</div>
+      </div>
+    </div>
+
+    <div class="history-container" id="history"></div>
   </div>
 
   <script>
@@ -43,50 +191,82 @@
     tg.ready();
     tg.expand();
 
-    const log = document.getElementById("log");
-
-    const chatId = tg.initDataUnsafe?.user?.id?.toString() || null;
-    console.log("Telegram initDataUnsafe:", tg.initDataUnsafe);
-    console.log("Extracted chat_id:", chatId);
-
-    if (!chatId) {
-      log.innerHTML = `<p style="color:red;">❗ Не вдалося отримати chat_id користувача. Перевір, чи WebApp відкрито через Telegram.</p>`;
-    } else {
-      fetch(`https://crm.dolce.kyiv.ua/api/get_requests?chat_id=${chatId}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.status !== "ok") {
-            log.innerHTML = `<p style="color:red;">🚫 ${data.message}</p>`;
-            return;
-          }
-
-          const container = document.getElementById("history");
-          if (data.requests.length === 0) {
-            container.innerHTML = "<p>Немає заявок.</p>";
-            return;
-          }
-
-          data.requests.forEach((req, idx) => {
-            const card = document.createElement("div");
-            card.className = "request-card";
-            card.innerHTML = `
-              <h4>Заявка #${idx + 1}</h4>
-              <p><strong>VIN:</strong> ${req.vin}</p>
-              <p><strong>Опис:</strong> ${req.problem}</p>
-              <p><strong>Телефон:</strong> ${req.phone}</p>
-              <p><strong>Дата:</strong> ${req.date}</p>
-              <div class="step-block completed">1. Створена</div>
-              <div class="step-block active">2. Діагностика</div>
-              <div class="step-block">3. Висновок</div>
-              <div class="step-block">4. Завершено</div>
-            `;
-            container.appendChild(card);
-          });
-        })
-        .catch(err => {
-          log.innerHTML = `<p style="color:red;">❌ Сталася помилка: ${err.message}</p>`;
-        });
+    async function fetchHistory() {
+      try {
+        const chatId = tg.initDataUnsafe?.user?.id?.toString() || "";
+        const res = await fetch("http://localhost:5001/api/get_requests?chat_id=" + chatId);
+        const { requests } = await res.json();
+        renderRequests(requests);
+      } catch (e) {
+        document.getElementById('history').innerHTML = '<p>Не вдалося завантажити історію.</p>';
+      }
     }
+
+    function renderRequests(requestsData) {
+      const histContainer = document.getElementById('history');
+      histContainer.innerHTML = '';
+
+      requestsData.forEach((req, idx) => {
+        const card = document.createElement('div');
+        card.className = 'request-card';
+
+        const hdr = document.createElement('div');
+        hdr.className = 'request-header';
+        hdr.innerHTML = 
+          <div>
+            <p class="request-title">Заявка №${idx+1}</p>
+            <p class="request-sub">VIN: ${req.vin}</p>
+          </div>
+          <p class="request-sub">${req.date}</p>
+        ;
+        card.append(hdr);
+
+        const body = document.createElement('div');
+        body.className = 'request-body';
+        body.innerHTML = 
+          <p><strong>Опис проблеми:</strong> ${req.problem}</p>
+          <p><strong>Телефон:</strong> <a href="tel:${req.phone}">${req.phone}</a></p>
+          <p><strong>Файл:</strong> <a href="${req.fileUrl || '#'}" target="_blank">Переглянути</a></p>
+        ;
+
+        const steps = document.createElement('div');
+        steps.className = 'steps';
+
+        const statuses = ['Створена', 'Діагностування', 'Висновок', 'Завершено'];
+        statuses.forEach((s, i) => {
+          const sb = document.createElement('div');
+          sb.className = 'step-block';
+          if (i === 0) sb.classList.add('completed');
+          else if (i === 1) sb.classList.add('active');
+
+          sb.innerHTML = 
+            <div class="left">
+              <span class="name">${i + 1}. ${s}</span>
+              <span class="time">${i === 0 ? req.date : ''}</span>
+            </div>
+            <div class="right">
+              ${i === 1 ? '<button class="pdf-btn" onclick="downloadPDF(\'' + req.vin + '\')">PDF</button>' : ''}
+            </div>
+          ;
+          steps.append(sb);
+        });
+
+        body.append(steps);
+        card.append(body);
+
+        hdr.addEventListener('click', () => {
+          body.style.display = body.style.display === 'block' ? 'none' : 'block';
+        });
+
+        histContainer.append(card);
+      });
+    }
+
+    function downloadPDF(vin) {
+      window.open("http://localhost:5001/download/" + vin, "_blank");
+    }
+
+    fetchHistory();
   </script>
 </body>
 </html>
