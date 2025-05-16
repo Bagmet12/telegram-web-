@@ -194,7 +194,7 @@
     async function fetchHistory() {
       try {
         const chatId = tg.initDataUnsafe?.user?.id?.toString() || "";
-        const res = await fetch("https://tgbot.dolce.kyiv.ua/api/get_requests?chat_id=" + chatId);
+        const res = await fetch("https://http://localhost:5001/api/get_requests?chat_id=" + chatId);
         const { requests } = await res.json();
         renderRequests(requests);
       } catch (e) {
@@ -263,7 +263,7 @@
     }
 
     function downloadPDF(vin) {
-      window.open("https://tgbot.dolce.kyiv.ua/download/" + vin, "_blank");
+      window.open("https://http://localhost:5001/download/" + vin, "_blank");
     }
 
     fetchHistory();
