@@ -71,126 +71,57 @@
       <button class="submit-btn" onclick="submitForm()">Надіслати</button>
     </div>
   </div>
- <script>
-  const tg = window.Telegram.WebApp;
-  tg.ready();
-  tg.expand();
 
-  let stream, activeVinField;
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
 
-  document.getElementById('info-ecu').addEventListener('click', function(e) {
-    e.stopPropagation();
-    const tip = this.querySelector('.tooltiptext');
-    tip.classList.toggle('active');
-  });
+    async function submitForm() {
+      const vinCar = document.getElementById('vin-input-car').value.trim();
+      const vinEcu = document.getElementById('vin-input-ecu').value.trim();
+      const problem = document.getElementById('problem').value.trim();
+      const phone = document.getElementById('phone-input').value.trim();
+      const chat_id = tg.initDataUnsafe?.user?.id?.toString() || "unknown";
+      const owner_name = tg.initDataUnsafe?.user?.first_name || "гость";
 
-  document.addEventListener('click', hideKeyboard);
-  document.addEventListener('touchstart', hideKeyboard);
+      if (vinCar.length !== 17) return alert('VIN автомобіля має містити 17 символів');
+      if (vinEcu.length !== 17) return alert('VIN комп’ютера має містити 17 символів');
+      if (!problem) return alert('Опишіть проблему');
 
-  function hideKeyboard(e) {
-    const tag = e.target.tagName;
-    if (tag !== 'INPUT' && tag !== 'TEXTAREA') {
-      if (document.activeElement &&
-          (document.activeElement.tagName === 'INPUT' ||
-           document.activeElement.tagName === 'TEXTAREA')) {
-        document.activeElement.blur();
-      }
-    }
-  }
+      const payload = {
+        vin: vinEcu,
+        car_vin: vinCar,
+        problem: problem,
+        phone: phone,
+        owner: "telegram",
+        owner_name: owner_name,
+        chat_id: chat_id
+      };
 
-  async function startScan(fieldId) {
-    activeVinField = fieldId;
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-      const videoEl = document.getElementById('video');
-      videoEl.srcObject = stream;
-      videoEl.style.display = 'block';
-      document.querySelector('.close-scan').style.display = 'block';
+      console.log("📤 Payload:", payload); // лог для отладки
 
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      let attempts = 0;
-
-      const interval = setInterval(async () => {
-        if (++attempts > 15) { clearInterval(interval); return; }
-        canvas.width = videoEl.videoWidth;
-        canvas.height = videoEl.videoHeight;
-        ctx.drawImage(videoEl, 0, 0);
-        const { data } = await Tesseract.recognize(canvas, 'eng', {
-          tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+      try {
+        const res = await fetch("https://crm.dolce.kyiv.ua/api/create_request", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
         });
-        const txt = data.text.replace(/\s/g, '').toUpperCase();
-        if (txt.length >= 17) {
-          clearInterval(interval);
-          stopScan();
-          document.getElementById(activeVinField).value = txt.slice(0,17);
+
+        const result = await res.json();
+        console.log("✅ Server response:", result);
+
+        if (result.status === "ok") {
+          alert("Заявка успішно надіслана!");
+          window.location.href = 'history.html';
+        } else {
+          alert("Помилка: " + result.message);
         }
-      }, 1000);
 
-    } catch {
-      document.getElementById('file-input').click();
-    }
-  }
-
-  function stopScan() {
-    if (stream) stream.getTracks().forEach(t => t.stop());
-    document.getElementById('video').style.display = 'none';
-    document.querySelector('.close-scan').style.display = 'none';
-  }
-
-  function updateVin(fieldId, val) {
-    document.getElementById(fieldId).value =
-      val.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,17);
-  }
-
-  async function submitForm() {
-    const vinCar = document.getElementById('vin-input-car').value.trim();
-    const vinEcu = document.getElementById('vin-input-ecu').value.trim();
-    const problem = document.getElementById('problem').value.trim();
-    const phone = document.getElementById('phone-input').value.trim();
-    const chat_id = tg.initDataUnsafe?.user?.id?.toString() || "unknown";
-    const owner_name = tg.initDataUnsafe?.user?.first_name || "гость";
-
-    if (vinCar.length !== 17) return alert('VIN автомобіля має містити 17 символів');
-    if (vinEcu.length !== 17) return alert('VIN комп’ютера має містити 17 символів');
-    if (!problem) return alert('Опишіть проблему');
-
-    const payload = {
-      vin: vinEcu,
-      car_vin: vinCar,
-      problem: problem,
-      phone: phone,
-      owner: "telegram",
-      owner_name: owner_name,
-      chat_id: chat_id
-    };
-
-    try {
-      // 🔴 1. Отправка напрямую в CRM
-      const res = await fetch("https://crm.dolce.kyiv.ua/api/create_request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      const result = await res.json();
-
-      // 🔴 2. Отправка в бота (чтобы сработал filters.StatusUpdate.WEB_APP_DATA)
-      tg.sendData(JSON.stringify(payload));
-
-      if (result.status === "ok") {
-        alert("Заявка успішно надіслана!");
-        window.location.href = 'history.html';
-      } else {
-        alert("Помилка: " + result.message);
+      } catch (err) {
+        alert("Помилка з'єднання: " + err.message);
       }
-
-    } catch (err) {
-      alert("Помилка з'єднання: " + err.message);
     }
-  }
-</script>
-</body>
-</html>
+  </script>
 </body>
 </html>
