@@ -8,16 +8,13 @@
   <style>
     * { box-sizing: border-box; }
     html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
+      margin: 0; padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       color: #fff;
       background: url('tesla-bg.png') no-repeat center center fixed;
       background-size: cover;
     }
     .container {
-      width: 100%;
       padding: 16px;
     }
     .header-card {
@@ -28,101 +25,83 @@
       margin-bottom: 20px;
     }
     .header-card .name {
-      font-size: 32px;
-      font-weight: 600;
-      margin: 0;
+      font-size: 32px; margin: 0;
     }
     .header-card .subtitle {
-      font-size: 16px;
-      color: #CCCCCC;
-      margin-top: 4px;
+      font-size: 16px; color: #ccc; margin-top: 4px;
     }
     .back-card {
-      margin-bottom: 20px;
-      cursor: pointer;
+      margin-bottom: 20px; cursor: pointer;
     }
     .back-card .card {
-      display: flex;
-      align-items: center;
+      display: flex; align-items: center;
       background: rgba(0,0,0,0.7);
       border-radius: 16px;
       padding: 12px 16px;
       transition: transform .1s;
     }
-    .back-card .card:hover {
-      transform: scale(1.03);
-    }
-    .back-card .icon {
-      font-size: 24px;
-      margin-right: 12px;
-    }
-    .back-card .text {
-      font-size: 18px;
-    }
+    .back-card .card:hover { transform: scale(1.03); }
+    .back-card .icon { font-size: 24px; margin-right: 12px; }
+    .back-card .text { font-size: 18px; }
     .history-container {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+      display: flex; flex-direction: column; gap: 12px;
     }
     .request-card {
       background: rgba(0,0,0,0.7);
       border-radius: 12px;
       overflow: hidden;
-      position: relative;
-    }
-    .request-card .delete-btn {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      background: #a00;
-      color: #fff;
-      border: none;
-      padding: 4px 8px;
-      border-radius: 6px;
-      font-size: 12px;
-      cursor: pointer;
-      transition: background .2s;
-    }
-    .request-card .delete-btn:hover {
-      background: #c00;
     }
     .request-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 16px;
-      cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 16px; cursor: pointer;
       transition: background .2s;
     }
-    .request-header:hover {
-      background: rgba(0,0,0,0.85);
-    }
+    .request-header:hover { background: rgba(0,0,0,0.85); }
     .request-header .left {
-      display: flex;
-      flex-direction: column;
+      display: flex; flex-direction: column;
     }
     .request-header .title {
-      margin: 0;
-      font-size: 18px;
-      font-weight: bold;
+      margin: 0; font-size: 18px; font-weight: bold;
     }
     .request-header .vin {
-      margin: 4px 0 0;
-      font-size: 14px;
-      color: #ccc;
+      margin: 4px 0 0; font-size: 14px; color: #ccc;
     }
     .request-header .date {
-      font-size: 14px;
-      color: #ccc;
+      font-size: 14px; color: #ccc;
     }
     .request-body {
       display: none;
       padding: 0 16px 16px;
       border-top: 1px solid #333;
     }
-    .request-body p {
-      margin: 8px 0;
-      font-size: 15px;
+    .steps {
+      display: flex; flex-direction: column; gap: 8px; margin-top: 12px;
+    }
+    .step-block {
+      display: flex; justify-content: space-between; align-items: center;
+      background: rgba(0,0,0,0.7); border-radius: 12px;
+      padding: 8px 12px;
+      font-size: 14px;
+    }
+    .step-block.completed { background: #045b32; }
+    .step-block.active    { background: #6d1c1c; }
+    .step-block .left {
+      display: flex; flex-direction: column;
+    }
+    .step-block .left .name {
+      font-weight: bold;
+    }
+    .step-block .left .time {
+      font-size: 12px; color: #ddd; margin-top: 2px;
+    }
+    .step-block .right button {
+      background: transparent; border: 1px solid #fff;
+      border-radius: 6px; padding: 4px 8px;
+      color: #fff; cursor: pointer;
+      transition: transform .1s;
+    }
+    .step-block .right button:hover {
+      transform: scale(1.05);
     }
   </style>
 </head>
@@ -147,7 +126,6 @@
     const tg = window.Telegram.WebApp;
     tg.ready(); tg.expand();
 
-    // форматирует ISO→"YYYY-MM-DD HH:mm" по локальному времени
     function formatLocal(iso) {
       const d = new Date(iso);
       const pad = n=>n<10?'0'+n:n;
@@ -159,7 +137,7 @@
       const chatId = String(tg.initDataUnsafe.user.id);
       const res = await fetch(`https://crm.dolce.kyiv.ua/api/get_requests?chat_id=${chatId}`);
       const body = await res.json();
-      if(body.status === "ok") render(body.requests);
+      if(body.status==="ok") render(body.requests);
       else document.getElementById('history').innerText = body.message;
     }
 
@@ -170,17 +148,7 @@
         const card = document.createElement('div');
         card.className = 'request-card';
 
-        // кнопка «Видалити»
-        const del = document.createElement('button');
-        del.className = 'delete-btn';
-        del.textContent = 'Видалити';
-        del.onclick = e => {
-          e.stopPropagation();
-          deleteRequest(r.id);
-        };
-        card.appendChild(del);
-
-        // шапка
+        // header
         const hdr = document.createElement('div');
         hdr.className = 'request-header';
         hdr.innerHTML = `
@@ -192,36 +160,74 @@
         `;
         card.appendChild(hdr);
 
-        // тело (скрыто по умолчанию)
+        // body with steps
         const body = document.createElement('div');
         body.className = 'request-body';
-        body.innerHTML = `
-          <p><strong>Проблема:</strong> ${r.problem}</p>
-          <p><strong>Телефон:</strong> ${r.phone || '—'}</p>
-        `;
+
+        const statuses = [
+          {name:'Створена',       key:'Створена'},
+          {name:'Діагностування', key:'Діагностування'},
+          {name:'Висновок',      key:'Висновок'},
+          {name:'Завершено',     key:'Завершено'},
+        ];
+
+        const steps = document.createElement('div');
+        steps.className = 'steps';
+
+        statuses.forEach((s,j)=>{
+          const sb = document.createElement('div');
+          sb.className = 'step-block';
+          // Створена всегда completed
+          if(j===0) sb.classList.add('completed');
+          // Активный только тот, что совпал с текущим статусом
+          else if(r.status === s.key) sb.classList.add('active');
+
+          const left = document.createElement('div');
+          left.className = 'left';
+          const name = document.createElement('span');
+          name.className = 'name';
+          name.textContent = `${j+1}. ${s.name}`;
+          left.appendChild(name);
+          // дату показываем у Створена и у активного шага
+          if(j===0 || r.status === s.key){
+            const time = document.createElement('span');
+            time.className = 'time';
+            time.textContent = formatLocal(r.date);
+            left.appendChild(time);
+          }
+
+          const right = document.createElement('div');
+          right.className = 'right';
+          // кнопка PDF на Диагностировании
+          if(s.key==='Діагностування' && r.status==='Діагностування'){
+            const btn = document.createElement('button');
+            btn.textContent = 'PDF';
+            btn.onclick = e=>{ e.stopPropagation(); window.open(`https://crm.dolce.kyiv.ua/download/${r.vin}`); };
+            right.appendChild(btn);
+          }
+          // кнопка Завершити на Завершено
+          if(s.key==='Завершено' && r.status==='Завершено'){
+            const btn = document.createElement('button');
+            btn.textContent = 'Завершити';
+            btn.onclick = e=>{ e.stopPropagation(); alert('Поздравляем, заявка завершена!'); };
+            right.appendChild(btn);
+          }
+
+          sb.appendChild(left);
+          sb.appendChild(right);
+          steps.appendChild(sb);
+        });
+
+        body.appendChild(steps);
         card.appendChild(body);
 
-        // переключение видимости тела
+        // toggle body visibility
         hdr.addEventListener('click', ()=> {
-          body.style.display = body.style.display === 'block' ? 'none' : 'block';
+          body.style.display = body.style.display==='block'?'none':'block';
         });
 
         out.appendChild(card);
       });
-    }
-
-    async function deleteRequest(id){
-      if(!confirm(`Видалити заявку №${id}?`)) return;
-      const res = await fetch(`https://crm.dolce.kyiv.ua/api/delete_request/${id}`, {
-        method: 'DELETE'
-      });
-      const body = await res.json();
-      if(body.status === "ok"){
-        alert(body.message);
-        fetchHistory();
-      } else {
-        alert("Помилка: " + body.message);
-      }
     }
 
     fetchHistory();
