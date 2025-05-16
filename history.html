@@ -192,15 +192,17 @@
     tg.expand();
 
     async function fetchHistory() {
-      try {
-        const chatId = tg.initDataUnsafe?.user?.id?.toString() || "";
-        const res = await fetch("https://crm.dolce.kyiv.ua/api/get_requests?chat_id=" + chatId);
-        const { requests } = await res.json();
-        renderRequests(requests);
-      } catch (e) {
-        document.getElementById('history').innerHTML = '<p>Не вдалося завантажити історію.</p>';
-      }
-    }
+  try {
+    const chatId = tg.initDataUnsafe?.user?.id?.toString() || "";
+    console.log("chat_id:", chatId);
+    const res = await fetch("https://tgbot.dolce.kyiv.ua/api/get_requests?chat_id=" + chatId);
+    const { requests } = await res.json();
+    renderRequests(requests);
+  } catch (e) {
+    document.getElementById('history').innerHTML = '<p>Не вдалося завантажити історію.</p>';
+  }
+}
+
 
     function renderRequests(requestsData) {
       const histContainer = document.getElementById('history');
