@@ -195,7 +195,7 @@
   try {
     const chatId = tg.initDataUnsafe?.user?.id?.toString() || "";
     console.log("chat_id:", chatId);
-    const res = await fetch("https://tgbot.dolce.kyiv.ua/api/get_requests?chat_id=" + chatId);
+    const res = await fetch("https://crm.dolce.kyiv.ua/api/get_requests?chat_id=" + chatId);
     const { requests } = await res.json();
     renderRequests(requests);
   } catch (e) {
