@@ -72,56 +72,60 @@
     </div>
   </div>
 
-  <script>
-    const tg = window.Telegram.WebApp;
-    tg.ready();
-    tg.expand();
+ <script>
+  const tg = window.Telegram.WebApp;
+  tg.ready(); tg.expand();
 
-    async function submitForm() {
-      const vinCar = document.getElementById('vin-input-car').value.trim();
-      const vinEcu = document.getElementById('vin-input-ecu').value.trim();
-      const problem = document.getElementById('problem').value.trim();
-      const phone = document.getElementById('phone-input').value.trim();
-      const chat_id = tg.initDataUnsafe?.user?.id?.toString() || "unknown";
-      const owner_name = tg.initDataUnsafe?.user?.first_name || "гость";
+  async function submitForm() {
+    const vinCar = document.getElementById('vin-input-car').value.trim();
+    const vinEcu = document.getElementById('vin-input-ecu').value.trim();
+    const problem = document.getElementById('problem').value.trim();
+    const phone = document.getElementById('phone-input').value.trim();
+    const chat_id = String(tg.initDataUnsafe.user.id);
+    const owner_name = tg.initDataUnsafe.user.first_name || "гость";
 
-      if (vinCar.length !== 17) return alert('VIN автомобіля має містити 17 символів');
-      if (vinEcu.length !== 17) return alert('VIN комп’ютера має містити 17 символів');
-      if (!problem) return alert('Опишіть проблему');
+    if (vinCar.length !== 17) return alert('VIN автомобіля має містити 17 символів');
+    if (vinEcu.length !== 17) return alert('VIN комп’ютера має містити 17 символів');
+    if (!problem) return alert('Опишіть проблему');
 
-      const payload = {
-        vin: vinEcu,
-        car_vin: vinCar,
-        problem: problem,
-        phone: phone,
-        owner: "telegram",
-        owner_name: owner_name,
-        chat_id: chat_id
-      };
+    // Берём текущее клиентское время в ISO (с часовым поясом и секундами)
+    const clientDate = new Date().toISOString(); 
 
-      console.log("📤 Payload:", payload); // лог для отладки
+    const payload = {
+      vin:         vinEcu,
+      car_vin:     vinCar,
+      problem:     problem,
+      phone:       phone,
+      owner:       "telegram",
+      owner_name:  owner_name,
+      chat_id:     chat_id,
+      date:        clientDate    // передаём дату с клиента
+    };
 
-      try {
-        const res = await fetch("https://crm.dolce.kyiv.ua/api/create_request", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
+    console.log("📤 Payload:", payload);
 
-        const result = await res.json();
-        console.log("✅ Server response:", result);
+    try {
+      const res = await fetch("https://crm.dolce.kyiv.ua/api/create_request", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify(payload)
+      });
 
-        if (result.status === "ok") {
-          alert("Заявка успішно надіслана!");
-          window.location.href = 'history.html';
-        } else {
-          alert("Помилка: " + result.message);
-        }
+      const result = await res.json();
+      console.log("✅ Server response:", result);
 
-      } catch (err) {
-        alert("Помилка з'єднання: " + err.message);
+      if (result.status === "ok") {
+        alert("Заявка успішно надіслана!");
+        window.location.href = 'history.html';
+      } else {
+        alert("Помилка: " + result.message);
       }
+
+    } catch (err) {
+      alert("Помилка з'єднання: " + err.message);
     }
-  </script>
+  }
+</script>
+
 </body>
 </html>
