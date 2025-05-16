@@ -90,84 +90,45 @@
 
     <div class="history-container" id="history"></div>
   </div>
-
-  <script>
+   <script>
     const tg = window.Telegram.WebApp;
-    tg.ready();
-    tg.expand();
+    tg.ready(); tg.expand();
+
+    const API = "https://crm.dolce.kyiv.ua/api";
 
     async function fetchHistory() {
+      const chatId = tg.initDataUnsafe?.user?.id;
+      console.log("fetchHistory: chatId =", chatId);
+
       try {
-        const chatId = tg.initDataUnsafe?.user?.id?.toString() || "";
-        const res = await fetch("https://crm.dolce.kyiv.ua/api/get_requests?chat_id=" + chatId);
-        const data = await res.json();
-        renderRequests(data.requests);
-      } catch (e) {
-        document.getElementById('history').innerHTML = '<p>Не вдалося завантажити історію.</p>';
+        const res = await fetch(`${API}/get_requests?chat_id=${chatId}`);
+        const json = await res.json();
+        console.log("GET /get_requests →", json);
+
+        if (json.status !== "ok") {
+          throw new Error(json.message || "Unknown error");
+        }
+        render(json.requests);
+      } catch (err) {
+        console.error(err);
+        document.getElementById("history").textContent = "Не вдалося завантажити історію.";
       }
     }
 
-    function renderRequests(requestsData) {
-      const histContainer = document.getElementById('history');
-      histContainer.innerHTML = '';
-
-      requestsData.forEach((req, idx) => {
-        const card = document.createElement('div');
-        card.className = 'request-card';
-
-        const hdr = document.createElement('div');
-        hdr.className = 'request-header';
-        hdr.innerHTML = `
-          <div>
-            <p class="request-title">Заявка №${idx + 1}</p>
-            <p class="request-sub">VIN: ${req.vin}</p>
-          </div>
-          <p class="request-sub">${req.date}</p>
+    function render(requests) {
+      const container = document.getElementById("history");
+      container.innerHTML = "";
+      requests.forEach((r,i) => {
+        const card = document.createElement("div");
+        card.innerHTML = `
+          <h3>Заявка №${i+1}</h3>
+          <p>VIN: ${r.vin}</p>
+          <p>Дата: ${r.date}</p>
+          <p>Проблема: ${r.problem}</p>
+          <hr>
         `;
-        card.append(hdr);
-
-        const body = document.createElement('div');
-        body.className = 'request-body';
-        body.innerHTML = `
-          <p><strong>Опис проблеми:</strong> ${req.problem}</p>
-          <p><strong>Телефон:</strong> <a href="tel:${req.phone}">${req.phone}</a></p>
-          <p><strong>Файл:</strong> <a href="${req.fileUrl || '#'}" target="_blank">Переглянути</a></p>
-        `;
-
-        const steps = document.createElement('div');
-        steps.className = 'steps';
-        const statuses = ['Створена', 'Діагностування', 'Висновок', 'Завершено'];
-        statuses.forEach((s, i) => {
-          const sb = document.createElement('div');
-          sb.className = 'step-block';
-          if (i === 0) sb.classList.add('completed');
-          else if (i === 1) sb.classList.add('active');
-
-          sb.innerHTML = `
-            <div class="left">
-              <span class="name">${i + 1}. ${s}</span>
-              <span class="time">${i === 0 ? req.date : ''}</span>
-            </div>
-            <div class="right">
-              ${i === 1 ? `<button class="pdf-btn" onclick="downloadPDF('${req.vin}')">PDF</button>` : ''}
-            </div>
-          `;
-          steps.append(sb);
-        });
-
-        body.append(steps);
-        card.append(body);
-
-        hdr.addEventListener('click', () => {
-          body.style.display = body.style.display === 'block' ? 'none' : 'block';
-        });
-
-        histContainer.append(card);
+        container.append(card);
       });
-    }
-
-    function downloadPDF(vin) {
-      window.open("https://crm.dolce.kyiv.ua/download/" + vin, "_blank");
     }
 
     fetchHistory();
