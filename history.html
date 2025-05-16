@@ -16,12 +16,10 @@
       background: url('tesla-bg.png') no-repeat center center fixed;
       background-size: cover;
     }
-
     .container {
       width: 100%;
       padding: 0 8px;
     }
-
     .header-card {
       background: rgba(0,0,0,0.7);
       border-radius: 16px;
@@ -44,7 +42,6 @@
       color: #CCCCCC;
       margin: 4px 0 0;
     }
-
     .back-card {
       width: 100%;
       margin-bottom: 20px;
@@ -68,7 +65,6 @@
     .back-card .text {
       font-size: 18px;
     }
-
     .history-container {
       width: 100%;
       display: flex;
@@ -76,7 +72,6 @@
       gap: 16px;
       margin-bottom: 40px;
     }
-
     .request-card {
       background: rgba(0,0,0,0.7);
       border-radius: 16px;
@@ -103,7 +98,6 @@
       font-size: 14px;
       color: #CCCCCC;
     }
-
     .request-body {
       display: none;
       padding: 0 16px 16px;
@@ -117,7 +111,6 @@
       color: #03c75a;
       text-decoration: underline;
     }
-
     .steps {
       display: flex;
       flex-direction: column;
@@ -132,12 +125,8 @@
       border-radius: 16px;
       padding: 12px 16px;
     }
-    .step-block.completed {
-      background: #045b32;
-    }
-    .step-block.active {
-      background: #6d1c1c;
-    }
+    .step-block.completed { background: #045b32; }
+    .step-block.active { background: #6d1c1c; }
     .step-block .left {
       display: flex;
       flex-direction: column;
@@ -212,22 +201,22 @@
 
         const hdr = document.createElement('div');
         hdr.className = 'request-header';
-        hdr.innerHTML = 
+        hdr.innerHTML = `
           <div>
-            <p class="request-title">Заявка №${idx+1}</p>
+            <p class="request-title">Заявка №${idx + 1}</p>
             <p class="request-sub">VIN: ${req.vin}</p>
           </div>
           <p class="request-sub">${req.date}</p>
-        ;
+        `;
         card.append(hdr);
 
         const body = document.createElement('div');
         body.className = 'request-body';
-        body.innerHTML = 
+        body.innerHTML = `
           <p><strong>Опис проблеми:</strong> ${req.problem}</p>
           <p><strong>Телефон:</strong> <a href="tel:${req.phone}">${req.phone}</a></p>
           <p><strong>Файл:</strong> <a href="${req.fileUrl || '#'}" target="_blank">Переглянути</a></p>
-        ;
+        `;
 
         const steps = document.createElement('div');
         steps.className = 'steps';
@@ -239,15 +228,15 @@
           if (i === 0) sb.classList.add('completed');
           else if (i === 1) sb.classList.add('active');
 
-          sb.innerHTML = 
+          sb.innerHTML = `
             <div class="left">
               <span class="name">${i + 1}. ${s}</span>
               <span class="time">${i === 0 ? req.date : ''}</span>
             </div>
             <div class="right">
-              ${i === 1 ? '<button class="pdf-btn" onclick="downloadPDF(\'' + req.vin + '\')">PDF</button>' : ''}
+              ${i === 1 ? `<button class="pdf-btn" onclick="downloadPDF('${req.vin}')">PDF</button>` : ''}
             </div>
-          ;
+          `;
           steps.append(sb);
         });
 
