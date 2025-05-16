@@ -1,46 +1,173 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8"/>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Історія заявок</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>/* ваш CSS */</style>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #fff;
+      background: url('tesla-bg.png') no-repeat center center fixed;
+      background-size: cover;
+    }
+
+    .container { width: 100%; padding: 0 8px; }
+    .header-card {
+      background: rgba(0,0,0,0.7); border-radius: 16px;
+      width: 100%; height: 120px; margin: 40px 0 20px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; text-align: center;
+    }
+    .header-card .name { font-size: 32px; font-weight: 600; margin: 0; }
+    .header-card .subtitle { font-size: 16px; color: #CCCCCC; margin: 4px 0 0; }
+
+    .back-card { width: 100%; margin-bottom: 20px; cursor: pointer; }
+    .back-card .card {
+      display: flex; align-items: center;
+      background: rgba(0,0,0,0.7); border-radius: 16px;
+      padding: 16px 24px; transition: transform .1s;
+    }
+    .back-card .card:hover { transform: scale(1.03); }
+    .back-card .icon { font-size: 24px; margin-right: 12px; }
+    .back-card .text { font-size: 18px; }
+
+    .history-container { width: 100%; display: flex; flex-direction: column; gap: 16px; margin-bottom: 40px; }
+
+    .request-card {
+      background: rgba(0,0,0,0.7); border-radius: 16px; overflow: hidden;
+    }
+    .request-header {
+      padding: 16px; display: flex; justify-content: space-between; align-items: center;
+      cursor: pointer; transition: background .2s;
+    }
+    .request-header:hover { background: rgba(0,0,0,0.85); }
+    .request-title { margin: 0; font-size: 18px; font-weight: bold; }
+    .request-sub { margin: 0; font-size: 14px; color: #CCCCCC; }
+
+    .request-body {
+      display: none; padding: 0 16px 16px; border-top: 1px solid #444;
+    }
+    .request-body p { margin: 8px 0; font-size: 15px; }
+    .request-body a { color: #03c75a; text-decoration: underline; }
+
+    .steps { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+    .step-block {
+      display: flex; justify-content: space-between; align-items: center;
+      background: rgba(0,0,0,0.7); border-radius: 16px; padding: 12px 16px;
+    }
+    .step-block.completed { background: #045b32; }
+    .step-block.active { background: #6d1c1c; }
+    .step-block .left { display: flex; flex-direction: column; }
+    .step-block .left .name { font-weight: bold; font-size: 15px; }
+    .step-block .left .time { font-size: 13px; color: #ddd; margin-top: 4px; }
+    .step-block .right { display: flex; align-items: center; gap: 8px; }
+    .step-block .pdf-btn {
+      background: transparent; border: none; color: #fff;
+      font-size: 14px; font-weight: bold; cursor: pointer;
+      transition: transform .1s;
+    }
+    .step-block .pdf-btn:hover { transform: scale(1.1); }
+  </style>
 </head>
 <body>
-  <div class="history-container" id="history"></div>
+  <div class="container">
+    <div class="header-card">
+      <div class="name">TeslaAssistantBot</div>
+      <div class="subtitle">mini-додаток</div>
+    </div>
+
+    <div class="back-card" onclick="location.href='index.html'">
+      <div class="card">
+        <div class="icon">←</div><div class="text">На головну</div>
+      </div>
+    </div>
+
+    <div class="history-container" id="history"></div>
+  </div>
 
   <script>
     const tg = window.Telegram.WebApp;
     tg.ready();
     tg.expand();
 
-    async function fetchHistory(){
-      const chatId = String(tg.initDataUnsafe.user.id);
-      console.log("fetchHistory chatId=",chatId);
+    async function fetchHistory() {
       try {
-        const res = await fetch(`https://crm.dolce.kyiv.ua/api/get_requests?chat_id=${chatId}`);
-        const body = await res.json();
-        if(body.status==="ok") render(body.requests);
-        else document.getElementById('history').innerText = body.message;
-      } catch(e){
-        document.getElementById('history').innerText = "Помилка завантаження";
+        const chatId = tg.initDataUnsafe?.user?.id?.toString() || "";
+        const res = await fetch("https://crm.dolce.kyiv.ua/api/get_requests?chat_id=" + chatId);
+        const data = await res.json();
+        renderRequests(data.requests);
+      } catch (e) {
+        document.getElementById('history').innerHTML = '<p>Не вдалося завантажити історію.</p>';
       }
     }
 
-    function render(list){
-      const out = document.getElementById('history');
-      out.innerHTML = "";
-      list.forEach((r,i)=>{
-        const div = document.createElement('div');
-        div.innerHTML = `
-          <b>Заявка №${i+1}</b><br>
-          VIN: ${r.vin}<br>
-          Дата: ${r.date}<br>
-          Проблема: ${r.problem}<hr>
+    function renderRequests(requestsData) {
+      const histContainer = document.getElementById('history');
+      histContainer.innerHTML = '';
+
+      requestsData.forEach((req, idx) => {
+        const card = document.createElement('div');
+        card.className = 'request-card';
+
+        const hdr = document.createElement('div');
+        hdr.className = 'request-header';
+        hdr.innerHTML = `
+          <div>
+            <p class="request-title">Заявка №${idx + 1}</p>
+            <p class="request-sub">VIN: ${req.vin}</p>
+          </div>
+          <p class="request-sub">${req.date}</p>
         `;
-        out.append(div);
+        card.append(hdr);
+
+        const body = document.createElement('div');
+        body.className = 'request-body';
+        body.innerHTML = `
+          <p><strong>Опис проблеми:</strong> ${req.problem}</p>
+          <p><strong>Телефон:</strong> <a href="tel:${req.phone}">${req.phone}</a></p>
+          <p><strong>Файл:</strong> <a href="${req.fileUrl || '#'}" target="_blank">Переглянути</a></p>
+        `;
+
+        const steps = document.createElement('div');
+        steps.className = 'steps';
+        const statuses = ['Створена', 'Діагностування', 'Висновок', 'Завершено'];
+        statuses.forEach((s, i) => {
+          const sb = document.createElement('div');
+          sb.className = 'step-block';
+          if (i === 0) sb.classList.add('completed');
+          else if (i === 1) sb.classList.add('active');
+
+          sb.innerHTML = `
+            <div class="left">
+              <span class="name">${i + 1}. ${s}</span>
+              <span class="time">${i === 0 ? req.date : ''}</span>
+            </div>
+            <div class="right">
+              ${i === 1 ? `<button class="pdf-btn" onclick="downloadPDF('${req.vin}')">PDF</button>` : ''}
+            </div>
+          `;
+          steps.append(sb);
+        });
+
+        body.append(steps);
+        card.append(body);
+
+        hdr.addEventListener('click', () => {
+          body.style.display = body.style.display === 'block' ? 'none' : 'block';
+        });
+
+        histContainer.append(card);
       });
+    }
+
+    function downloadPDF(vin) {
+      window.open("https://crm.dolce.kyiv.ua/download/" + vin, "_blank");
     }
 
     fetchHistory();
