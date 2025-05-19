@@ -137,4 +137,133 @@
       </div>
 
       <div class="form-row">
-        <label for="vin
+        <label for="vin-input-ecu">VIN комп’ютера</label>
+        <input id="vin-input-ecu" type="text" maxlength="17" />
+        <button class="scan-btn" onclick="startScan('vin-input-ecu')">📷</button>
+      </div>
+
+      <div class="video-wrapper" id="scanner-wrap">
+        <video id="video" autoplay playsinline></video>
+        <button class="close-scan" onclick="stopScan()">✖ Закрити</button>
+      </div>
+
+      <div class="form-row">
+        <label for="problem">Опис проблеми</label>
+        <textarea id="problem" rows="4"></textarea>
+      </div>
+
+      <div class="form-row">
+        <label for="phone-input">Номер телефону</label>
+        <input id="phone-input" type="tel" />
+      </div>
+
+      <div class="form-row">
+        <label for="file-input">Фото / відео (необов’язково)</label>
+        <input id="file-input" type="file" accept="image/*,video/*" />
+      </div>
+
+      <button id="submit-btn" class="submit-btn" onclick="submitForm()" disabled>Надіслати</button>
+    </div>
+  </div>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.ready(); tg.expand();
+
+    const btn = document.getElementById("submit-btn");
+    const fields = [
+      document.getElementById("vin-input-car"),
+      document.getElementById("vin-input-ecu"),
+      document.getElementById("problem"),
+      document.getElementById("phone-input")
+    ];
+
+    fields.forEach(f => f.addEventListener("input", validateForm));
+    function validateForm(){
+      const ok = fields.every(f => f.value.trim().length > 0)
+        && fields[0].value.trim().length === 17
+        && fields[1].value.trim().length === 17;
+      btn.disabled = !ok;
+    }
+
+    let stream, activeField;
+    async function startScan(fieldId){
+      activeField = fieldId;
+      const wrap = document.getElementById("scanner-wrap");
+      const video = document.getElementById("video");
+
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        video.srcObject = stream;
+        wrap.style.display = "flex";
+
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        let attempts = 0;
+
+        const interval = setInterval(async () => {
+          if (++attempts > 15) { clearInterval(interval); return; }
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          ctx.drawImage(video, 0, 0);
+          const { data: { text } } = await Tesseract.recognize(canvas, 'eng', {
+            tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+          });
+          const txt = text.replace(/\s/g, '').toUpperCase();
+          if (txt.length >= 17) {
+            clearInterval(interval);
+            stopScan();
+            document.getElementById(activeField).value = txt.slice(0, 17);
+            validateForm();
+          }
+        }, 1000);
+
+      } catch (e) {
+        alert("Помилка доступу до камери");
+        console.error(e);
+      }
+    }
+
+    function stopScan(){
+      if (stream) stream.getTracks().forEach(t => t.stop());
+      document.getElementById("scanner-wrap").style.display = "none";
+    }
+
+    async function submitForm(){
+      const vinCar = fields[0].value.trim();
+      const vinEcu = fields[1].value.trim();
+      const problem = fields[2].value.trim();
+      const phone   = fields[3].value.trim();
+      const chat_id = String(tg.initDataUnsafe.user.id);
+      const owner_name = tg.initDataUnsafe.user.first_name || "";
+
+      const form = new FormData();
+      form.append("vin", vinEcu);
+      form.append("car_vin", vinCar);
+      form.append("problem", problem);
+      form.append("phone", phone);
+      form.append("owner", "telegram");
+      form.append("owner_name", owner_name);
+      form.append("chat_id", chat_id);
+
+      const fileEl = document.getElementById("file-input");
+      if (fileEl.files.length) {
+        form.append("media", fileEl.files[0]);
+      }
+
+      const res = await fetch("https://crm.dolce.kyiv.ua/api/create_request", {
+        method: "POST",
+        body: form
+      });
+
+      const result = await res.json();
+      if (result.status === "ok") {
+        alert("Заявка успішно надіслана!");
+        location.href = "history.html";
+      } else {
+        alert("Помилка: " + result.message);
+      }
+    }
+  </script>
+</body>
+</html>
