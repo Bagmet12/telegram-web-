@@ -14,49 +14,44 @@
       background: url('tesla-bg.png') no-repeat center center fixed;
       background-size: cover;
     }
-    .container { padding: 16px; }
-    .page-header { font-size: 32px; text-align: center; margin-bottom: 16px;}
+    .container {
+      padding: 16px;
+      max-width: 500px;
+      margin: auto;
+    }
+    .page-header {
+      font-size: 28px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
     .form-card {
       background: rgba(0,0,0,0.7);
       border-radius: 12px;
       padding: 20px;
+      overflow: hidden;
     }
-        .form-row {
-        margin-bottom: 14px;
-        position: relative;
-        display: flex;
-        align-items: center;
-      }
+    .form-row {
+      margin-bottom: 14px;
+      position: relative;
+    }
     .form-row label {
       display: block;
       margin-bottom: 4px;
       color: #ccc;
     }
-      .form-row input {
-      flex: 1;
+    .form-row input, .form-row textarea {
+      width: 100%;
       padding: 10px;
       border-radius: 6px;
       border: 1px solid #444;
       background: #121212;
       color: #fff;
       font-size: 15px;
-      padding-right: 44px; /* место под кнопку */
     }
-
-    .form-row textarea {
-      width: 100%;
-      padding: 8px 44px 8px 12px;
-      border-radius: 6px;
-      border: 1px solid #444;
-      background: #121212;
-      color: #fff;
-      font-size: 16px;
-    }
-      .scan-btn {
+    .scan-btn {
       position: absolute;
       right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
+      top: 32px;
       width: 36px;
       height: 36px;
       background: rgba(0,0,0,0.7);
@@ -66,36 +61,40 @@
       color: #fff;
       cursor: pointer;
     }
-    #video {
-      width: 100%;
-      border-radius: 8px;
+    .video-wrapper {
       display: none;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    video {
+      width: 100%;
+      max-height: 240px;
+      border-radius: 10px;
       margin-bottom: 8px;
     }
     .close-scan {
-      display: none;
-      width: 100%;
-      padding: 8px;
+      padding: 6px 12px;
       background: #c00;
       border: none;
       border-radius: 6px;
       color: #fff;
       cursor: pointer;
-      margin-bottom: 12px;
     }
     .submit-btn {
       width: 100%;
       padding: 12px;
-      border: none;
       background: #03c75a;
       color: #000;
-      font-size: 16px;
+      font-weight: bold;
+      border: none;
       border-radius: 8px;
+      font-size: 16px;
       cursor: pointer;
     }
     .submit-btn:disabled {
       background: #555;
-      cursor: default;
+      cursor: not-allowed;
     }
   </style>
 </head>
@@ -105,19 +104,21 @@
     <div class="form-card">
 
       <div class="form-row">
-        <label for="vin-input-car">VIN автомобіля (17)</label>
+        <label for="vin-input-car">VIN автомобіля</label>
         <input id="vin-input-car" type="text" maxlength="17" />
         <button class="scan-btn" onclick="startScan('vin-input-car')">📷</button>
       </div>
 
       <div class="form-row">
-        <label for="vin-input-ecu">VIN комп’ютера (17)</label>
+        <label for="vin-input-ecu">VIN комп’ютера</label>
         <input id="vin-input-ecu" type="text" maxlength="17" />
         <button class="scan-btn" onclick="startScan('vin-input-ecu')">📷</button>
       </div>
 
-      <video id="video" autoplay playsinline></video>
-      <button class="close-scan" onclick="stopScan()">✖ Закрити скан</button>
+      <div class="video-wrapper" id="scanner-wrap">
+        <video id="video" autoplay playsinline></video>
+        <button class="close-scan" onclick="stopScan()">✖ Закрити</button>
+      </div>
 
       <div class="form-row">
         <label for="problem">Опис проблеми</label>
@@ -130,16 +131,11 @@
       </div>
 
       <div class="form-row">
-        <label for="file-input">Фото/відео (необов’язково)</label>
+        <label for="file-input">Фото / відео (необов’язково)</label>
         <input id="file-input" type="file" accept="image/*,video/*" />
       </div>
 
-      <button
-        id="submit-btn"
-        class="submit-btn"
-        onclick="submitForm()"
-        disabled
-      >Надіслати</button>
+      <button id="submit-btn" class="submit-btn" onclick="submitForm()" disabled>Надіслати</button>
     </div>
   </div>
 
@@ -165,43 +161,44 @@
     let stream, activeField;
     async function startScan(fieldId){
       activeField = fieldId;
+      const wrap = document.getElementById("scanner-wrap");
+      const video = document.getElementById("video");
+
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-        const videoEl = document.getElementById("video");
-        videoEl.srcObject = stream;
-        videoEl.style.display = "block";
-        document.querySelector(".close-scan").style.display = "block";
+        video.srcObject = stream;
+        wrap.style.display = "flex";
 
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
         let attempts = 0;
 
-        const interval = setInterval(async ()=>{
-          if(++attempts > 15){ clearInterval(interval); return; }
-          canvas.width  = videoEl.videoWidth;
-          canvas.height = videoEl.videoHeight;
-          ctx.drawImage(videoEl,0,0);
+        const interval = setInterval(async () => {
+          if (++attempts > 15) { clearInterval(interval); return; }
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          ctx.drawImage(video, 0, 0);
           const { data: { text } } = await Tesseract.recognize(canvas, 'eng', {
             tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
           });
-          const txt = text.replace(/\s/g,'').toUpperCase();
-          if(txt.length>=17){
+          const txt = text.replace(/\s/g, '').toUpperCase();
+          if (txt.length >= 17) {
             clearInterval(interval);
             stopScan();
-            document.getElementById(activeField).value = txt.slice(0,17);
+            document.getElementById(activeField).value = txt.slice(0, 17);
             validateForm();
           }
         }, 1000);
-      } catch(e){
-        console.error("camera error", e);
-        alert("Не вдалося отримати доступ до камери");
+
+      } catch (e) {
+        alert("Помилка доступу до камери");
+        console.error(e);
       }
     }
 
     function stopScan(){
-      if(stream) stream.getTracks().forEach(t=>t.stop());
-      document.getElementById("video").style.display = "none";
-      document.querySelector(".close-scan").style.display = "none";
+      if (stream) stream.getTracks().forEach(t => t.stop());
+      document.getElementById("scanner-wrap").style.display = "none";
     }
 
     async function submitForm(){
@@ -222,7 +219,7 @@
       form.append("chat_id", chat_id);
 
       const fileEl = document.getElementById("file-input");
-      if(fileEl.files.length){
+      if (fileEl.files.length) {
         form.append("media", fileEl.files[0]);
       }
 
@@ -230,9 +227,9 @@
         method: "POST",
         body: form
       });
-      const result = await res.json();
 
-      if(result.status === "ok"){
+      const result = await res.json();
+      if (result.status === "ok") {
         alert("Заявка успішно надіслана!");
         location.href = "history.html";
       } else {
