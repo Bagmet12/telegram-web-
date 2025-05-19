@@ -14,9 +14,7 @@
       background: url('tesla-bg.png') no-repeat center center fixed;
       background-size: cover;
     }
-    .container {
-      padding: 16px;
-    }
+    .container { padding: 16px; }
     .header-card {
       background: rgba(0,0,0,0.7);
       border-radius: 16px;
@@ -24,15 +22,9 @@
       text-align: center;
       margin-bottom: 20px;
     }
-    .header-card .name {
-      font-size: 32px; margin: 0;
-    }
-    .header-card .subtitle {
-      font-size: 16px; color: #ccc; margin-top: 4px;
-    }
-    .back-card {
-      margin-bottom: 20px; cursor: pointer;
-    }
+    .header-card .name { font-size: 32px; margin: 0; }
+    .header-card .subtitle { font-size: 16px; color: #ccc; margin-top: 4px; }
+    .back-card { margin-bottom: 20px; cursor: pointer; }
     .back-card .card {
       display: flex; align-items: center;
       background: rgba(0,0,0,0.7);
@@ -43,6 +35,7 @@
     .back-card .card:hover { transform: scale(1.03); }
     .back-card .icon { font-size: 24px; margin-right: 12px; }
     .back-card .text { font-size: 18px; }
+
     .history-container {
       display: flex; flex-direction: column; gap: 12px;
     }
@@ -57,59 +50,54 @@
       transition: background .2s;
     }
     .request-header:hover { background: rgba(0,0,0,0.85); }
-    .request-header .left {
-      display: flex; flex-direction: column;
-    }
-    .request-header .title {
-      margin: 0; font-size: 18px; font-weight: bold;
-    }
-    .request-header .vin {
-      margin: 4px 0 0; font-size: 14px; color: #ccc;
-    }
-    .request-header .date {
-      font-size: 14px; color: #ccc;
-    }
+    .request-header .left { display: flex; flex-direction: column; }
+    .request-header .title { margin: 0; font-size: 18px; font-weight: bold; }
+    .request-header .vin { margin: 4px 0 0; font-size: 14px; color: #ccc; }
+
     .request-body {
       display: none;
       padding: 0 16px 16px;
       border-top: 1px solid #333;
     }
-    .steps {
-      display: flex; flex-direction: column; gap: 8px; margin-top: 12px;
+    .request-body p {
+      margin: 8px 0; font-size: 15px;
     }
+    .request-body a {
+      color: #03c75a; text-decoration: underline;
+    }
+    .attachments img {
+      max-width: 100%; margin-bottom: 8px; border-radius: 8px;
+    }
+    .attachments a {
+      display: block; color: #03c75a; margin-bottom: 6px;
+    }
+
+    .steps { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
     .step-block {
       display: flex; justify-content: space-between; align-items: center;
       background: rgba(0,0,0,0.7); border-radius: 12px;
-      padding: 8px 12px;
-      font-size: 14px;
+      padding: 8px 12px; font-size: 14px;
     }
     .step-block.completed { background: #045b32; }
     .step-block.active    { background: #6d1c1c; }
-    .step-block .left {
-      display: flex; flex-direction: column;
-    }
-    .step-block .left .name {
-      font-weight: bold;
-    }
+    .step-block .left { display: flex; flex-direction: column; }
+    .step-block .left .name { font-weight: bold; }
     .step-block .left .time {
       font-size: 12px; color: #ddd; margin-top: 2px;
     }
     .step-block .right button {
       background: transparent; border: 1px solid #fff;
       border-radius: 6px; padding: 4px 8px;
-      color: #fff; cursor: pointer;
-      transition: transform .1s;
+      color: #fff; cursor: pointer; transition: transform .1s;
     }
-    .step-block .right button:hover {
-      transform: scale(1.05);
-    }
+    .step-block .right button:hover { transform: scale(1.05); }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header-card">
       <div class="name">TeslaAssistantBot</div>
-      <div class="subtitle">mini-додаток</div>
+      <div class="subtitle">Історія заявок</div>
     </div>
 
     <div class="back-card" onclick="location.href='index.html'">
@@ -126,25 +114,31 @@
     const tg = window.Telegram.WebApp;
     tg.ready(); tg.expand();
 
+    // Формат ISO → локальный YYYY-MM-DD HH:mm
     function formatLocal(iso) {
       const d = new Date(iso);
-      const pad = n=>n<10?'0'+n:n;
+      const pad = n => n<10?'0'+n:n;
       return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`
            + ` ${pad(d.getHours())}:${pad(d.getMinutes())}`;
     }
 
     async function fetchHistory(){
       const chatId = String(tg.initDataUnsafe.user.id);
-      const res = await fetch(`https://crm.dolce.kyiv.ua/api/get_requests?chat_id=${chatId}`);
-      const body = await res.json();
-      if(body.status==="ok") render(body.requests);
-      else document.getElementById('history').innerText = body.message;
+      try {
+        const res = await fetch(`https://crm.dolce.kyiv.ua/api/get_requests?chat_id=${chatId}`);
+        const body = await res.json();
+        if(body.status==="ok") render(body.requests);
+        else document.getElementById('history').innerText = body.message;
+      } catch {
+        document.getElementById('history').innerText = 'Не вдалося завантажити історію.';
+      }
     }
 
     function render(list){
       const out = document.getElementById('history');
       out.innerHTML = "";
       list.forEach((r,i)=>{
+        // карточка
         const card = document.createElement('div');
         card.className = 'request-card';
 
@@ -154,79 +148,96 @@
         hdr.innerHTML = `
           <div class="left">
             <p class="title">Заявка №${i+1}</p>
-            <p class="vin">VIN: ${r.vin}</p>
+            <p class="vin">VIN авто: ${r.car_vin}</p>
           </div>
-          <p class="date">${formatLocal(r.date)}</p>
+          <p class="vin">${formatLocal(r.date)}</p>
         `;
-        card.appendChild(hdr);
+        card.append(hdr);
 
-        // body with steps
+        // body
         const body = document.createElement('div');
         body.className = 'request-body';
 
-        const statuses = [
-          {name:'Створена',       key:'Створена'},
-          {name:'Діагностування', key:'Діагностування'},
-          {name:'Висновок',      key:'Висновок'},
-          {name:'Завершено',     key:'Завершено'},
-        ];
+        // телефон
+        body.innerHTML += `
+          <p><strong>Телефон:</strong> <a href="tel:${r.phone}">${r.phone}</a></p>
+        `;
 
+        // описание
+        body.innerHTML += `
+          <p><strong>Опис проблеми:</strong> ${r.problem}</p>
+        `;
+
+        // вложения (если есть)
+        if(r.media){
+          const div = document.createElement('div');
+          div.className = 'attachments';
+          r.media.split(',').forEach(url=>{
+            url = url.trim();
+            const ext = url.split('.').pop().toLowerCase();
+            if(['jpg','jpeg','png','gif'].includes(ext)){
+              const img = document.createElement('img');
+              img.src = url;
+              div.append(img);
+            } else {
+              const a = document.createElement('a');
+              a.href = url; a.target = '_blank';
+              a.textContent = url;
+              div.append(a);
+            }
+          });
+          body.append(div);
+        }
+
+        // шаги
+        const statuses = [
+          {name:'1. Створена',       key:'Створена'},
+          {name:'2. Діагностування', key:'Діагностування'},
+          {name:'3. Висновок',       key:'Висновок'},
+          {name:'4. Завершено',      key:'Завершено'}
+        ];
         const steps = document.createElement('div');
         steps.className = 'steps';
-
         statuses.forEach((s,j)=>{
           const sb = document.createElement('div');
           sb.className = 'step-block';
-          // Створена всегда completed
           if(j===0) sb.classList.add('completed');
-          // Активный только тот, что совпал с текущим статусом
-          else if(r.status === s.key) sb.classList.add('active');
+          else if(r.status===s.key) sb.classList.add('active');
 
           const left = document.createElement('div');
           left.className = 'left';
-          const name = document.createElement('span');
-          name.className = 'name';
-          name.textContent = `${j+1}. ${s.name}`;
-          left.appendChild(name);
-          // дату показываем у Створена и у активного шага
-          if(j===0 || r.status === s.key){
-            const time = document.createElement('span');
-            time.className = 'time';
-            time.textContent = formatLocal(r.date);
-            left.appendChild(time);
-          }
+          left.innerHTML = `<span class="name">${s.name}</span>
+                            <span class="time">${(j===0||r.status===s.key)?formatLocal(r.date):''}</span>`;
 
           const right = document.createElement('div');
           right.className = 'right';
-          // кнопка PDF на Диагностировании
           if(s.key==='Діагностування' && r.status==='Діагностування'){
             const btn = document.createElement('button');
             btn.textContent = 'PDF';
-            btn.onclick = e=>{ e.stopPropagation(); window.open(`https://crm.dolce.kyiv.ua/download/${r.vin}`); };
-            right.appendChild(btn);
+            btn.onclick = e=> {
+              e.stopPropagation();
+              window.open(`https://crm.dolce.kyiv.ua/download/${r.car_vin}`, '_blank');
+            };
+            right.append(btn);
           }
-          // кнопка Завершити на Завершено
           if(s.key==='Завершено' && r.status==='Завершено'){
             const btn = document.createElement('button');
             btn.textContent = 'Завершити';
-            btn.onclick = e=>{ e.stopPropagation(); alert('Поздравляем, заявка завершена!'); };
-            right.appendChild(btn);
+            btn.onclick = e=> e.stopPropagation() && alert('Заявка завершена.');
+            right.append(btn);
           }
 
-          sb.appendChild(left);
-          sb.appendChild(right);
-          steps.appendChild(sb);
+          sb.append(left, right);
+          steps.append(sb);
         });
+        body.append(steps);
 
-        body.appendChild(steps);
-        card.appendChild(body);
-
-        // toggle body visibility
-        hdr.addEventListener('click', ()=> {
-          body.style.display = body.style.display==='block'?'none':'block';
-        });
-
-        out.appendChild(card);
+        card.append(body);
+        // toggle
+        hdr.addEventListener('click', ()=>
+          body.style.display = body.style.display==='block'?'none':'block'
+        );
+        out.append(card);
       });
     }
 
