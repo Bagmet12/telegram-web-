@@ -271,11 +271,10 @@
       }
 
       try {
-        const res = await fetch("https://crm.dolce.kyiv.ua/api/create_request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" }, 
-        body: JSON.stringify(payload)
-      });
+       const res = await fetch("https://crm.dolce.kyiv.ua/api/create_request", {
+          method: "POST",
+          body: form
+        });
         const result = await res.json();
         if (result.status === "ok") {
           alert("Заявка успішно надіслана!");
