@@ -21,16 +21,28 @@
       border-radius: 12px;
       padding: 20px;
     }
-    .form-row {
-      margin-bottom: 12px;
-      position: relative;
-    }
+        .form-row {
+        margin-bottom: 14px;
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
     .form-row label {
       display: block;
       margin-bottom: 4px;
       color: #ccc;
     }
-    .form-row input,
+      .form-row input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #444;
+      background: #121212;
+      color: #fff;
+      font-size: 15px;
+      padding-right: 44px; /* место под кнопку */
+    }
+
     .form-row textarea {
       width: 100%;
       padding: 8px 44px 8px 12px;
@@ -40,18 +52,18 @@
       color: #fff;
       font-size: 16px;
     }
-    .scan-btn {
+      .scan-btn {
       position: absolute;
-      right: 12px;
+      right: 10px;
       top: 50%;
       transform: translateY(-50%);
-      width: 32px;
-      height: 32px;
+      width: 36px;
+      height: 36px;
       background: rgba(0,0,0,0.7);
-      border: none;
-      color: #fff;
+      border: 1px solid #555;
       border-radius: 6px;
       font-size: 18px;
+      color: #fff;
       cursor: pointer;
     }
     #video {
