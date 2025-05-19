@@ -21,19 +21,35 @@
       border-radius: 12px;
       padding: 20px;
     }
-    .form-row { margin-bottom: 12px; position: relative; }
-    .form-row label { display: block; margin-bottom: 4px; color: #ccc; }
-    .form-row input, .form-row textarea {
-      width: 100%; padding: 8px; border-radius: 6px;
-      border: 1px solid #444; background: #121212; color: #fff;
+    .form-row {
+      margin-bottom: 12px;
+      position: relative;
+    }
+    .form-row label {
+      display: block;
+      margin-bottom: 4px;
+      color: #ccc;
+    }
+    .form-row input,
+    .form-row textarea {
+      width: 100%;
+      padding: 8px 44px 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #444;
+      background: #121212;
+      color: #fff;
+      font-size: 16px;
     }
     .scan-btn {
       position: absolute;
-      right: 8px;
-      top: 32px;
-      width: 32px; height: 32px;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 32px;
+      height: 32px;
       background: rgba(0,0,0,0.7);
-      border: none; color: #fff;
+      border: none;
+      color: #fff;
       border-radius: 6px;
       font-size: 18px;
       cursor: pointer;
@@ -56,11 +72,19 @@
       margin-bottom: 12px;
     }
     .submit-btn {
-      width: 100%; padding: 12px; border: none;
-      background: #03c75a; color: #000; font-size: 16px;
-      border-radius: 8px; cursor: pointer;
+      width: 100%;
+      padding: 12px;
+      border: none;
+      background: #03c75a;
+      color: #000;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
     }
-    .submit-btn:disabled { background: #555; cursor: default; }
+    .submit-btn:disabled {
+      background: #555;
+      cursor: default;
+    }
   </style>
 </head>
 <body>
@@ -68,37 +92,31 @@
     <div class="page-header">Створити заявку</div>
     <div class="form-card">
 
-      <!-- VIN авто -->
       <div class="form-row">
         <label for="vin-input-car">VIN автомобіля (17)</label>
         <input id="vin-input-car" type="text" maxlength="17" />
         <button class="scan-btn" onclick="startScan('vin-input-car')">📷</button>
       </div>
 
-      <!-- VIN ECU -->
       <div class="form-row">
         <label for="vin-input-ecu">VIN комп’ютера (17)</label>
         <input id="vin-input-ecu" type="text" maxlength="17" />
         <button class="scan-btn" onclick="startScan('vin-input-ecu')">📷</button>
       </div>
 
-      <!-- Видео-поток для сканера -->
       <video id="video" autoplay playsinline></video>
       <button class="close-scan" onclick="stopScan()">✖ Закрити скан</button>
 
-      <!-- Описание проблемы -->
       <div class="form-row">
         <label for="problem">Опис проблеми</label>
         <textarea id="problem" rows="4"></textarea>
       </div>
 
-      <!-- Телефон -->
       <div class="form-row">
         <label for="phone-input">Номер телефону</label>
         <input id="phone-input" type="tel" />
       </div>
 
-      <!-- Медиа -->
       <div class="form-row">
         <label for="file-input">Фото/відео (необов’язково)</label>
         <input id="file-input" type="file" accept="image/*,video/*" />
@@ -117,7 +135,6 @@
     const tg = window.Telegram.WebApp;
     tg.ready(); tg.expand();
 
-    // Поле валидации
     const btn = document.getElementById("submit-btn");
     const fields = [
       document.getElementById("vin-input-car"),
@@ -127,13 +144,12 @@
     ];
     fields.forEach(f => f.addEventListener("input", validateForm));
     function validateForm(){
-      const ok = fields.every(f => f.value.trim().length>0)
-               && fields[0].value.trim().length===17
-               && fields[1].value.trim().length===17;
+      const ok = fields.every(f => f.value.trim().length > 0)
+        && fields[0].value.trim().length === 17
+        && fields[1].value.trim().length === 17;
       btn.disabled = !ok;
     }
 
-    // Сканер VIN
     let stream, activeField;
     async function startScan(fieldId){
       activeField = fieldId;
@@ -164,35 +180,34 @@
             validateForm();
           }
         }, 1000);
-
       } catch(e){
         console.error("camera error", e);
         alert("Не вдалося отримати доступ до камери");
       }
     }
+
     function stopScan(){
       if(stream) stream.getTracks().forEach(t=>t.stop());
       document.getElementById("video").style.display = "none";
       document.querySelector(".close-scan").style.display = "none";
     }
 
-    // Отправка
     async function submitForm(){
       const vinCar = fields[0].value.trim();
       const vinEcu = fields[1].value.trim();
       const problem = fields[2].value.trim();
       const phone   = fields[3].value.trim();
-      const chat_id   = String(tg.initDataUnsafe.user.id);
-      const owner_name= tg.initDataUnsafe.user.first_name || "";
+      const chat_id = String(tg.initDataUnsafe.user.id);
+      const owner_name = tg.initDataUnsafe.user.first_name || "";
 
       const form = new FormData();
-      form.append("vin",      vinEcu);
-      form.append("car_vin",  vinCar);
-      form.append("problem",  problem);
-      form.append("phone",    phone);
-      form.append("owner",    "telegram");
+      form.append("vin", vinEcu);
+      form.append("car_vin", vinCar);
+      form.append("problem", problem);
+      form.append("phone", phone);
+      form.append("owner", "telegram");
       form.append("owner_name", owner_name);
-      form.append("chat_id",  chat_id);
+      form.append("chat_id", chat_id);
 
       const fileEl = document.getElementById("file-input");
       if(fileEl.files.length){
@@ -205,11 +220,11 @@
       });
       const result = await res.json();
 
-      if(result.status==="ok"){
+      if(result.status === "ok"){
         alert("Заявка успішно надіслана!");
         location.href = "history.html";
       } else {
-        alert("Помилка: "+result.message);
+        alert("Помилка: " + result.message);
       }
     }
   </script>
