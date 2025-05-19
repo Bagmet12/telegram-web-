@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Створити заявку</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Tesseract.js для распознавания VIN -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2/dist/tesseract.min.js"></script>
   <style>
     body {
       margin: 0;
@@ -20,11 +22,39 @@
       border-radius: 12px;
       padding: 20px;
     }
-    .form-row { margin-bottom: 12px; }
+    .form-row { margin-bottom: 12px; position: relative; }
     .form-row label { display: block; margin-bottom: 4px; color: #ccc; }
     .form-row input, .form-row textarea {
       width: 100%; padding: 8px; border-radius: 6px;
       border: 1px solid #444; background: #121212; color: #fff;
+    }
+    .scan-btn {
+      position: absolute;
+      right: 8px;
+      top: 32px;
+      width: 32px; height: 32px;
+      background: rgba(0,0,0,0.7);
+      border: none; color: #fff;
+      border-radius: 6px;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    #video {
+      width: 100%;
+      border-radius: 8px;
+      display: none;
+      margin-bottom: 8px;
+    }
+    .close-scan {
+      display: none;
+      width: 100%;
+      padding: 8px;
+      background: #c00;
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      cursor: pointer;
+      margin-bottom: 12px;
     }
     .submit-btn {
       width: 100%; padding: 12px; border: none;
@@ -38,26 +68,43 @@
   <div class="container">
     <div class="page-header">Створити заявку</div>
     <div class="form-card">
+
+      <!-- VIN авто -->
       <div class="form-row">
         <label for="vin-input-car">VIN автомобіля (17)</label>
         <input id="vin-input-car" type="text" maxlength="17" />
+        <button class="scan-btn" onclick="startScan('vin-input-car')">📷</button>
       </div>
+
+      <!-- VIN ECU -->
       <div class="form-row">
         <label for="vin-input-ecu">VIN комп’ютера (17)</label>
         <input id="vin-input-ecu" type="text" maxlength="17" />
+        <button class="scan-btn" onclick="startScan('vin-input-ecu')">📷</button>
       </div>
+
+      <!-- Видео-поток для сканера -->
+      <video id="video" autoplay playsinline></video>
+      <button class="close-scan" onclick="stopScan()">✖ Закрити скан</button>
+
+      <!-- Описание проблемы -->
       <div class="form-row">
         <label for="problem">Опис проблеми</label>
         <textarea id="problem" rows="4"></textarea>
       </div>
+
+      <!-- Телефон -->
       <div class="form-row">
         <label for="phone-input">Номер телефону</label>
         <input id="phone-input" type="tel" />
       </div>
+
+      <!-- Медиа -->
       <div class="form-row">
         <label for="file-input">Фото/відео (необов’язково)</label>
         <input id="file-input" type="file" accept="image/*,video/*" />
       </div>
+
       <button
         id="submit-btn"
         class="submit-btn"
@@ -71,7 +118,7 @@
     const tg = window.Telegram.WebApp;
     tg.ready(); tg.expand();
 
-    // полeзунок валидации
+    // Поле валидации
     const btn = document.getElementById("submit-btn");
     const fields = [
       document.getElementById("vin-input-car"),
@@ -87,8 +134,51 @@
       btn.disabled = !ok;
     }
 
+    // Сканер VIN
+    let stream, activeField;
+    async function startScan(fieldId){
+      activeField = fieldId;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        const videoEl = document.getElementById("video");
+        videoEl.srcObject = stream;
+        videoEl.style.display = "block";
+        document.querySelector(".close-scan").style.display = "block";
+
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        let attempts = 0;
+
+        const interval = setInterval(async ()=>{
+          if(++attempts > 15){ clearInterval(interval); return; }
+          canvas.width  = videoEl.videoWidth;
+          canvas.height = videoEl.videoHeight;
+          ctx.drawImage(videoEl,0,0);
+          const { data: { text } } = await Tesseract.recognize(canvas, 'eng', {
+            tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+          });
+          const txt = text.replace(/\s/g,'').toUpperCase();
+          if(txt.length>=17){
+            clearInterval(interval);
+            stopScan();
+            document.getElementById(activeField).value = txt.slice(0,17);
+            validateForm();
+          }
+        }, 1000);
+
+      } catch(e){
+        console.error("camera error", e);
+        alert("Не вдалося отримати доступ до камери");
+      }
+    }
+    function stopScan(){
+      if(stream) stream.getTracks().forEach(t=>t.stop());
+      document.getElementById("video").style.display = "none";
+      document.querySelector(".close-scan").style.display = "none";
+    }
+
+    // Отправка
     async function submitForm(){
-      // собираем данные
       const vinCar = fields[0].value.trim();
       const vinEcu = fields[1].value.trim();
       const problem = fields[2].value.trim();
@@ -96,22 +186,20 @@
       const chat_id   = String(tg.initDataUnsafe.user.id);
       const owner_name= tg.initDataUnsafe.user.first_name || "";
 
-      // собираем multipart
       const form = new FormData();
-      form.append("vin", vinEcu);
-      form.append("car_vin", vinCar);
-      form.append("problem", problem);
-      form.append("phone", phone);
-      form.append("owner", "telegram");
+      form.append("vin",      vinEcu);
+      form.append("car_vin",  vinCar);
+      form.append("problem",  problem);
+      form.append("phone",    phone);
+      form.append("owner",    "telegram");
       form.append("owner_name", owner_name);
-      form.append("chat_id", chat_id);
+      form.append("chat_id",  chat_id);
 
       const fileEl = document.getElementById("file-input");
       if(fileEl.files.length){
         form.append("media", fileEl.files[0]);
       }
 
-      // POST без ручной установки Content-Type
       const res = await fetch("https://crm.dolce.kyiv.ua/api/create_request", {
         method: "POST",
         body: form
