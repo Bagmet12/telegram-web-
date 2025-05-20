@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+теперь я хочу чтоб тг боте менялся статус в истории заявок вот мой код так же туда должен рядом загружаться pdf файл когда машина на этапе диагностики дальше идет высновок который человек получает в пдф тоже и получаеться на каком этапе машина то и подвечуеться так же чтоб было видно во сколько изменился статутс машины <!DOCTYPE html>
 <html lang="uk">
 <head>
   <meta charset="UTF-8"/>
@@ -6,218 +6,380 @@
   <title>Історія заявок</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    /* ... existing styles ... */
-
-    /* Добавляем новые стили для статусов и файлов диагностики */
-    .status-history {
-      margin: 16px 0;
-      padding: 16px;
-      background: rgba(0,0,0,0.5);
-      border-radius: 12px;
-    }
-
-    .status-timeline {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .status-block {
-      display: flex;
-      gap: 12px;
-      padding: 12px;
-      background: rgba(0,0,0,0.3);
-      border-radius: 8px;
-      position: relative;
-    }
-
-    .status-block.active {
-      background: rgba(33, 150, 243, 0.2);
-      border-left: 4px solid #2196f3;
-    }
-
-    .status-icon {
-      font-size: 24px;
-      min-width: 30px;
-      text-align: center;
-    }
-
-    .status-content {
-      flex: 1;
-    }
-
-    .status-name {
-      font-weight: bold;
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       color: #fff;
-      margin-bottom: 4px;
+      background: url('tesla-bg.png') no-repeat center center fixed;
+      background-size: cover;
     }
-
-    .status-date {
-      font-size: 12px;
-      color: #ccc;
-      margin-bottom: 4px;
+    .container { padding: 16px; }
+    .header-card {
+      background: rgba(0,0,0,0.7);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
     }
-
-    .status-text {
-      color: #e0e0e0;
-      font-size: 14px;
-      margin-bottom: 4px;
+    .header-card .name { font-size: 32px; margin: 0; }
+    .header-card .subtitle { font-size: 16px; color: #ccc; margin-top: 4px; }
+    .back-card { margin-bottom: 20px; cursor: pointer; }
+    .back-card .card {
+      display: flex; align-items: center;
+      background: rgba(0,0,0,0.7);
+      border-radius: 16px;
+      padding: 12px 16px;
+      transition: transform .1s;
     }
+    .back-card .card:hover { transform: scale(1.03); }
+    .back-card .icon { font-size: 24px; margin-right: 12px; }
+    .back-card .text { font-size: 18px; }
 
-    .diagnostic-file {
-      margin-top: 8px;
+    .history-container {
+      display: flex; flex-direction: column; gap: 12px;
     }
-
-    .pdf-link {
-      display: inline-block;
-      padding: 8px 12px;
-      background: #2196f3;
-      color: white;
-      text-decoration: none;
-      border-radius: 4px;
-      font-size: 14px;
-      transition: background-color 0.2s;
-    }
-
-    .pdf-link:hover {
-      background: #1976d2;
-    }
-
-    /* Обновляем стили для шагов статусов */
-    .steps {
-      margin-top: 16px;
-      padding: 16px;
-      background: rgba(0,0,0,0.5);
+    .request-card {
+      background: rgba(0,0,0,0.7);
       border-radius: 12px;
+      overflow: hidden;
+    }
+    .request-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 16px; cursor: pointer;
+      transition: background .2s;
+    }
+    .request-header:hover { background: rgba(0,0,0,0.85); }
+    .request-header .left { display: flex; flex-direction: column; }
+    .request-header .title { margin: 0; font-size: 18px; font-weight: bold; }
+    .request-header .vin { margin: 4px 0 0; font-size: 14px; color: #ccc; }
+
+    .request-body {
+      display: none;
+      padding: 0 16px 16px;
+      border-top: 1px solid #333;
+    }
+    .request-body p {
+      margin: 8px 0; font-size: 15px;
+    }
+    .request-body a {
+      color: #03c75a; text-decoration: none;
+      transition: color 0.2s;
+    }
+    .request-body a:hover {
+      color: #02b350;
+      text-decoration: underline;
     }
 
-    .step-block {
-      margin-bottom: 8px;
-      padding: 12px;
+    .attachments {
+      margin: 16px 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+    }
+
+    .attachment-item {
+      position: relative;
       border-radius: 8px;
+      overflow: hidden;
       background: rgba(0,0,0,0.3);
-      transition: background-color 0.2s;
+      transition: transform 0.2s;
     }
 
-    .step-block.completed {
-      background: rgba(76, 175, 80, 0.2);
-      border-left: 4px solid #4caf50;
+    .attachment-item:hover {
+      transform: scale(1.02);
     }
 
-    .step-block.active {
-      background: rgba(33, 150, 243, 0.2);
-      border-left: 4px solid #2196f3;
+    .attachment-item img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      display: block;
     }
 
-    .step-block .status-icon {
-      margin-right: 12px;
-    }
-
-    .step-block .diagnostic-pdf {
-      margin-top: 8px;
+    .attachment-item .file-info {
       padding: 8px;
-      background: rgba(33, 150, 243, 0.1);
-      border-radius: 4px;
+      font-size: 13px;
+      color: #ccc;
+      text-align: center;
+      word-break: break-all;
+    }
+
+    .attachment-item .file-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 150px;
+      font-size: 48px;
+      color: #03c75a;
+    }
+
+    .attachment-item .file-link {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.5);
+      opacity: 0;
+      transition: opacity 0.2s;
+      color: #fff;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .attachment-item:hover .file-link {
+      opacity: 1;
+    }
+
+    .video-preview {
+      position: relative;
+      width: 100%;
+      height: 150px;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .video-preview::before {
+      content: "▶";
+      font-size: 48px;
+      color: #fff;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .steps { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+    .step-block {
+      display: flex; justify-content: space-between; align-items: center;
+      background: rgba(0,0,0,0.7); border-radius: 12px;
+      padding: 8px 12px; font-size: 14px;
+    }
+    .step-block.completed { background: #045b32; }
+    .step-block.active    { background: #6d1c1c; }
+    .step-block .left { display: flex; flex-direction: column; }
+    .step-block .left .name { font-weight: bold; }
+    .step-block .left .time {
+      font-size: 12px; color: #ddd; margin-top: 2px;
+    }
+    .step-block .right button {
+      background: transparent; border: 1px solid #fff;
+      border-radius: 6px; padding: 4px 8px;
+      color: #fff; cursor: pointer; transition: all 0.2s;
+    }
+    .step-block .right button:hover { 
+      transform: scale(1.05);
+      background: rgba(255,255,255,0.1);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.9);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      max-width: 90%;
+      max-height: 90vh;
+      object-fit: contain;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(0,0,0,0.5);
+      border: none;
+      color: #fff;
+      font-size: 24px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      background: rgba(255,255,255,0.1);
+      transform: scale(1.1);
     }
   </style>
 </head>
 <body>
-  <!-- ... existing HTML structure ... -->
+  <div class="container">
+    <div class="header-card">
+      <div class="name">TeslaAssistantBot</div>
+      <div class="subtitle">Історія заявок</div>
+    </div>
+
+    <div class="back-card" onclick="location.href='index.html'">
+      <div class="card">
+        <div class="icon">←</div>
+        <div class="text">На головну</div>
+      </div>
+    </div>
+
+    <div class="history-container" id="history"></div>
+  </div>
+
+  <div class="modal" id="imageModal">
+    <button class="modal-close" onclick="closeModal()">✖</button>
+    <img class="modal-content" id="modalImage">
+  </div>
 
   <script>
-    // ... existing functions ...
+    const tg = window.Telegram.WebApp;
+    tg.ready(); tg.expand();
 
-    async function fetchRequestHistory(requestId) {
+    function formatLocal(iso) {
+      const d = new Date(iso);
+      const pad = n => n<10?'0'+n:n;
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`
+           + ` ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    function getFileIcon(ext) {
+      const icons = {
+        pdf: '📄',
+        doc: '📝',
+        docx: '📝',
+        xls: '📊',
+        xlsx: '📊',
+        zip: '📦',
+        rar: '📦',
+        default: '📎'
+      };
+      return icons[ext.toLowerCase()] || icons.default;
+    }
+
+    function openModal(url) {
+      const modal = document.getElementById('imageModal');
+      const modalImg = document.getElementById('modalImage');
+      modalImg.src = url;
+      modal.classList.add('active');
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('imageModal');
+      modal.classList.remove('active');
+    }
+
+    async function fetchHistory(){
+      const chatId = String(tg.initDataUnsafe.user.id);
       try {
-        const response = await fetch(`/api/get_request_history/${requestId}`);
-        const data = await response.json();
-        if (data.status === 'ok') {
-          return data.history;
-        }
-        return [];
-      } catch (error) {
-        console.error('Error fetching request history:', error);
-        return [];
+        const res = await fetch(`https://crm.dolce.kyiv.ua/api/get_requests?chat_id=${chatId}`);
+        const body = await res.json();
+        if(body.status==="ok") render(body.requests);
+        else document.getElementById('history').innerText = body.message;
+      } catch {
+        document.getElementById('history').innerText = 'Не вдалося завантажити історію.';
       }
     }
 
-    function createStatusBlock(entry, currentStatus) {
-      const statusBlock = document.createElement('div');
-      statusBlock.className = 'status-block';
-      if (entry.status === currentStatus) {
-        statusBlock.classList.add('active');
+    function createAttachmentElement(url) {
+      const ext = url.split('.').pop().toLowerCase();
+      const item = document.createElement('div');
+      item.className = 'attachment-item';
+
+      if(['jpg','jpeg','png','gif'].includes(ext)) {
+        const img = document.createElement('img');
+        img.src = url;
+        img.alt = 'Вкладення';
+        img.loading = 'lazy';
+        item.append(img);
+        
+        const link = document.createElement('a');
+        link.className = 'file-link';
+        link.href = url;
+        link.target = '_blank';
+        link.onclick = (e) => {
+          e.preventDefault();
+          openModal(url);
+        };
+        item.append(link);
+      } else if(['mp4','webm','mov'].includes(ext)) {
+        const preview = document.createElement('div');
+        preview.className = 'video-preview';
+        item.append(preview);
+        
+        const link = document.createElement('a');
+        link.className = 'file-link';
+        link.href = url;
+        link.target = '_blank';
+        link.textContent = 'Відкрити відео';
+        item.append(link);
+      } else {
+        const icon = document.createElement('div');
+        icon.className = 'file-icon';
+        icon.textContent = getFileIcon(ext);
+        item.append(icon);
+        
+        const info = document.createElement('div');
+        info.className = 'file-info';
+        info.textContent = url.split('/').pop();
+        item.append(info);
+        
+        const link = document.createElement('a');
+        link.className = 'file-link';
+        link.href = url;
+        link.target = '_blank';
+        link.textContent = 'Відкрити файл';
+        item.append(link);
       }
 
-      // Определяем иконку статуса
-      let statusIcon = '📝';
-      if (entry.status === 'Діагностування') statusIcon = '🔧';
-      if (entry.status === 'Висновок') statusIcon = '📋';
-      if (entry.status === 'Завершено') statusIcon = '✅';
-
-      statusBlock.innerHTML = `
-        <div class="status-icon">${statusIcon}</div>
-        <div class="status-content">
-          <div class="status-name">${entry.status}</div>
-          <div class="status-date">${formatLocal(entry.date)}</div>
-          <div class="status-text">${entry.text}</div>
-          ${entry.diagnostic_file ? `
-            <div class="diagnostic-file">
-              <a href="/download/${entry.diagnostic_file}" target="_blank" class="pdf-link">
-                📄 Переглянути діагностику
-              </a>
-            </div>
-          ` : ''}
-        </div>
-      `;
-
-      return statusBlock;
+      return item;
     }
 
-    async function render(list) {
+    function render(list){
       const out = document.getElementById('history');
       out.innerHTML = "";
-
-      for (const r of list) {
+      list.forEach((r,i)=>{
         const card = document.createElement('div');
         card.className = 'request-card';
 
-        // ... existing header creation ...
+        const hdr = document.createElement('div');
+        hdr.className = 'request-header';
+        hdr.innerHTML = `
+          <div class="left">
+            <p class="title">Заявка №${i+1}</p>
+            <p class="vin">VIN авто: ${r.car_vin}</p>
+          </div>
+          <p class="vin">${formatLocal(r.date)}</p>
+        `;
+        card.append(hdr);
 
         const body = document.createElement('div');
         body.className = 'request-body';
 
-        // Добавляем основную информацию
         body.innerHTML += `
           <p><strong>Телефон:</strong> <a href="tel:${r.phone}">${r.phone}</a></p>
           <p><strong>Опис проблеми:</strong> ${r.problem}</p>
         `;
 
-        // Получаем и отображаем историю статусов
-        const history = await fetchRequestHistory(r.id);
-        if (history.length > 0) {
-          const historyContainer = document.createElement('div');
-          historyContainer.className = 'status-history';
-          historyContainer.innerHTML = '<h3>Історія статусів</h3>';
-
-          const timeline = document.createElement('div');
-          timeline.className = 'status-timeline';
-
-          history.forEach(entry => {
-            timeline.appendChild(createStatusBlock(entry, r.status));
-          });
-
-          historyContainer.appendChild(timeline);
-          body.appendChild(historyContainer);
-        }
-
-        // Добавляем вложения
-        if (r.media) {
+        if(r.media) {
           const attachments = document.createElement('div');
           attachments.className = 'attachments';
           
           r.media.split(',').forEach(url => {
             url = url.trim();
-            if (url) {
+            if(url) {
               attachments.append(createAttachmentElement(url));
             }
           });
@@ -225,64 +387,72 @@
           body.append(attachments);
         }
 
-        // Добавляем шаги статусов
         const statuses = [
-          {name: '1. Створена', key: 'Створена', icon: '📝'},
-          {name: '2. Діагностування', key: 'Діагностування', icon: '🔧'},
-          {name: '3. Висновок', key: 'Висновок', icon: '📋'},
-          {name: '4. Завершено', key: 'Завершено', icon: '✅'}
+          {name:'1. Створена',       key:'Створена'},
+          {name:'2. Діагностування', key:'Діагностування'},
+          {name:'3. Висновок',       key:'Висновок'},
+          {name:'4. Завершено',      key:'Завершено'}
         ];
 
         const steps = document.createElement('div');
         steps.className = 'steps';
+        
+        statuses.forEach((s,j)=>{
+          const sb = document.createElement('div');
+          sb.className = 'step-block';
+          if(j===0) sb.classList.add('completed');
+          else if(r.status===s.key) sb.classList.add('active');
 
-        statuses.forEach((s, index) => {
-          const stepBlock = document.createElement('div');
-          stepBlock.className = 'step-block';
-          
-          if (index === 0 || r.status === s.key) {
-            stepBlock.classList.add(r.status === s.key ? 'active' : 'completed');
-          }
-
-          const stepContent = document.createElement('div');
-          stepContent.className = 'step-content';
-          stepContent.innerHTML = `
-            <div class="left">
-              <span class="status-icon">${s.icon}</span>
-              <span class="name">${s.name}</span>
-              ${index === 0 || r.status === s.key ? 
-                `<span class="time">${formatLocal(r.date)}</span>` : ''}
-            </div>
+          const left = document.createElement('div');
+          left.className = 'left';
+          left.innerHTML = `
+            <span class="name">${s.name}</span>
+            <span class="time">${(j===0||r.status===s.key)?formatLocal(r.date):''}</span>
           `;
 
-          if (s.key === 'Діагностування' && r.status === 'Діагностування' && r.diagnostic_file) {
-            const pdfLink = document.createElement('div');
-            pdfLink.className = 'diagnostic-pdf';
-            pdfLink.innerHTML = `
-              <a href="/download/${r.diagnostic_file}" target="_blank" class="pdf-link">
-                📄 Переглянути діагностику
-              </a>
-            `;
-            stepContent.appendChild(pdfLink);
+          const right = document.createElement('div');
+          right.className = 'right';
+          
+          if(s.key==='Діагностування' && r.status==='Діагностування'){
+            const btn = document.createElement('button');
+            btn.textContent = 'PDF';
+            btn.onclick = e=> {
+              e.stopPropagation();
+              window.open(`https://crm.dolce.kyiv.ua/download/${r.car_vin}`, '_blank');
+            };
+            right.append(btn);
+          }
+          
+          if(s.key==='Завершено' && r.status==='Завершено'){
+            const btn = document.createElement('button');
+            btn.textContent = 'Завершити';
+            btn.onclick = e=> e.stopPropagation() && alert('Заявка завершена.');
+            right.append(btn);
           }
 
-          stepBlock.appendChild(stepContent);
-          steps.appendChild(stepBlock);
+          sb.append(left, right);
+          steps.append(sb);
         });
+        
+        body.append(steps);
+        card.append(body);
 
-        body.appendChild(steps);
-        card.appendChild(body);
-
-        // Добавляем обработчик клика для раскрытия/скрытия деталей
-        card.querySelector('.request-header').addEventListener('click', () => {
-          body.style.display = body.style.display === 'block' ? 'none' : 'block';
-        });
-
-        out.appendChild(card);
-      }
+        hdr.addEventListener('click', ()=>
+          body.style.display = body.style.display==='block'?'none':'block'
+        );
+        
+        out.append(card);
+      });
     }
 
-    // ... rest of existing code ...
+    // Close modal when clicking outside the image
+    document.getElementById('imageModal').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) {
+        closeModal();
+      }
+    });
+
+    fetchHistory();
   </script>
 </body>
-</html>
+</html> 
