@@ -7,147 +7,7 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2/dist/tesseract.min.js"></script>
   <style>
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: url('tesla-bg.png') no-repeat center center fixed;
-      background-size: cover;
-      color: #fff;
-      min-height: 100vh;
-    }
-
-    .container {
-      padding: 20px;
-      max-width: 600px;
-      margin: auto;
-    }
-
-    .page-header {
-      font-size: 32px;
-      text-align: center;
-      margin-bottom: 24px;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    }
-
-    .back-btn {
-      display: inline-flex;
-      align-items: center;
-      margin-bottom: 20px;
-      padding: 10px 20px;
-      background: rgba(0,0,0,0.8);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 12px;
-      color: #fff;
-      font-size: 16px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .back-btn:hover {
-      background: rgba(0,0,0,0.9);
-      transform: translateY(-1px);
-    }
-
-    .form-card {
-      background: rgba(0, 0, 0, 0.85);
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.2);
-      backdrop-filter: blur(10px);
-    }
-
-    .form-row {
-      margin-bottom: 20px;
-      position: relative;
-    }
-
-    .form-row label {
-      display: block;
-      margin-bottom: 8px;
-      color: #e0e0e0;
-      font-size: 15px;
-      font-weight: 500;
-    }
-
-    .input-wrapper {
-      position: relative;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .form-row input,
-    .form-row textarea {
-      flex: 1;
-      padding: 12px 16px;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.1);
-      background: rgba(255,255,255,0.05);
-      color: #fff;
-      font-size: 16px;
-      transition: all 0.3s ease;
-    }
-
-    .form-row input:focus,
-    .form-row textarea:focus {
-      outline: none;
-      border-color: #03c75a;
-      background: rgba(255,255,255,0.08);
-    }
-
-    .scan-btn {
-      width: 42px;
-      height: 42px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(3,199,90,0.1);
-      border: 1px solid rgba(3,199,90,0.3);
-      border-radius: 10px;
-      font-size: 20px;
-      color: #03c75a;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .scan-btn:hover {
-      background: rgba(3,199,90,0.2);
-      transform: translateY(-1px);
-    }
-
-    .video-wrapper {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      margin: 20px 0;
-      background: rgba(0,0,0,0.5);
-      padding: 20px;
-      border-radius: 12px;
-    }
-
-    video {
-      width: 100%;
-      max-height: 300px;
-      border-radius: 12px;
-      margin-bottom: 12px;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-
-    .close-scan {
-      padding: 10px 20px;
-      background: #ff3b30;
-      border: none;
-      border-radius: 10px;
-      color: #fff;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .close-scan:hover {
-      background: #ff2d55;
-      transform: translateY(-1px);
-    }
+    /* ... existing styles ... */
 
     .file-input-wrapper {
       position: relative;
@@ -183,105 +43,48 @@
       border-color: rgba(255,255,255,0.3);
     }
 
-    .submit-btn {
-      width: 100%;
-      padding: 16px;
-      background: #03c75a;
-      color: #fff;
-      font-weight: 600;
-      border: none;
-      border-radius: 12px;
-      font-size: 18px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      margin-top: 10px;
-    }
-
-    .submit-btn:hover:not(:disabled) {
-      background: #02b350;
-      transform: translateY(-1px);
-    }
-
-    .submit-btn:disabled {
-      background: #555;
-      cursor: not-allowed;
-      opacity: 0.7;
-    }
-
-    .loading {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0,0,0,0.8);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-
-    .loading.active {
+    .selected-files {
+      margin-top: 8px;
       display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
-    .loading-spinner {
-      width: 50px;
-      height: 50px;
-      border: 3px solid #03c75a;
-      border-radius: 50%;
-      border-top-color: transparent;
-      animation: spin 1s linear infinite;
+    .file-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      background: rgba(3,199,90,0.1);
+      border: 1px solid rgba(3,199,90,0.3);
+      border-radius: 6px;
+      font-size: 13px;
+      color: #03c75a;
     }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
+    .file-tag .remove {
+      margin-left: 6px;
+      cursor: pointer;
+      opacity: 0.7;
+      transition: opacity 0.2s;
     }
+
+    .file-tag .remove:hover {
+      opacity: 1;
+    }
+
+    /* ... rest of existing styles ... */
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="page-header">Створити заявку</div>
-    <button class="back-btn" onclick="location.href='index.html'">← На головну</button>
-
-    <div class="form-card">
-      <div class="form-row">
-        <label for="vin-input-car">VIN автомобіля</label>
-        <div class="input-wrapper">
-          <input id="vin-input-car" type="text" maxlength="17" placeholder="Введіть VIN код" />
-          <button class="scan-btn" onclick="startScan('vin-input-car')" title="Сканувати VIN">📷</button>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <label for="vin-input-ecu">VIN комп'ютера</label>
-        <div class="input-wrapper">
-          <input id="vin-input-ecu" type="text" maxlength="17" placeholder="Введіть VIN код" />
-          <button class="scan-btn" onclick="startScan('vin-input-ecu')" title="Сканувати VIN">📷</button>
-        </div>
-      </div>
-
-      <div class="video-wrapper" id="scanner-wrap">
-        <video id="video" autoplay playsinline></video>
-        <button class="close-scan" onclick="stopScan()">✖ Закрити сканер</button>
-      </div>
-
-      <div class="form-row">
-        <label for="problem">Опис проблеми</label>
-        <textarea id="problem" rows="4" placeholder="Опишіть детально проблему..."></textarea>
-      </div>
-
-      <div class="form-row">
-        <label for="phone-input">Номер телефону</label>
-        <input id="phone-input" type="tel" placeholder="+380XXXXXXXXX" />
-      </div>
+  <!-- ... existing HTML until file input ... -->
 
       <div class="form-row">
         <label for="file-input">Фото / відео (необов'язково)</label>
         <div class="file-input-wrapper">
-          <div class="file-input-label" id="file-label">Натисніть для вибору файлу</div>
-          <input id="file-input" type="file" accept="image/*,video/*" onchange="updateFileLabel()" />
+          <div class="file-input-label" id="file-label">Натисніть для вибору файлів</div>
+          <input id="file-input" type="file" accept="image/*,video/*" onchange="updateFileLabel()" multiple />
         </div>
+        <div id="selected-files" class="selected-files"></div>
       </div>
 
       <button id="submit-btn" class="submit-btn" onclick="submitForm()" disabled>Надіслати заявку</button>
@@ -293,106 +96,52 @@
   </div>
 
   <script>
-    const tg = window.Telegram.WebApp;
-    tg.ready(); 
-    tg.expand();
-
-    const btn = document.getElementById("submit-btn");
-    const loading = document.getElementById("loading");
-    const fields = [
-      document.getElementById("vin-input-car"),
-      document.getElementById("vin-input-ecu"),
-      document.getElementById("problem"),
-      document.getElementById("phone-input")
-    ];
+    // ... existing script until updateFileLabel ... 
 
     function updateFileLabel() {
       const fileInput = document.getElementById("file-input");
       const label = document.getElementById("file-label");
-      if (fileInput.files.length > 0) {
-        label.textContent = `Вибрано: ${fileInput.files[0].name}`;
-      } else {
-        label.textContent = "Натисніть для вибору файлу";
-      }
-    }
-
-    function validatePhone(phone) {
-      return /^\+?[0-9]{10,12}$/.test(phone.replace(/\D/g, ''));
-    }
-
-    fields.forEach(f => f.addEventListener("input", validateForm));
-    
-    function validateForm() {
-      const vinCar = fields[0].value.trim();
-      const vinEcu = fields[1].value.trim();
-      const problem = fields[2].value.trim();
-      const phone = fields[3].value.trim();
-
-      const ok = vinCar.length === 17 &&
-                vinEcu.length === 17 &&
-                problem.length > 0 &&
-                phone.length > 0;
+      const selectedFiles = document.getElementById("selected-files");
       
-      btn.disabled = !ok;
-    }
-
-    let stream, activeField;
-    async function startScan(fieldId) {
-      activeField = fieldId;
-      const wrap = document.getElementById("scanner-wrap");
-      const video = document.getElementById("video");
-
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { 
-            facingMode: "environment",
-            width: { ideal: 1920 },
-            height: { ideal: 1080 }
-          } 
-        });
+      // Очищаем предыдущий список файлов
+      selectedFiles.innerHTML = '';
+      
+      if (fileInput.files.length > 0) {
+        label.textContent = `Вибрано файлів: ${fileInput.files.length}`;
         
-        video.srcObject = stream;
-        wrap.style.display = "flex";
-
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        let attempts = 0;
-
-        const interval = setInterval(async () => {
-          if (++attempts > 20) { 
-            clearInterval(interval); 
-            return; 
-          }
-          
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          ctx.drawImage(video, 0, 0);
-          
-          const { data: { text } } = await Tesseract.recognize(canvas, 'eng', {
-            tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-          });
-          
-          const txt = text.replace(/\s/g, '').toUpperCase();
-          if (txt.length >= 17) {
-            clearInterval(interval);
-            stopScan();
-            document.getElementById(activeField).value = txt.slice(0, 17);
-            validateForm();
-          }
-        }, 1000);
-
-      } catch (e) {
-        alert("Помилка доступу до камери. Перевірте дозволи браузера.");
-        console.error(e);
+        // Создаем теги для каждого выбранного файла
+        Array.from(fileInput.files).forEach((file, index) => {
+          const fileTag = document.createElement('div');
+          fileTag.className = 'file-tag';
+          fileTag.innerHTML = `
+            ${file.name}
+            <span class="remove" onclick="removeFile(${index})">×</span>
+          `;
+          selectedFiles.appendChild(fileTag);
+        });
+      } else {
+        label.textContent = "Натисніть для вибору файлів";
       }
     }
 
-    function stopScan() {
-      if (stream) {
-        stream.getTracks().forEach(t => t.stop());
+    function removeFile(index) {
+      const fileInput = document.getElementById("file-input");
+      const dt = new DataTransfer();
+      const files = fileInput.files;
+      
+      // Создаем новый FileList без удаленного файла
+      for (let i = 0; i < files.length; i++) {
+        if (i !== index) {
+          dt.items.add(files[i]);
+        }
       }
-      document.getElementById("scanner-wrap").style.display = "none";
+      
+      // Обновляем input с новым FileList
+      fileInput.files = dt.files;
+      updateFileLabel();
     }
+
+    // ... rest of existing script until submitForm ...
 
     async function submitForm() {
       const vinCar = fields[0].value.trim();
@@ -411,10 +160,30 @@
         return;
       }
 
+      // Проверка формата телефона
+      if (!validatePhone(phone)) {
+        tg.showPopup({
+          title: "Помилка",
+          message: "Будь ласка, введіть коректний номер телефону",
+          buttons: [{ type: "ok" }]
+        });
+        return;
+      }
+
       loading.classList.add("active");
       btn.disabled = true;
 
       try {
+        console.log("Отправка заявки...", {
+          vin: vinEcu,
+          car_vin: vinCar,
+          problem: problem,
+          phone: phone,
+          owner: "telegram",
+          owner_name: owner_name,
+          chat_id: chat_id
+        });
+
         const form = new FormData();
         form.append("vin", vinEcu);
         form.append("car_vin", vinCar);
@@ -425,16 +194,22 @@
         form.append("chat_id", chat_id);
 
         const fileEl = document.getElementById("file-input");
-        if (fileEl.files.length) {
-          form.append("media", fileEl.files[0]);
+        if (fileEl.files.length > 0) {
+          console.log("Добавление файлов:", fileEl.files.length);
+          for (let i = 0; i < fileEl.files.length; i++) {
+            form.append("media", fileEl.files[i]);
+            console.log(`Добавлен файл ${i + 1}: ${fileEl.files[i].name}`);
+          }
         }
 
-        const res = await fetch("https://crm.dolce.kyiv.ua/api/create_request", {
+        const res = await fetch("https://tesla-service-dashboard-eda44e4816de.herokuapp.com/api/create_request", {
           method: "POST",
           body: form
         });
 
+        console.log("Ответ сервера:", res.status, res.statusText);
         const result = await res.json();
+        console.log("Данные ответа:", result);
         
         if (result.status === "ok") {
           tg.showPopup({
@@ -444,12 +219,14 @@
           });
           setTimeout(() => location.href = "history.html", 1500);
         } else {
+          console.error("Ошибка сервера:", result);
           throw new Error(result.message || "Помилка при відправці заявки");
         }
       } catch (error) {
+        console.error("Ошибка при отправке:", error);
         tg.showPopup({
           title: "Помилка",
-          message: error.message || "Сталася помилка при відправці заявки",
+          message: error.message || "Сталася помилка при відправці заявки. Спробуйте пізніше.",
           buttons: [{ type: "ok" }]
         });
         btn.disabled = false;
@@ -459,4 +236,4 @@
     }
   </script>
 </body>
-</html> 
+</html>
