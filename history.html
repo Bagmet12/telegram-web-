@@ -413,15 +413,20 @@
           const right = document.createElement('div');
           right.className = 'right';
           
-          if(s.key==='Діагностування' && r.status==='Діагностування'){
+            if(s.key==='Діагностування' && r.status==='Діагностування'){
             const btn = document.createElement('button');
             btn.textContent = 'PDF';
             btn.onclick = e=> {
               e.stopPropagation();
-              window.open(`https://crm.dolce.kyiv.ua/download/${r.car_vin}`, '_blank');
+              // Проверяем наличие URL диагностического файла перед открытием
+              if (r.diagnostic_file) {
+                window.open(r.diagnostic_file, '_blank');
+              } else {
+                alert('Файл діагностики відсутній.');
+              }
             };
             right.append(btn);
-          }
+          } 
           
           if(s.key==='Завершено' && r.status==='Завершено'){
             const btn = document.createElement('button');
