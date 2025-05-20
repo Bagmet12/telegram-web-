@@ -1,7 +1,244 @@
 <!DOCTYPE html>
 <html lang="uk">
 <!-- ... existing head and styles ... -->
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #fff;
+      background: url('tesla-bg.png') no-repeat center center fixed;
+      background-size: cover;
+    }
+    .container { padding: 16px; }
+    .header-card {
+      background: rgba(0,0,0,0.7);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .header-card .name { font-size: 32px; margin: 0; }
+    .header-card .subtitle { font-size: 16px; color: #ccc; margin-top: 4px; }
+    .back-card { margin-bottom: 20px; cursor: pointer; }
+    .back-card .card {
+      display: flex; align-items: center;
+      background: rgba(0,0,0,0.7);
+      border-radius: 16px;
+      padding: 12px 16px;
+      transition: transform .1s;
+    }
+    .back-card .card:hover { transform: scale(1.03); }
+    .back-card .icon { font-size: 24px; margin-right: 12px; }
+    .back-card .text { font-size: 18px; }
 
+    .history-container {
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .request-card {
+      background: rgba(0,0,0,0.7);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .request-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 16px; cursor: pointer;
+      transition: background .2s;
+    }
+    .request-header:hover { background: rgba(0,0,0,0.85); }
+    .request-header .left { display: flex; flex-direction: column; }
+    .request-header .title { margin: 0; font-size: 18px; font-weight: bold; }
+    .request-header .vin { margin: 4px 0 0; font-size: 14px; color: #ccc; }
+
+    .request-body {
+      display: none;
+      padding: 0 16px 16px;
+      border-top: 1px solid #333;
+    }
+    .request-body p {
+      margin: 8px 0; font-size: 15px;
+    }
+    .request-body a {
+      color: #03c75a; text-decoration: none;
+      transition: color 0.2s;
+    }
+    .request-body a:hover {
+      color: #02b350;
+      text-decoration: underline;
+    }
+
+    .attachments {
+      margin: 16px 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+    }
+
+    .attachment-item {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      background: rgba(0,0,0,0.3);
+      transition: transform 0.2s;
+    }
+
+    .attachment-item:hover {
+      transform: scale(1.02);
+    }
+
+    .attachment-item img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .attachment-item .file-info {
+      padding: 8px;
+      font-size: 13px;
+      color: #ccc;
+      text-align: center;
+      word-break: break-all;
+    }
+
+    .attachment-item .file-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 150px;
+      font-size: 48px;
+      color: #03c75a;
+    }
+
+    .attachment-item .file-link {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.5);
+      opacity: 0;
+      transition: opacity 0.2s;
+      color: #fff;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .attachment-item:hover .file-link {
+      opacity: 1;
+    }
+
+    .video-preview {
+      position: relative;
+      width: 100%;
+      height: 150px;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .video-preview::before {
+      content: "▶";
+      font-size: 48px;
+      color: #fff;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .steps { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+    .step-block {
+      display: flex; justify-content: space-between; align-items: center;
+      background: rgba(0,0,0,0.7); border-radius: 12px;
+      padding: 8px 12px; font-size: 14px;
+    }
+    .step-block.completed { background: #045b32; }
+    .step-block.active    { background: #6d1c1c; }
+    .step-block .left { display: flex; flex-direction: column; }
+    .step-block .left .name { font-weight: bold; }
+    .step-block .left .time {
+      font-size: 12px; color: #ddd; margin-top: 2px;
+    }
+    .step-block .right button {
+      background: transparent; border: 1px solid #fff;
+      border-radius: 6px; padding: 4px 8px;
+      color: #fff; cursor: pointer; transition: all 0.2s;
+    }
+    .step-block .right button:hover { 
+      transform: scale(1.05);
+      background: rgba(255,255,255,0.1);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.9);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      max-width: 90%;
+      max-height: 90vh;
+      object-fit: contain;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(0,0,0,0.5);
+      border: none;
+      color: #fff;
+      font-size: 24px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      background: rgba(255,255,255,0.1);
+      transform: scale(1.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-card">
+      <div class="name">TeslaAssistantBot</div>
+      <div class="subtitle">Історія заявок</div>
+    </div>
+
+    <div class="back-card" onclick="location.href='index.html'">
+      <div class="card">
+        <div class="icon">←</div>
+        <div class="text">На головну</div>
+      </div>
+    </div>
+
+    <div class="history-container" id="history"></div>
+  </div>
+
+  <div class="modal" id="imageModal">
+    <button class="modal-close" onclick="closeModal()">✖</button>
+    <img class="modal-content" id="modalImage">
+  </div>
 <script>
     // ... existing script until createAttachmentElement ...
 
