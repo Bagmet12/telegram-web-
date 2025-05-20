@@ -317,7 +317,7 @@
     }
 
     function validatePhone(phone) {
-      return /^\+380\d{9}$/.test(phone);
+      return /^\+?[0-9]{10,12}$/.test(phone.replace(/\D/g, ''));
     }
 
     fields.forEach(f => f.addEventListener("input", validateForm));
@@ -331,7 +331,7 @@
       const ok = vinCar.length === 17 &&
                 vinEcu.length === 17 &&
                 problem.length > 0 &&
-                validatePhone(phone);
+                phone.length > 0;
       
       btn.disabled = !ok;
     }
@@ -401,6 +401,15 @@
       const phone = fields[3].value.trim();
       const chat_id = String(tg.initDataUnsafe.user.id);
       const owner_name = tg.initDataUnsafe.user.first_name || "";
+
+      if (!vinCar || !vinEcu || !problem || !phone) {
+        tg.showPopup({
+          title: "Помилка",
+          message: "Будь ласка, заповніть всі обов'язкові поля",
+          buttons: [{ type: "ok" }]
+        });
+        return;
+      }
 
       loading.classList.add("active");
       btn.disabled = true;
