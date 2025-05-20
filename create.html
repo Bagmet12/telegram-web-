@@ -7,8 +7,200 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2/dist/tesseract.min.js"></script>
   <style>
-    /* ... existing styles ... */
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: url('tesla-bg.png') no-repeat center center fixed;
+      background-size: cover;
+      color: #fff;
+      min-height: 100vh;
+    }
 
+    .container {
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    .page-header {
+      font-size: 32px;
+      text-align: center;
+      margin-bottom: 24px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 10px 20px;
+      background: rgba(0,0,0,0.8);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .back-btn:hover {
+      background: rgba(0,0,0,0.9);
+      transform: translateY(-1px);
+    }
+
+    .form-card {
+      background: rgba(0, 0, 0, 0.85);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+      backdrop-filter: blur(10px);
+    }
+
+    .form-row {
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .form-row label {
+      display: block;
+      margin-bottom: 8px;
+      color: #e0e0e0;
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .form-row input,
+    .form-row textarea {
+      flex: 1;
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
+
+    .form-row input:focus,
+    .form-row textarea:focus {
+      outline: none;
+      border-color: #03c75a;
+      background: rgba(255,255,255,0.08);
+    }
+
+    .scan-btn {
+      width: 42px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(3,199,90,0.1);
+      border: 1px solid rgba(3,199,90,0.3);
+      border-radius: 10px;
+      font-size: 20px;
+      color: #03c75a;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .scan-btn:hover {
+      background: rgba(3,199,90,0.2);
+      transform: translateY(-1px);
+    }
+
+    .video-wrapper {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      margin: 20px 0;
+      background: rgba(0,0,0,0.5);
+      padding: 20px;
+      border-radius: 12px;
+    }
+
+    video {
+      width: 100%;
+      max-height: 300px;
+      border-radius: 8px;
+    }
+
+    canvas {
+      display: none;
+      width: 100%;
+      max-height: 300px;
+      border-radius: 8px;
+    }
+
+    .video-controls {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .submit-btn {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      margin-top: 24px;
+      background: #03c75a;
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.3s ease;
+    }
+
+    .submit-btn:hover {
+      background: #02b350;
+      transform: translateY(-1px);
+    }
+
+    .submit-btn:disabled {
+      background: #555;
+      cursor: not-allowed;
+    }
+
+    .loading {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .loading.active {
+      display: flex;
+    }
+
+    .loading-spinner {
+      border: 4px solid rgba(255,255,255,0.3);
+      border-top: 4px solid #fff;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* New styles for multiple file upload */
     .file-input-wrapper {
       position: relative;
       overflow: hidden;
@@ -72,12 +264,42 @@
       opacity: 1;
     }
 
-    /* ... rest of existing styles ... */
   </style>
 </head>
 <body>
-  <!-- ... existing HTML until file input ... -->
+  <div class="container">
+    <div class="page-header">Створити заявку</div>
 
+    <div class="back-btn" onclick="Telegram.WebApp.close()">← Назад</div>
+
+    <div class="form-card">
+      <div class="form-row">
+        <label for="vin-car">VIN автомобіля</label>
+        <div class="input-wrapper">
+          <input type="text" id="vin-car" placeholder="Введіть VIN авто" required />
+          <div class="scan-btn">📸</div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label for="vin-ecu">VIN блоку керування (ECU)</label>
+        <div class="input-wrapper">
+          <input type="text" id="vin-ecu" placeholder="Введіть VIN ECU" required />
+          <div class="scan-btn">📸</div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label for="problem">Опис проблеми</label>
+        <textarea id="problem" placeholder="Опишіть проблему" rows="4" required></textarea>
+      </div>
+
+      <div class="form-row">
+        <label for="phone">Ваш номер телефону</label>
+        <input type="tel" id="phone" placeholder="+380 XX XXX XX XX" required />
+      </div>
+
+      <!-- File Input with multiple support -->
       <div class="form-row">
         <label for="file-input">Фото / відео (необов'язково)</label>
         <div class="file-input-wrapper">
@@ -96,8 +318,33 @@
   </div>
 
   <script>
-    // ... existing script until updateFileLabel ... 
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
 
+    const fields = [
+      document.getElementById("vin-car"),
+      document.getElementById("vin-ecu"),
+      document.getElementById("problem"),
+      document.getElementById("phone")
+    ];
+    const btn = document.getElementById("submit-btn");
+    const loading = document.getElementById("loading");
+
+    function checkFields() {
+      const allFilled = fields.every(field => field.value.trim() !== "");
+      btn.disabled = !allFilled;
+    }
+
+    fields.forEach(field => field.addEventListener("input", checkFields));
+
+    function validatePhone(phone) {
+      // Простая валидация номера телефона (дополнительно можно использовать более сложные regex)
+      const regex = /^\+?\d{10,15}$/;
+      return regex.test(phone);
+    }
+
+    // --- Функции для работы с файлами ---
     function updateFileLabel() {
       const fileInput = document.getElementById("file-input");
       const label = document.getElementById("file-label");
@@ -139,9 +386,9 @@
       // Обновляем input с новым FileList
       fileInput.files = dt.files;
       updateFileLabel();
+      checkFields(); // Проверяем поля после удаления файла (если файл был обязательным, это нужно)
     }
-
-    // ... rest of existing script until submitForm ...
+    // ------------------------------------
 
     async function submitForm() {
       const vinCar = fields[0].value.trim();
@@ -193,12 +440,12 @@
         form.append("owner_name", owner_name);
         form.append("chat_id", chat_id);
 
-        const fileEl = document.getElementById("file-input");
-        if (fileEl.files.length > 0) {
-          console.log("Добавление файлов:", fileEl.files.length);
-          for (let i = 0; i < fileEl.files.length; i++) {
-            form.append("media", fileEl.files[i]);
-            console.log(`Добавлен файл ${i + 1}: ${fileEl.files[i].name}`);
+        const fileInput = document.getElementById("file-input");
+        if (fileInput.files.length > 0) {
+          console.log("Добавление файлов:", fileInput.files.length);
+          for (let i = 0; i < fileInput.files.length; i++) {
+            form.append("media", fileInput.files[i]);
+            console.log(`Добавлен файл ${i + 1}: ${fileInput.files[i].name}`);
           }
         }
 
@@ -234,6 +481,9 @@
         loading.classList.remove("active");
       }
     }
+
+    // Initialize check on load
+    checkFields();
   </script>
 </body>
-</html>
+</html> 
