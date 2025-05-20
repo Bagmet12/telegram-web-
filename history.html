@@ -304,7 +304,7 @@
         img.alt = 'Вкладення';
         img.loading = 'lazy';
         item.append(img);
-        
+
         const link = document.createElement('a');
         link.className = 'file-link';
         link.href = url;
@@ -318,7 +318,7 @@
         const preview = document.createElement('div');
         preview.className = 'video-preview';
         item.append(preview);
-        
+
         const link = document.createElement('a');
         link.className = 'file-link';
         link.href = url;
@@ -330,12 +330,12 @@
         icon.className = 'file-icon';
         icon.textContent = getFileIcon(ext);
         item.append(icon);
-        
+
         const info = document.createElement('div');
         info.className = 'file-info';
         info.textContent = url.split('/').pop();
         item.append(info);
-        
+
         const link = document.createElement('a');
         link.className = 'file-link';
         link.href = url;
@@ -373,17 +373,19 @@
           <p><strong>Опис проблеми:</strong> ${r.problem}</p>
         `;
 
-        if(r.media) {
+        // Проверяем наличие медиа URL и отображаем, если есть
+        if(r.media_url) { // <-- Используем media_url, как возвращает сервер
           const attachments = document.createElement('div');
           attachments.className = 'attachments';
-          
-          r.media.split(',').forEach(url => {
+
+          // Разделяем строку URLов, если их несколько (хотя сейчас сервер отдает только один)
+          r.media_url.split(',').forEach(url => {
             url = url.trim();
             if(url) {
               attachments.append(createAttachmentElement(url));
             }
           });
-          
+
           body.append(attachments);
         }
 
@@ -396,7 +398,7 @@
 
         const steps = document.createElement('div');
         steps.className = 'steps';
-        
+
         statuses.forEach((s,j)=>{
           const sb = document.createElement('div');
           sb.className = 'step-block';
@@ -412,7 +414,7 @@
 
           const right = document.createElement('div');
           right.className = 'right';
-          
+
             if(s.key==='Діагностування' && r.status==='Діагностування'){
             const btn = document.createElement('button');
             btn.textContent = 'PDF';
@@ -426,8 +428,8 @@
               }
             };
             right.append(btn);
-          } 
-          
+          }
+
           if(s.key==='Завершено' && r.status==='Завершено'){
             const btn = document.createElement('button');
             btn.textContent = 'Завершити';
@@ -438,14 +440,14 @@
           sb.append(left, right);
           steps.append(sb);
         });
-        
+
         body.append(steps);
         card.append(body);
 
         hdr.addEventListener('click', ()=>
           body.style.display = body.style.display==='block'?'none':'block'
         );
-        
+
         out.append(card);
       });
     }
@@ -460,4 +462,4 @@
     fetchHistory();
   </script>
 </body>
-</html> 
+</html>
