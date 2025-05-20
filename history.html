@@ -63,13 +63,93 @@
       margin: 8px 0; font-size: 15px;
     }
     .request-body a {
-      color: #03c75a; text-decoration: underline;
+      color: #03c75a; text-decoration: none;
+      transition: color 0.2s;
     }
-    .attachments img {
-      max-width: 100%; margin-bottom: 8px; border-radius: 8px;
+    .request-body a:hover {
+      color: #02b350;
+      text-decoration: underline;
     }
-    .attachments a {
-      display: block; color: #03c75a; margin-bottom: 6px;
+
+    .attachments {
+      margin: 16px 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+    }
+
+    .attachment-item {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      background: rgba(0,0,0,0.3);
+      transition: transform 0.2s;
+    }
+
+    .attachment-item:hover {
+      transform: scale(1.02);
+    }
+
+    .attachment-item img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .attachment-item .file-info {
+      padding: 8px;
+      font-size: 13px;
+      color: #ccc;
+      text-align: center;
+      word-break: break-all;
+    }
+
+    .attachment-item .file-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 150px;
+      font-size: 48px;
+      color: #03c75a;
+    }
+
+    .attachment-item .file-link {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.5);
+      opacity: 0;
+      transition: opacity 0.2s;
+      color: #fff;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .attachment-item:hover .file-link {
+      opacity: 1;
+    }
+
+    .video-preview {
+      position: relative;
+      width: 100%;
+      height: 150px;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .video-preview::before {
+      content: "▶";
+      font-size: 48px;
+      color: #fff;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
     }
 
     .steps { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
@@ -88,9 +168,58 @@
     .step-block .right button {
       background: transparent; border: 1px solid #fff;
       border-radius: 6px; padding: 4px 8px;
-      color: #fff; cursor: pointer; transition: transform .1s;
+      color: #fff; cursor: pointer; transition: all 0.2s;
     }
-    .step-block .right button:hover { transform: scale(1.05); }
+    .step-block .right button:hover { 
+      transform: scale(1.05);
+      background: rgba(255,255,255,0.1);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.9);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      max-width: 90%;
+      max-height: 90vh;
+      object-fit: contain;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(0,0,0,0.5);
+      border: none;
+      color: #fff;
+      font-size: 24px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      background: rgba(255,255,255,0.1);
+      transform: scale(1.1);
+    }
   </style>
 </head>
 <body>
@@ -110,16 +239,46 @@
     <div class="history-container" id="history"></div>
   </div>
 
+  <div class="modal" id="imageModal">
+    <button class="modal-close" onclick="closeModal()">✖</button>
+    <img class="modal-content" id="modalImage">
+  </div>
+
   <script>
     const tg = window.Telegram.WebApp;
     tg.ready(); tg.expand();
 
-    // Формат ISO → локальный YYYY-MM-DD HH:mm
     function formatLocal(iso) {
       const d = new Date(iso);
       const pad = n => n<10?'0'+n:n;
       return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`
            + ` ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    function getFileIcon(ext) {
+      const icons = {
+        pdf: '📄',
+        doc: '📝',
+        docx: '📝',
+        xls: '📊',
+        xlsx: '📊',
+        zip: '📦',
+        rar: '📦',
+        default: '📎'
+      };
+      return icons[ext.toLowerCase()] || icons.default;
+    }
+
+    function openModal(url) {
+      const modal = document.getElementById('imageModal');
+      const modalImg = document.getElementById('modalImage');
+      modalImg.src = url;
+      modal.classList.add('active');
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('imageModal');
+      modal.classList.remove('active');
     }
 
     async function fetchHistory(){
@@ -134,15 +293,67 @@
       }
     }
 
+    function createAttachmentElement(url) {
+      const ext = url.split('.').pop().toLowerCase();
+      const item = document.createElement('div');
+      item.className = 'attachment-item';
+
+      if(['jpg','jpeg','png','gif'].includes(ext)) {
+        const img = document.createElement('img');
+        img.src = url;
+        img.alt = 'Вкладення';
+        img.loading = 'lazy';
+        item.append(img);
+        
+        const link = document.createElement('a');
+        link.className = 'file-link';
+        link.href = url;
+        link.target = '_blank';
+        link.onclick = (e) => {
+          e.preventDefault();
+          openModal(url);
+        };
+        item.append(link);
+      } else if(['mp4','webm','mov'].includes(ext)) {
+        const preview = document.createElement('div');
+        preview.className = 'video-preview';
+        item.append(preview);
+        
+        const link = document.createElement('a');
+        link.className = 'file-link';
+        link.href = url;
+        link.target = '_blank';
+        link.textContent = 'Відкрити відео';
+        item.append(link);
+      } else {
+        const icon = document.createElement('div');
+        icon.className = 'file-icon';
+        icon.textContent = getFileIcon(ext);
+        item.append(icon);
+        
+        const info = document.createElement('div');
+        info.className = 'file-info';
+        info.textContent = url.split('/').pop();
+        item.append(info);
+        
+        const link = document.createElement('a');
+        link.className = 'file-link';
+        link.href = url;
+        link.target = '_blank';
+        link.textContent = 'Відкрити файл';
+        item.append(link);
+      }
+
+      return item;
+    }
+
     function render(list){
       const out = document.getElementById('history');
       out.innerHTML = "";
       list.forEach((r,i)=>{
-        // карточка
         const card = document.createElement('div');
         card.className = 'request-card';
 
-        // header
         const hdr = document.createElement('div');
         hdr.className = 'request-header';
         hdr.innerHTML = `
@@ -154,50 +365,38 @@
         `;
         card.append(hdr);
 
-        // body
         const body = document.createElement('div');
         body.className = 'request-body';
 
-        // телефон
         body.innerHTML += `
           <p><strong>Телефон:</strong> <a href="tel:${r.phone}">${r.phone}</a></p>
-        `;
-
-        // описание
-        body.innerHTML += `
           <p><strong>Опис проблеми:</strong> ${r.problem}</p>
         `;
 
-        // вложения (если есть)
-        if(r.media){
-          const div = document.createElement('div');
-          div.className = 'attachments';
-          r.media.split(',').forEach(url=>{
+        if(r.media) {
+          const attachments = document.createElement('div');
+          attachments.className = 'attachments';
+          
+          r.media.split(',').forEach(url => {
             url = url.trim();
-            const ext = url.split('.').pop().toLowerCase();
-            if(['jpg','jpeg','png','gif'].includes(ext)){
-              const img = document.createElement('img');
-              img.src = url;
-              div.append(img);
-            } else {
-              const a = document.createElement('a');
-              a.href = url; a.target = '_blank';
-              a.textContent = url;
-              div.append(a);
+            if(url) {
+              attachments.append(createAttachmentElement(url));
             }
           });
-          body.append(div);
+          
+          body.append(attachments);
         }
 
-        // шаги
         const statuses = [
           {name:'1. Створена',       key:'Створена'},
           {name:'2. Діагностування', key:'Діагностування'},
           {name:'3. Висновок',       key:'Висновок'},
           {name:'4. Завершено',      key:'Завершено'}
         ];
+
         const steps = document.createElement('div');
         steps.className = 'steps';
+        
         statuses.forEach((s,j)=>{
           const sb = document.createElement('div');
           sb.className = 'step-block';
@@ -206,11 +405,14 @@
 
           const left = document.createElement('div');
           left.className = 'left';
-          left.innerHTML = `<span class="name">${s.name}</span>
-                            <span class="time">${(j===0||r.status===s.key)?formatLocal(r.date):''}</span>`;
+          left.innerHTML = `
+            <span class="name">${s.name}</span>
+            <span class="time">${(j===0||r.status===s.key)?formatLocal(r.date):''}</span>
+          `;
 
           const right = document.createElement('div');
           right.className = 'right';
+          
           if(s.key==='Діагностування' && r.status==='Діагностування'){
             const btn = document.createElement('button');
             btn.textContent = 'PDF';
@@ -220,6 +422,7 @@
             };
             right.append(btn);
           }
+          
           if(s.key==='Завершено' && r.status==='Завершено'){
             const btn = document.createElement('button');
             btn.textContent = 'Завершити';
@@ -230,18 +433,26 @@
           sb.append(left, right);
           steps.append(sb);
         });
+        
         body.append(steps);
-
         card.append(body);
-        // toggle
+
         hdr.addEventListener('click', ()=>
           body.style.display = body.style.display==='block'?'none':'block'
         );
+        
         out.append(card);
       });
     }
 
+    // Close modal when clicking outside the image
+    document.getElementById('imageModal').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) {
+        closeModal();
+      }
+    });
+
     fetchHistory();
   </script>
 </body>
-</html>
+</html> 
