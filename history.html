@@ -53,6 +53,11 @@
     .request-header .left { display: flex; flex-direction: column; }
     .request-header .title { margin: 0; font-size: 18px; font-weight: bold; }
     .request-header .vin { margin: 4px 0 0; font-size: 14px; color: #ccc; }
+    .request-header .created-date { 
+      font-size: 12px; 
+      color: #999; 
+      margin-top: 4px; 
+    }
 
     .request-body {
       display: none;
@@ -205,6 +210,79 @@
     }
     .step-block .right button:first-child:hover {
       background: rgba(3,199,90,0.3);
+    }
+
+    .conclusion-section {
+      margin-top: 16px;
+      border-top: 1px solid #333;
+      padding-top: 16px;
+    }
+
+    .conclusion-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      padding: 8px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .conclusion-header:hover {
+      background: rgba(0,0,0,0.4);
+    }
+
+    .conclusion-header .title {
+      font-weight: bold;
+      font-size: 15px;
+    }
+
+    .conclusion-header .icon {
+      transition: transform 0.3s;
+    }
+
+    .conclusion-header.active .icon {
+      transform: rotate(180deg);
+    }
+
+    .conclusion-content {
+      display: none;
+      padding: 12px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 8px;
+      margin-top: 8px;
+    }
+
+    .conclusion-content.active {
+      display: block;
+    }
+
+    .conclusion-text {
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+
+    .conclusion-files {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .conclusion-files button {
+      background: rgba(3,199,90,0.1);
+      border: 1px solid #03c75a;
+      color: #03c75a;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 13px;
+    }
+
+    .conclusion-files button:hover {
+      background: rgba(3,199,90,0.2);
+      transform: scale(1.05);
     }
 
     .modal {
@@ -416,8 +494,9 @@
           <div class="left">
             <p class="title">Заявка №${r.id}</p>
             <p class="vin">VIN авто: ${r.car_vin}</p>
+            <p class="created-date">Створено: ${formatLocal(r.created_at)}</p>
           </div>
-          <p class="vin">${formatLocal(r.date)}</p>
+          <p class="vin">Статус: ${r.status}</p>
         `;
         card.append(hdr);
 
@@ -456,10 +535,26 @@
         }
 
         const statuses = [
-          {name:'1. Створена',       key:'Створена',      time: r.created_at},
-          {name:'2. Діагностування', key:'Діагностування', time: r.diagnostic_at},
-          {name:'3. Висновок',       key:'Висновок',      time: r.conclusion_at},
-          {name:'4. Завершено',      key:'Завершено',     time: r.completed_at}
+          {
+            name: '1. Створена',
+            key: 'Створена',
+            time: r.created_at
+          },
+          {
+            name: '2. Діагностування',
+            key: 'Діагностування',
+            time: r.diagnostic_at
+          },
+          {
+            name: '3. Висновок',
+            key: 'Висновок',
+            time: r.conclusion_at
+          },
+          {
+            name: '4. Завершено',
+            key: 'Завершено',
+            time: r.completed_at
+          }
         ];
 
         const steps = document.createElement('div');
@@ -491,7 +586,7 @@
           right.className = 'right';
 
           if(s.key === 'Діагностування') {
-            if(r.status === 'Діагностування' || r.status === 'Висновок' || r.status === 'Завершено') {
+            if(['Діагностування', 'Висновок', 'Завершено'].includes(r.status)) {
               if(r.diagnostic_file) {
                 const pdfBtn = document.createElement('button');
                 pdfBtn.textContent = 'PDF';
@@ -547,6 +642,52 @@
         });
 
         body.append(steps);
+
+        if(r.conclusion || r.diagnostic_file) {
+          const conclusionSection = document.createElement('div');
+          conclusionSection.className = 'conclusion-section';
+          
+          const conclusionHeader = document.createElement('div');
+          conclusionHeader.className = 'conclusion-header';
+          conclusionHeader.innerHTML = `
+            <span class="title">Заключення по діагностиці</span>
+            <span class="icon">▼</span>
+          `;
+          
+          const conclusionContent = document.createElement('div');
+          conclusionContent.className = 'conclusion-content';
+          
+          if(r.conclusion) {
+            const conclusionText = document.createElement('div');
+            conclusionText.className = 'conclusion-text';
+            conclusionText.textContent = r.conclusion;
+            conclusionContent.append(conclusionText);
+          }
+
+          if(r.diagnostic_file) {
+            const conclusionFiles = document.createElement('div');
+            conclusionFiles.className = 'conclusion-files';
+            
+            const downloadBtn = document.createElement('button');
+            downloadBtn.textContent = '📄 Скачати діагностику';
+            downloadBtn.onclick = e => {
+              e.stopPropagation();
+              window.open(r.diagnostic_file, '_blank');
+            };
+            conclusionFiles.append(downloadBtn);
+            
+            conclusionContent.append(conclusionFiles);
+          }
+
+          conclusionHeader.addEventListener('click', () => {
+            conclusionHeader.classList.toggle('active');
+            conclusionContent.classList.toggle('active');
+          });
+
+          conclusionSection.append(conclusionHeader, conclusionContent);
+          body.append(conclusionSection);
+        }
+
         card.append(body);
 
         hdr.addEventListener('click', () => {
