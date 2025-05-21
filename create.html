@@ -270,7 +270,7 @@
   <div class="container">
     <div class="page-header">Створити заявку</div>
 
-    <div class="back-btn" onclick="Telegram.WebApp.close()">← Назад</div>
+    <div class="back-btn" onclick="window.location.href='index.html'">← Назад</div>
 
     <div class="form-card">
       <div class="form-row">
@@ -464,7 +464,7 @@
             message: "Заявка успішно надіслана!",
             buttons: [{ type: "ok" }]
           });
-          setTimeout(() => location.href = "history.html", 1500);
+          setTimeout(() => window.location.href = "index.html", 1500);
         } else {
           console.error("Ошибка сервера:", result);
           throw new Error(result.message || "Помилка при відправці заявки");
@@ -486,4 +486,4 @@
     checkFields();
   </script>
 </body>
-</html> 
+</html>
