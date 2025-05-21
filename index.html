@@ -31,7 +31,6 @@
       gap: 8px;
     }
 
-
     .header-card .name {
       font-size: 32px;
       font-weight: 600;
@@ -106,7 +105,7 @@
       margin-bottom: 16px;
       font-size: 16px;
     }
-    #contacts-popup button.contact {
+    #contacts-popup .contact {
       display: block;
       width: 100%;
       margin: 10px 0;
@@ -117,6 +116,17 @@
       border-radius: 10px;
       cursor: pointer;
       font-size: 18px;
+      text-decoration: none;
+      transition: background-color 0.2s ease;
+    }
+    #contacts-popup .contact:hover {
+      background: #2F2F2F;
+    }
+    #contacts-popup .contact.phone {
+      background: #03c75a;
+    }
+    #contacts-popup .contact.phone:hover {
+      background: #02b350;
     }
   </style>
 </head>
@@ -148,9 +158,9 @@
   <!-- Popup контактов -->
   <div id="contacts-popup">
     <button class="close-btn" onclick="toggleContacts(event)">✖ Закрити</button>
-    <button class="contact" onclick="window.location.href='tel:+380674679495'">
-      📞 +38 067 467 94 95
-    </button>
+    <a href="tel:+380674679495" class="contact phone">
+      �� +38 067 467 94 95
+    </a>
     <button class="contact" onclick="window.open(
       'https://www.google.com/maps/dir/?api=1&destination=Столичне+шосе+103,+Київ+03026',
       '_blank'
@@ -175,8 +185,13 @@
       const pop = document.getElementById('contacts-popup');
       pop.style.display = (pop.style.display === 'block') ? 'none' : 'block';
     }
-    document.body.addEventListener('click', () => {
-      document.getElementById('contacts-popup').style.display = 'none';
+
+    // Закрытие попапа при клике вне его
+    document.body.addEventListener('click', (e) => {
+      const popup = document.getElementById('contacts-popup');
+      if (!popup.contains(e.target) && e.target.closest('.card')?.textContent !== 'Контактна інформація') {
+        popup.style.display = 'none';
+      }
     });
   </script>
 
