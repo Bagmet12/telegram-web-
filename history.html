@@ -179,18 +179,32 @@
       color: #ddd; 
       margin-top: 2px;
     }
+    .step-block .right {
+      display: flex;
+      gap: 8px;
+    }
     .step-block .right button {
-      background: transparent; 
+      background: transparent;
       border: 1px solid #fff;
-      border-radius: 6px; 
+      border-radius: 6px;
       padding: 4px 8px;
-      color: #fff; 
-      cursor: pointer; 
+      color: #fff;
+      cursor: pointer;
       transition: all 0.2s;
+      white-space: nowrap;
+      font-size: 12px;
     }
     .step-block .right button:hover { 
       transform: scale(1.05);
       background: rgba(255,255,255,0.1);
+    }
+    .step-block .right button:first-child {
+      background: rgba(3,199,90,0.2);
+      border-color: #03c75a;
+      color: #03c75a;
+    }
+    .step-block .right button:first-child:hover {
+      background: rgba(3,199,90,0.3);
     }
 
     .modal {
@@ -268,20 +282,25 @@
     tg.expand();
 
     function formatLocal(iso) {
+      if (!iso) return '';
       const d = new Date(iso);
-      const pad = n => n<10?'0'+n:n;
-      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`
-           + ` ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      return d.toLocaleString('uk-UA', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
     }
 
     function getFileIcon(ext) {
       const icons = {
-        pdf: '📄',
+        pdf: '��',
         doc: '📝',
-        docx: '📝',
+        docx: '��',
         xls: '📊',
         xlsx: '📊',
-        zip: '📦',
+        zip: '��',
         rar: '📦',
         default: '📎'
       };
@@ -437,10 +456,10 @@
         }
 
         const statuses = [
-          {name:'1. Створена',       key:'Створена'},
-          {name:'2. Діагностування', key:'Діагностування'},
-          {name:'3. Висновок',       key:'Висновок'},
-          {name:'4. Завершено',      key:'Завершено'}
+          {name:'1. Створена',       key:'Створена',      time: r.created_at},
+          {name:'2. Діагностування', key:'Діагностування', time: r.diagnostic_at},
+          {name:'3. Висновок',       key:'Висновок',      time: r.conclusion_at},
+          {name:'4. Завершено',      key:'Завершено',     time: r.completed_at}
         ];
 
         const steps = document.createElement('div');
@@ -465,20 +484,62 @@
           left.className = 'left';
           left.innerHTML = `
             <span class="name">${s.name}</span>
-            <span class="time">${r.status === s.key ? formatLocal(r.date) : ''}</span>
+            <span class="time">${s.time ? formatLocal(s.time) : ''}</span>
           `;
 
           const right = document.createElement('div');
           right.className = 'right';
 
-          if(s.key === 'Діагностування' && r.status === 'Діагностування' && r.diagnostic_file) {
-            const btn = document.createElement('button');
-            btn.textContent = 'PDF';
-            btn.onclick = e => {
-              e.stopPropagation();
-              window.open(r.diagnostic_file, '_blank');
-            };
-            right.append(btn);
+          if(s.key === 'Діагностування') {
+            if(r.status === 'Діагностування' || r.status === 'Висновок' || r.status === 'Завершено') {
+              if(r.diagnostic_file) {
+                const pdfBtn = document.createElement('button');
+                pdfBtn.textContent = 'PDF';
+                pdfBtn.onclick = e => {
+                  e.stopPropagation();
+                  window.open(r.diagnostic_file, '_blank');
+                };
+                right.append(pdfBtn);
+              }
+              if(r.status === 'Діагностування') {
+                const uploadBtn = document.createElement('button');
+                uploadBtn.textContent = 'Завантажити PDF';
+                uploadBtn.onclick = e => {
+                  e.stopPropagation();
+                  tg.showPopup({
+                    title: "Завантаження PDF",
+                    message: "Відправте PDF файл в чат з ботом",
+                    buttons: [{ type: "ok" }]
+                  });
+                };
+                right.append(uploadBtn);
+              }
+            }
+          }
+
+          if(s.key === 'Завершено') {
+            if(r.status === 'Завершено') {
+              if(r.completion_file) {
+                const pdfBtn = document.createElement('button');
+                pdfBtn.textContent = 'PDF';
+                pdfBtn.onclick = e => {
+                  e.stopPropagation();
+                  window.open(r.completion_file, '_blank');
+                };
+                right.append(pdfBtn);
+              }
+              const uploadBtn = document.createElement('button');
+              uploadBtn.textContent = 'Завантажити PDF';
+              uploadBtn.onclick = e => {
+                e.stopPropagation();
+                tg.showPopup({
+                  title: "Завантаження PDF",
+                  message: "Відправте PDF файл в чат з ботом",
+                  buttons: [{ type: "ok" }]
+                });
+              };
+              right.append(uploadBtn);
+            }
           }
 
           sb.append(left, right);
