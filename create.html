@@ -464,7 +464,7 @@
             message: "Заявка успішно надіслана!",
             buttons: [{ type: "ok" }]
           });
-          setTimeout(() => window.location.href = "index.html", 1500);
+          setTimeout(() => window.location.href = "history.html", 1500);
         } else {
           console.error("Ошибка сервера:", result);
           throw new Error(result.message || "Помилка при відправці заявки");
