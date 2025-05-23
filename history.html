@@ -502,6 +502,13 @@
         return;
       }
 
+      // Sort requests by date in descending order (newest first)
+      list.sort((a, b) => {
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        return dateB - dateA; // Descending order
+      });
+
       list.forEach((r) => {
         const card = document.createElement('div');
         card.className = 'request-card';
