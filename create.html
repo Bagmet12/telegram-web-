@@ -43,11 +43,6 @@
       transition: all 0.3s ease;
     }
 
-    .back-btn:hover {
-      background: rgba(0,0,0,0.9);
-      transform: translateY(-1px);
-    }
-
     .form-card {
       background: rgba(0, 0, 0, 0.85);
       border-radius: 16px;
@@ -85,14 +80,6 @@
       background: rgba(255,255,255,0.05);
       color: #fff;
       font-size: 16px;
-      transition: all 0.3s ease;
-    }
-
-    .form-row input:focus,
-    .form-row textarea:focus {
-      outline: none;
-      border-color: #03c75a;
-      background: rgba(255,255,255,0.08);
     }
 
     .scan-btn {
@@ -107,16 +94,24 @@
       font-size: 20px;
       color: #03c75a;
       cursor: pointer;
-      transition: all 0.3s ease;
     }
 
-    .scan-btn:hover {
-      background: rgba(3,199,90,0.2);
-      transform: translateY(-1px);
+    .submit-btn {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      margin-top: 24px;
+      background: #03c75a;
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
     }
 
     .video-wrapper {
-      display: flex;
+      display: none;
       flex-direction: column;
       align-items: center;
       margin: 20px auto;
@@ -132,17 +127,24 @@
       transform: translateX(-50%);
     }
 
-    video {
-      width: 100%;
-      max-height: 300px;
-      border-radius: 8px;
+    .loading-spinner {
+      border: 4px solid rgba(255,255,255,0.3);
+      border-top: 4px solid #fff;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="page-header">Створити заявку</div>
-
     <div class="back-btn" onclick="window.location.href='index.html'">← Назад</div>
 
     <div class="form-card">
@@ -172,8 +174,14 @@
         <input type="tel" id="phone" placeholder="+380 XX XXX XX XX" required />
       </div>
 
-      <button id="submit-btn" class="submit-btn" onclick="alert('Тут буде логіка надсилання')">Надіслати заявку</button>
+      <button id="submit-btn" class="submit-btn" onclick="submitForm()">Надіслати заявку</button>
     </div>
+  </div>
+
+  <div id="vin-scanner" class="video-wrapper">
+    <video id="vin-video" autoplay></video>
+    <button id="scan-confirm" class="submit-btn" style="margin-top: 12px;">Сканувати</button>
+    <div class="loading-spinner" id="vin-loading" style="display: none; margin-top: 12px;"></div>
   </div>
 
   <script>
@@ -181,40 +189,108 @@
     tg.ready();
     tg.expand();
 
+    const fields = [
+      document.getElementById("vin-car"),
+      document.getElementById("vin-ecu"),
+      document.getElementById("problem"),
+      document.getElementById("phone")
+    ];
+
+    let currentVINField = null;
+    let videoStream = null;
+
     function scanVIN(inputId) {
-      const video = document.createElement("video");
+      currentVINField = inputId;
+      document.getElementById("vin-scanner").style.display = "flex";
+      const video = document.getElementById("vin-video");
+      navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
+        videoStream = stream;
+        video.srcObject = stream;
+      });
+    }
+
+    document.getElementById("scan-confirm").addEventListener("click", () => {
+      const video = document.getElementById("vin-video");
+      const loading = document.getElementById("vin-loading");
+      loading.style.display = "block";
+
       const canvas = document.createElement("canvas");
       const context = canvas.getContext("2d");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      const container = document.createElement("div");
-      container.className = "video-wrapper";
-      container.appendChild(video);
-      document.body.appendChild(container);
+      Tesseract.recognize(canvas.toDataURL(), 'eng', { logger: m => console.log(m) })
+        .then(({ data: { text } }) => {
+          const cleaned = text.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+          const vin = cleaned.slice(0, 17);
+          document.getElementById(currentVINField).value = vin;
+          stopVINScan();
+        })
+        .catch(err => {
+          alert("Не вдалося зчитати VIN. Спробуйте ще раз.");
+          console.error(err);
+          stopVINScan();
+        });
+    });
 
-      navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
-        video.srcObject = stream;
-        video.play();
+    function stopVINScan() {
+      document.getElementById("vin-scanner").style.display = "none";
+      document.getElementById("vin-loading").style.display = "none";
+      if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        videoStream = null;
+      }
+    }
 
-        setTimeout(() => {
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    function validatePhone(phone) {
+      const regex = /^\+?\d{10,15}$/;
+      return regex.test(phone);
+    }
 
-          Tesseract.recognize(canvas.toDataURL(), 'eng', { logger: m => console.log(m) })
-            .then(({ data: { text } }) => {
-              const cleaned = text.replace(/[^A-Z0-9]/gi, '').toUpperCase();
-              const vin = cleaned.slice(0, 17);
-              document.getElementById(inputId).value = vin;
-              stream.getTracks().forEach(track => track.stop());
-              container.remove();
-            })
-            .catch(err => {
-              alert('Не вдалося зчитати VIN. Спробуйте ще раз.');
-              stream.getTracks().forEach(track => track.stop());
-              container.remove();
-            });
-        }, 3000);
-      });
+    function submitForm() {
+      const vinCar = fields[0].value.trim();
+      const vinEcu = fields[1].value.trim();
+      const problem = fields[2].value.trim();
+      const phone = fields[3].value.trim();
+      const chat_id = String(tg.initDataUnsafe.user.id);
+      const owner_name = tg.initDataUnsafe.user.first_name || "";
+
+      if (!vinCar || !vinEcu || !problem || !phone) {
+        tg.showPopup({ title: "Помилка", message: "Заповніть усі поля", buttons: [{ type: "ok" }] });
+        return;
+      }
+      if (!validatePhone(phone)) {
+        tg.showPopup({ title: "Помилка", message: "Некоректний номер телефону", buttons: [{ type: "ok" }] });
+        return;
+      }
+
+      const form = new FormData();
+      form.append("vin", vinEcu);
+      form.append("car_vin", vinCar);
+      form.append("problem", problem);
+      form.append("phone", phone);
+      form.append("owner", "telegram");
+      form.append("owner_name", owner_name);
+      form.append("chat_id", chat_id);
+
+      fetch("https://tesla-service-dashboard-eda44e4816de.herokuapp.com/api/create_request", {
+        method: "POST",
+        body: form
+      })
+        .then(res => res.json())
+        .then(result => {
+          if (result.status === "ok") {
+            tg.showPopup({ title: "Успіх", message: "Заявку надіслано!", buttons: [{ type: "ok" }] });
+            setTimeout(() => window.location.href = "history.html", 1500);
+          } else {
+            throw new Error(result.message || "Помилка при збереженні заявки");
+          }
+        })
+        .catch(error => {
+          console.error("Помилка:", error);
+          tg.showPopup({ title: "Помилка", message: error.message, buttons: [{ type: "ok" }] });
+        });
     }
   </script>
 </body>
