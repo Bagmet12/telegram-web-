@@ -17,7 +17,6 @@
       position: relative;
     }
 
-    /* Статичный квадратик с заголовком */
     .header-card {
       background: rgba(0,0,0,0.7);
       border: none;
@@ -45,7 +44,6 @@
       text-align: center;
     }
 
-    /* Меню-карточки */
     .menu {
       display: flex;
       flex-direction: column;
@@ -80,7 +78,6 @@
       flex: 1;
     }
 
-    /* Popup контактов */
     #contacts-popup {
       display: none;
       position: absolute;
@@ -132,14 +129,12 @@
 </head>
 <body>
 
-  <!-- Статичный header-card -->
   <div class="header-card">
     <div class="name">TeslaAssistantBot</div>
     <div class="subtitle">mini-додаток</div>
     <div id="greeting">Вітаємо!</div>
   </div>
 
-  <!-- Меню-карточки -->
   <div class="menu">
     <div class="card" onclick="location.href='create.html'">
       <div class="icon">📩</div>
@@ -155,11 +150,10 @@
     </div>
   </div>
 
-  <!-- Popup контактов -->
   <div id="contacts-popup">
     <button class="close-btn" onclick="toggleContacts(event)">✖ Закрити</button>
     <a href="tel:+380674679495" class="contact phone">
-      �� +38 067 467 94 95
+      📞 +38 067 467 94 95
     </a>
     <button class="contact" onclick="window.open(
       'https://www.google.com/maps/dir/?api=1&destination=Столичне+шосе+103,+Київ+03026',
@@ -186,7 +180,6 @@
       pop.style.display = (pop.style.display === 'block') ? 'none' : 'block';
     }
 
-    // Закрытие попапа при клике вне его
     document.body.addEventListener('click', (e) => {
       const popup = document.getElementById('contacts-popup');
       if (!popup.contains(e.target) && e.target.closest('.card')?.textContent !== 'Контактна інформація') {
