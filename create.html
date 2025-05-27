@@ -125,53 +125,73 @@
       const regex = /^\+?\d{10,15}$/;
       return regex.test(phone);
     }
-    function submitForm() {
-      const vinCar = fields[0].value.trim();
-      const vinMceu = fields[1].value.trim();
-      const problem = fields[2].value.trim();
-      const phone = fields[3].value.trim();
-      const chat_id = String(tg.initDataUnsafe.user.id);
-      const owner_name = tg.initDataUnsafe.user.first_name || "";
-      if (!vinCar || !vinMceu || !problem || !phone) {
-        tg.showPopup({ title: "Помилка", message: "Заповніть усі поля", buttons: [{ type: "ok" }] });
-        return;
-      }
-      if (!validatePhone(phone)) {
-        tg.showPopup({ title: "Помилка", message: "Некоректний номер телефону", buttons: [{ type: "ok" }] });
-        return;
-      }
-      const form = new FormData();
-      form.append("vin", vinMceu);
-      form.append("car_vin", vinCar);
-      form.append("problem", problem);
-      form.append("phone", phone);
-      form.append("owner", "telegram");
-      form.append("owner_name", owner_name);
-      form.append("chat_id", chat_id);
-      const fileInput = document.getElementById("file-input");
-      if (fileInput.files.length > 0) {
-        for (let i = 0; i < fileInput.files.length; i++) {
-          form.append("media", fileInput.files[i]);
-        }
-      }
-      fetch("https://tesla-service-dashboard-eda44e4816de.herokuapp.com/api/create_request", {
-        method: "POST",
-        body: form
-      })
-        .then(res => res.json())
-        .then(result => {
-          if (result.status === "ok") {
-            tg.showPopup({ title: "Успіх", message: "Заявку надіслано!", buttons: [{ type: "ok" }] });
-            setTimeout(() => window.location.href = "history.html", 1500);
-          } else {
-            throw new Error(result.message || "Помилка при збереженні заявки");
-          }
-        })
-        .catch(error => {
-          console.error("Помилка:", error);
-          tg.showPopup({ title: "Помилка", message: error.message, buttons: [{ type: "ok" }] });
-        });
+   function submitForm() {
+  const vinCar = fields[0].value.trim();
+  const vinMceu = fields[1].value.trim();
+  const problem = fields[2].value.trim();
+  const phone = fields[3].value.trim();
+  const chat_id = String(tg.initDataUnsafe.user.id);
+  const owner_name = tg.initDataUnsafe.user.first_name || "";
+
+  if (!vinCar || !vinMceu || !problem || !phone) {
+    tg.showPopup({ title: "Помилка", message: "Заповніть усі поля", buttons: [{ type: "ok" }] });
+    return;
+  }
+
+  if (!validatePhone(phone)) {
+    tg.showPopup({ title: "Помилка", message: "Некоректний номер телефону", buttons: [{ type: "ok" }] });
+    return;
+  }
+
+  // Создаем объект с данными для отправки в бота
+  const botData = {
+    vin: vinMceu,
+    car_vin: vinCar,
+    problem: problem,
+    phone: phone,
+    owner: "telegram",
+    owner_name: owner_name,
+    chat_id: chat_id
+  };
+
+  // Отправляем данные в бота
+  tg.sendData(JSON.stringify(botData));
+
+  // Отправляем данные в CRM
+  const form = new FormData();
+  form.append("vin", vinMceu);
+  form.append("car_vin", vinCar);
+  form.append("problem", problem);
+  form.append("phone", phone);
+  form.append("owner", "telegram");
+  form.append("owner_name", owner_name);
+  form.append("chat_id", chat_id);
+
+  const fileInput = document.getElementById("file-input");
+  if (fileInput.files.length > 0) {
+    for (let i = 0; i < fileInput.files.length; i++) {
+      form.append("media", fileInput.files[i]);
     }
+  }
+
+  fetch("https://tesla-service-dashboard-eda44e4816de.herokuapp.com/api/create_request", {
+    method: "POST",
+    body: form
+  })
+    .then(res => res.json())
+    .then(result => {
+      if (result.status === "ok") {
+        tg.showPopup({ title: "Успіх", message: "Заявку надіслано!", buttons: [{ type: "ok" }] });
+        setTimeout(() => window.location.href = "history.html", 1500);
+      } else {
+        throw new Error(result.message || "Помилка при збереженні заявки");
+      }
+    })
+    .catch(error => {
+      console.error("Помилка:", error);
+      tg.showPopup({ title: "Помилка", message: error.message, buttons: [{ type: "ok" }] });
+    });
+} 
     function previewFiles() {
       const input = document.getElementById("file-input");
       const preview = document.getElementById("file-preview");
