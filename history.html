@@ -477,100 +477,52 @@
     }
 
     async function fetchHistory() {
-      console.log('Entering fetchHistory function.'); // Лог 1
       const chatId = String(tg.initDataUnsafe.user.id);
-      console.log('Fetching history for chat ID:', chatId); // Лог 2
-
-      if (!chatId || chatId === 'undefined') { // Добавим проверку chatId на всякий случай
-          console.error('Invalid chatId obtained:', chatId);
-          document.getElementById('history').innerText = 'Не вдалося отримати ID користувача.';
-          return;
-      }
-
       try {
-        console.log('Attempting fetch to:', `https://tesla-service-dashboard-eda44e4816de.herokuapp.com/api/get_requests?chat_id=${chatId}`); // Лог 3
+        // Ensure this URL is correct and accessible
         const res = await fetch(`https://tesla-service-dashboard-eda44e4816de.herokuapp.com/api/get_requests?chat_id=${chatId}`);
-        console.log('Fetch response received.'); // Лог 4
-        console.log('Fetch response status:', res.status); // Лог 5
-
-        if (!res.ok) { // Проверка на успешный HTTP статус (2xx)
-             console.error('HTTP error fetching history:', res.status, res.statusText); // Лог 6
-             const errorText = await res.text(); // Попробуем прочитать текст ошибки
-             console.error('HTTP error details:', errorText);
-             document.getElementById('history').innerText = `Помилка сервера: ${res.status} - ${res.statusText}`;
-             return;
-        }
-
-
         const body = await res.json();
-        console.log('API response body (parsed):', body); // Лог 7
-
         if(body.status === "ok") {
-          console.log('API status is OK. Rendering requests.'); // Лог 8
-          console.log('Requests data:', body.requests); // Лог 9 - Проверяем, что body.requests содержит
-          render(body.requests); // Передаем массив заявок в render
-          console.log('Render function called.'); // Лог 10
+          render(body.requests);
         } else {
-          console.error('API returned an error status:', body.message); // Лог 11
           document.getElementById('history').innerText = body.message || 'Помилка завантаження історії';
         }
       } catch(error) {
-        console.error('Error during fetch or JSON parsing:', error); // Лог 12
+        console.error('Error fetching history:', error);
         document.getElementById('history').innerText = 'Не вдалося завантажити історію. Спробуйте пізніше.';
       }
     }
 
     function render(list) {
-      console.log('Entering render function with list:', list); // Лог 13
       const out = document.getElementById('history');
       out.innerHTML = "";
 
-      if (!list || !Array.isArray(list) || list.length === 0) { // Улучшенная проверка списка
-        console.log('List is empty, not an array, or null/undefined.'); // Лог 14
+      if (!list || list.length === 0) {
         out.innerHTML = '<div class="request-card"><div class="request-header"><div class="left"><p class="title">Історія порожня</p></div></div></div>';
         return;
       }
 
       // Sort requests by date in descending order (newest first)
       list.sort((a, b) => {
-        // Добавим проверку, что a и b - объекты с полем 'date'
-        const dateA = a && typeof a === 'object' && a.date ? new Date(a.date) : new Date(0);
-        const dateB = b && typeof b === 'object' && b.date ? new Date(b.date) : new Date(0);
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
         return dateB - dateA; // Descending order
       });
-      console.log('List sorted.'); // Лог 15
 
-
-      list.forEach((r, index) => { // Добавим index для отладки
-        console.log('Processing request at index', index, ':', r); // Лог 16 - Смотрим каждый элемент списка
-        // Добавим проверку перед доступом к свойствам
-        if (!r || typeof r !== 'object') {
-             console.error('Invalid item in list at index', index, ':', r); // Лог 17
-             // Можно также добавить сообщение на страницу для каждого некорректного элемента
-             const errorItem = document.createElement('div');
-             errorItem.textContent = `Помилка: некоректний формат даних заявки за індексом ${index}.`;
-             out.append(errorItem);
-             return; // Пропускаем невалидный элемент
-        }
-
+      list.forEach((r) => {
         const card = document.createElement('div');
         card.className = 'request-card';
 
         const hdr = document.createElement('div');
         hdr.className = 'request-header';
-        // Убедимся, что r.id существует перед использованием
-        const requestId = r.id !== undefined && r.id !== null ? r.id : 'Н/Д';
-        const carVin = r.car_vin || 'Н/Д'; // Используем || для дефолтного значения
-        const createdDate = r.date ? formatLocal(r.date) : 'Н/Д';
-        const status = r.status || 'Н/Д';
-
+        // Use r.date for creation date, not r.created_at (which is not returned by API now)
         hdr.innerHTML = `
           <div class="left">
-            <p class="title">Заявка №${requestId}</p>
-            <p class="vin">VIN авто: ${carVin}</p>
-            <p class="created-date">Створено: ${createdDate}</p>
+            <p class="title">Заявка №${r.id}</p>
+            <p class="vin">VIN авто: ${r.car_vin || 'Н/Д'}</p>
+            <p class="created-date">Створено: ${formatLocal(r.date)}</p>
           </div>
-          <p class="vin">Статус: ${status}</p>
+          <p class="vin">Статус: ${r.status || 'Н/Д'}</p>
         `;
         card.append(hdr);
 
@@ -582,9 +534,12 @@
           <p><strong>Опис проблеми:</strong> ${r.problem || 'Немає опису'}</p>
         `;
 
-        // Display Attachments
-        // Добавим проверку r.media_url и r.media_url.split является функцией
-        if(r.media_url && typeof r.media_url.split === 'function') {
+        // Display Attachments (client media and diagnostic file if present in main request object)
+        // Note: The diagnostic_file from the request object might be the *latest* one,
+        // but displaying it here might be redundant if it's also shown in history steps.
+        // Let's rely on history entries for diagnostic file links within the steps section.
+        // We will keep the client media here.
+        if(r.media_url) {
             const attachments = document.createElement('div');
             attachments.className = 'attachments';
 
@@ -596,7 +551,7 @@
                         const attachmentElement = createAttachmentElement(url);
                         attachments.append(attachmentElement);
                     } catch(error) {
-                        console.error('Error creating attachment element for URL:', url, error);
+                        console.error('Error creating attachment element:', error);
                         const errorItem = document.createElement('div');
                         errorItem.className = 'attachment-item';
                         errorItem.innerHTML = `
@@ -613,38 +568,21 @@
         }
 
 
-        // Display History Steps
+        // Display History Steps (using the 'history' array from API response)
         const steps = document.createElement('div');
         steps.className = 'steps';
         body.append(steps); // Add the steps container to the body
 
-        // Проверка, что r.history является массивом и не пустой
-        if (r.history && Array.isArray(r.history) && r.history.length > 0) {
+        if (r.history && r.history.length > 0) {
              const historyTitle = document.createElement('h4'); // Add a title for the history
              historyTitle.textContent = 'Історія змін статусу:';
              steps.append(historyTitle);
 
              // Sort history by created_at ascending to show timeline correctly
-             r.history.sort((a, b) => {
-                 const dateA = a && typeof a === 'object' && a.created_at ? new Date(a.created_at) : new Date(0);
-                 const dateB = b && typeof b === 'object' && b.created_at ? new Date(b.created_at) : new Date(0);
-                 return dateA - dateB; // Ascending order
-             });
-             console.log('History list sorted for request', requestId); // Лог 18
+             r.history.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
 
             r.history.forEach(entry => {
-                console.log('Processing history entry for request', requestId, ':', entry); // Лог 19 - Смотрим каждую запись истории
-                // Добавим проверку перед доступом к свойствам записи истории
-                if (!entry || typeof entry !== 'object') {
-                   console.error('Invalid item in history list for request', requestId, ':', entry); // Лог 20
-                   // Можно также добавить сообщение на страницу для каждого некорректного элемента истории
-                   const errorItem = document.createElement('div');
-                   errorItem.textContent = `Помилка: некоректний формат історії для заявки ${requestId}.`;
-                   steps.append(errorItem);
-                   return; // Пропускаем невалидный элемент
-                }
-
                 const entryBlock = document.createElement('div');
                 entryBlock.className = 'history-entry-block';
                 entryBlock.setAttribute('data-status', entry.status || ''); // Add data attribute for status color
@@ -659,7 +597,7 @@
 
                 const statusTime = document.createElement('span');
                 statusTime.className = 'status-time';
-                statusTime.textContent = entry.created_at ? formatLocal(entry.created_at) : 'Н/Д';
+                statusTime.textContent = entry.created_at ? formatLocal(entry.created_at) : '';
                 left.append(statusTime);
 
                 // Display history text if available (e.g., conclusion text)
@@ -682,31 +620,20 @@
                     pdfBtn.className = 'pdf-button';
                     pdfBtn.onclick = e => {
                         e.stopPropagation();
-                         // Добавим проверку перед открытием URL
-                        if(entry.media) {
-                            window.open(entry.media, '_blank'); // Open the media URL from the history entry
-                        } else {
-                            console.error('Attempted to open PDF but media URL is missing for history entry:', entry);
-                        }
+                        window.open(entry.media, '_blank'); // Open the media URL from the history entry
                     };
                     right.append(pdfBtn);
                 }
 
                  // Add "Read More" button for Conclusion step with text
                  // Use r.latest_conclusion for the full text in modal
-                 // Проверяем entry.status === 'Висновок' И r.latest_conclusion
                  if (entry.status === 'Висновок' && r.latest_conclusion) {
                     const readMoreBtn = document.createElement('button');
                     readMoreBtn.textContent = 'Читати повністю';
                     readMoreBtn.className = 'read-more-button';
                     readMoreBtn.onclick = e => {
                         e.stopPropagation();
-                        // Добавим проверку перед открытием модального окна
-                        if(r.latest_conclusion) {
-                            openConclusionModal(r.latest_conclusion); // Open modal with the full conclusion text
-                        } else {
-                            console.error('Attempted to open conclusion modal but conclusion text is missing for request:', r);
-                        }
+                        openConclusionModal(r.latest_conclusion); // Open modal with the full conclusion text
                     };
                     right.append(readMoreBtn);
                  }
@@ -730,7 +657,6 @@
 
         out.append(card);
       });
-       console.log('Render function finished processing all items.'); // Лог 21
     }
 
     // Close image modal when clicking outside the image
@@ -749,7 +675,6 @@
 
 
     // Initial load
-    console.log('Calling fetchHistory() on page load.'); // Лог 22
     fetchHistory();
   </script>
 </body>
