@@ -156,51 +156,19 @@
         chat_id: chat_id
       };
 
-      // Отправляем данные в бота
+      // Отправляем данные в бота через Telegram WebApp API
       tg.sendData(JSON.stringify(botData));
 
-      // Отправляем данные в CRM
-      const form = new FormData();
-      form.append("vin", vinMceu);
-      form.append("car_vin", vinCar);
-      form.append("problem", problem);
-      form.append("phone", phone);
-      form.append("owner", "telegram");
-      form.append("owner_name", owner_name);
-      form.append("chat_id", chat_id);
+      // После отправки данных через WebApp, закрываем WebApp (опционально)
+      tg.close();
 
-      const fileInput = document.getElementById("file-input");
-      if (fileInput.files.length > 0) {
-        for (let i = 0; i < fileInput.files.length; i++) {
-          form.append("media", fileInput.files[i]);
-        }
-      }
 
-      try {
-        const res = await fetch("https://tesla-service-dashboard-eda44e4816de.herokuapp.com/api/create_request", {
-          method: "POST",
-          body: form
-        });
+      // УДАЛЕН КОД ПРЯМОГО ОТПРАВКИ В CRM
 
-        // Логируем статус ответа и сам ответ
-        console.log("CRM API Response Status:", res.status);
-        const result = await res.json();
-        console.log("CRM API Response Body:", result);
+      // Дополнительно можно показать сообщение об успешной отправке данных в WebApp, если не закрываете его сразу
+       tg.showPopup({ title: "Успіх", message: "Заявку надіслано через бота!", buttons: [{ type: "ok" }] });
 
-        if (res.ok && result.status === "ok") {
-          tg.showPopup({ title: "Успіх", message: "Заявку надіслано!", buttons: [{ type: "ok" }] });
-          setTimeout(() => window.location.href = "history.html", 1500);
-        } else {
-          // Обрабатываем ошибку, если статус не 'ok' или ответ не успешный
-          const errorMessage = result.message || res.statusText || "Невідома помилка при збереженні заявки";
-          console.error("Помилка при збереженні заявки:", errorMessage);
-          tg.showPopup({ title: "Помилка", message: errorMessage, buttons: [{ type: "ok" }] });
-        }
-      } catch (error) {
-        // Обрабатываем сетевые ошибки или ошибки парсинга JSON
-        console.error("Помилка при відправці даних в CRM:", error);
-        tg.showPopup({ title: "Помилка", message: `Помилка зв'язку з сервером: ${error.message}`, buttons: [{ type: "ok" }] });
-      }
+
     }
     function previewFiles() {
       const input = document.getElementById("file-input");
