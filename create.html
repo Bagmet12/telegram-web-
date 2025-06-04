@@ -146,9 +146,10 @@
       }
 
       // Создаем объект с данными для отправки в бота
+      // Бот получит эти данные в handle_webapp_data
       const botData = {
-        vin: vinMceu,
-        car_vin: vinCar,
+        vin: vinMceu, // VIN MCEU
+        car_vin: vinCar, // VIN автомобиля
         problem: problem,
         phone: phone,
         owner: "telegram",
@@ -157,17 +158,30 @@
       };
 
       // Отправляем данные в бота через Telegram WebApp API
+      // ЭТО ГЛАВНОЕ ИЗМЕНЕНИЕ - данные идут сначала в бота!
       tg.sendData(JSON.stringify(botData));
 
-      // После отправки данных через WebApp, закрываем WebApp (опционально)
-      tg.close();
+      // После отправки данных в бота, показываем сообщение и переходим
+      tg.showPopup({ title: "Успіх", message: "Заявку надіслано!", buttons: [{ type: "ok" }] });
+      // Оставляем редирект на history.html
+      setTimeout(() => window.location.href = "history.html", 1500);
 
-
-      // УДАЛЕН КОД ПРЯМОГО ОТПРАВКИ В CRM
-
-      // Дополнительно можно показать сообщение об успешной отправке данных в WebApp, если не закрываете его сразу
-       tg.showPopup({ title: "Успіх", message: "Заявку надіслано через бота!", buttons: [{ type: "ok" }] });
-
+      // УДАЛЕН КОД ПРЯМОГО ОТПРАВКИ В CRM (fetch)
+      // Этот код был здесь в вашем оригинале и теперь удален.
+      /*
+      const form = new FormData();
+      form.append("vin", vinMceu);
+      // ... добавление других полей и файлов ...
+      try {
+        const res = await fetch("https://tesla-service-dashboard-eda44e4816de.herokuapp.com/api/create_request", {
+          method: "POST",
+          body: form
+        });
+        // ... обработка ответа ...
+      } catch (error) {
+        // ... обработка ошибок ...
+      }
+      */
 
     }
     function previewFiles() {
