@@ -465,7 +465,7 @@ function render(list) {
       <div class="left">
         <p class="title">Заявка №${r.id}</p>
         <p class="vin">VIN авто: ${r.car_vin || 'Н/Д'}</p>
-        <p class="created-date">Створено: ${formatLocal(r.date)}</p>
+         <p class="created-date">Створено: ${formatLocal(r.date || r.created_at)}</p>
       </div>
       <p class="vin">Статус: ${r.status || 'Н/Д'}</p>
     `;
