@@ -614,16 +614,22 @@
                 right.className = 'right';
 
                 // Add PDF button for Diagnostic step with media
-                if (entry.status === 'Діагностування' && entry.media) {
-                    const pdfBtn = document.createElement('button');
-                    pdfBtn.textContent = '📄 PDF'; // Changed text and added icon
-                    pdfBtn.className = 'pdf-button';
-                    pdfBtn.onclick = e => {
-                        e.stopPropagation();
-                        window.open(entry.media, '_blank'); // Open the media URL from the history entry
-                    };
-                    right.append(pdfBtn);
-                }
+               // Add PDF button for Diagnostic step with media OR with diagnostic_file in request object
+              if (entry.status === 'Діагностування' && (entry.media || r.diagnostic_file)) {
+                  const pdfBtn = document.createElement('button');
+                  pdfBtn.textContent = 'ЗАВАНТАЖИТИ PDF файл';
+                  pdfBtn.className = 'pdf-button';
+                  pdfBtn.style.fontWeight = 'bold';
+                  pdfBtn.style.fontSize = '14px';
+                  pdfBtn.style.padding = '8px 18px';
+                  pdfBtn.style.marginTop = '8px';
+                  pdfBtn.style.width = '100%';
+                  pdfBtn.onclick = e => {
+                      e.stopPropagation();
+                      window.open(entry.media || r.diagnostic_file, '_blank');
+                  };
+                  right.append(pdfBtn);
+                  }
 
                  // Add "Read More" button for Conclusion step with text
                  // Use r.latest_conclusion for the full text in modal
