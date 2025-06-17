@@ -347,347 +347,325 @@
   </div>
 
 
-  <script>
-    const tg = window.Telegram.WebApp;
-    tg.ready();
-    tg.expand();
+ <script>
+const tg = window.Telegram.WebApp;
+tg.ready();
+tg.expand();
 
-    // Helper function to format date
-    function formatLocal(iso) {
-      if (!iso) return '';
-      try {
-       function formatLocal(iso) {
-      if (!iso) return '';
-      try {
-        // Принудительно добавить 3 часа к времени (если iso в UTC)
-        const d = new Date(iso);
-        if (isNaN(d.getTime())) {
-          return iso;
-        }
-        // Добавить 3 часа
-        d.setHours(d.getHours() + 3);
-        return d.toLocaleString('uk-UA', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit'
+// Helper function to format date with +03:00 correction if нужно
+function formatLocal(iso) {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) {
+      return iso;
+    }
+    // Если строка времени не содержит смещения (нет + или Z), добавляем 3 часа вручную
+    if (!iso.includes('+') && !iso.endsWith('Z')) {
+      d.setHours(d.getHours() + 3);
+    }
+    return d.toLocaleString('uk-UA', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch (e) {
+    console.error("Error formatting date:", iso, e);
+    return iso;
+  }
+}
+
+function getFileIcon(ext) {
+  const icons = {
+    pdf: '📄',
+    doc: '📝',
+    docx: '📝',
+    xls: '📊',
+    xlsx: '📊',
+    zip: '📦',
+    rar: '📦',
+    default: '📎'
+  };
+  return icons[ext.toLowerCase()] || icons.default;
+}
+
+function openImageModal(url) {
+  const modal = document.getElementById('imageModal');
+  const modalImg = document.getElementById('modalImage');
+  modalImg.src = url;
+  modal.classList.add('active');
+}
+
+function closeImageModal() {
+  const modal = document.getElementById('imageModal');
+  modal.classList.remove('active');
+}
+
+// New functions for Conclusion Modal
+function openConclusionModal(text) {
+  const modal = document.getElementById('conclusionModal');
+  const modalText = document.getElementById('conclusionModalText');
+  modalText.textContent = text;
+  modal.classList.add('active');
+}
+
+function closeConclusionModal() {
+  const modal = document.getElementById('conclusionModal');
+  modal.classList.remove('active');
+}
+
+function createAttachmentElement(url) {
+  const ext = url.split('.').pop().toLowerCase();
+  const item = document.createElement('div');
+  item.className = 'attachment-item';
+
+  if(['jpg','jpeg','png','gif'].includes(ext)) {
+    const img = document.createElement('img');
+    img.src = url;
+    img.alt = 'Вкладення';
+    img.loading = 'lazy';
+    img.onerror = function() {
+      this.style.display = 'none';
+      const icon = document.createElement('div');
+      icon.className = 'file-icon';
+      icon.textContent = '🖼️';
+      this.parentNode.insertBefore(icon, this);
+    };
+    item.append(img);
+
+    const link = document.createElement('a');
+    link.className = 'file-link';
+    link.href = url;
+    link.target = '_blank';
+    link.onclick = (e) => {
+      e.preventDefault();
+      openImageModal(url);
+    };
+    item.append(link);
+  } else if(['mp4','webm','mov'].includes(ext)) {
+    const preview = document.createElement('div');
+    preview.className = 'video-preview';
+    item.append(preview);
+
+    const link = document.createElement('a');
+    link.className = 'file-link';
+    link.href = url;
+    link.target = '_blank';
+    link.textContent = 'Відкрити відео';
+    item.append(link);
+  } else {
+    const icon = document.createElement('div');
+    icon.className = 'file-icon';
+    icon.textContent = getFileIcon(ext);
+    item.append(icon);
+
+    const info = document.createElement('div');
+    info.className = 'file-info';
+    const fileName = decodeURIComponent(url.split('/').pop().split('?')[0]);
+    info.textContent = fileName;
+    item.append(info);
+
+    const link = document.createElement('a');
+    link.className = 'file-link';
+    link.href = url;
+    link.target = '_blank';
+    link.textContent = 'Відкрити файл';
+    item.append(link);
+  }
+
+  return item;
+}
+
+async function fetchHistory() {
+  const chatId = String(tg.initDataUnsafe.user.id);
+  try {
+    const res = await fetch(`https://tesla-service-dashboard-eda44e4816de.herokuapp.com/api/get_requests?chat_id=${chatId}`);
+    const body = await res.json();
+    if(body.status === "ok") {
+      render(body.requests);
+    } else {
+      document.getElementById('history').innerText = body.message || 'Помилка завантаження історії';
+    }
+  } catch(error) {
+    console.error('Error fetching history:', error);
+    document.getElementById('history').innerText = 'Не вдалося завантажити історію. Спробуйте пізніше.';
+  }
+}
+
+function render(list) {
+  const out = document.getElementById('history');
+  out.innerHTML = "";
+
+  if (!list || list.length === 0) {
+    out.innerHTML = '<div class="request-card"><div class="request-header"><div class="left"><p class="title">Історія порожня</p></div></div></div>';
+    return;
+  }
+
+  // Sort requests by date in descending order (newest first)
+  list.sort((a, b) => {
+    const dateA = new Date(a.date);
+    const dateB = new Date(b.date);
+    return dateB - dateA;
+  });
+
+  list.forEach((r) => {
+    const card = document.createElement('div');
+    card.className = 'request-card';
+
+    const hdr = document.createElement('div');
+    hdr.className = 'request-header';
+    hdr.innerHTML = `
+      <div class="left">
+        <p class="title">Заявка №${r.id}</p>
+        <p class="vin">VIN авто: ${r.car_vin || 'Н/Д'}</p>
+        <p class="created-date">Створено: ${formatLocal(r.date)}</p>
+      </div>
+      <p class="vin">Статус: ${r.status || 'Н/Д'}</p>
+    `;
+    card.append(hdr);
+
+    const body = document.createElement('div');
+    body.className = 'request-body';
+
+    body.innerHTML += `
+      <p><strong>Телефон:</strong> <a href="tel:${r.phone}">${r.phone || 'Н/Д'}</a></p>
+      <p><strong>Опис проблеми:</strong> ${r.problem || 'Немає опису'}</p>
+    `;
+
+    if(r.media_url) {
+      const attachments = document.createElement('div');
+      attachments.className = 'attachments';
+
+      const mediaUrls = r.media_url.split(',').map(url => url.trim()).filter(url => url);
+
+      if(mediaUrls.length > 0) {
+        mediaUrls.forEach(url => {
+          try {
+            const attachmentElement = createAttachmentElement(url);
+            attachments.append(attachmentElement);
+          } catch(error) {
+            console.error('Error creating attachment element:', error);
+            const errorItem = document.createElement('div');
+            errorItem.className = 'attachment-item';
+            errorItem.innerHTML = `
+              <div class="file-icon">❌</div>
+              <div class="file-info">Помилка завантаження</div>
+            `;
+            attachments.append(errorItem);
+          }
         });
-      } catch (e) {
-          console.error("Error formatting date:", iso, e);
-          return iso; // Return original on error
-      }
-    }
-
-
-    function getFileIcon(ext) {
-      const icons = {
-        pdf: '📄', // Changed icon
-        doc: '📝',
-        docx: '📝',
-        xls: '📊',
-        xlsx: '📊',
-        zip: '📦', // Changed icon
-        rar: '📦',
-        default: '📎'
-      };
-      return icons[ext.toLowerCase()] || icons.default;
-    }
-
-    function openImageModal(url) {
-      const modal = document.getElementById('imageModal');
-      const modalImg = document.getElementById('modalImage');
-      modalImg.src = url;
-      modal.classList.add('active');
-    }
-
-    function closeImageModal() {
-      const modal = document.getElementById('imageModal');
-      modal.classList.remove('active');
-    }
-
-    // New functions for Conclusion Modal
-    function openConclusionModal(text) {
-        const modal = document.getElementById('conclusionModal');
-        const modalText = document.getElementById('conclusionModalText');
-        modalText.textContent = text; // Use textContent to prevent XSS
-        modal.classList.add('active');
-    }
-
-    function closeConclusionModal() {
-        const modal = document.getElementById('conclusionModal');
-        modal.classList.remove('active');
-    }
-
-
-    function createAttachmentElement(url) {
-      const ext = url.split('.').pop().toLowerCase();
-      const item = document.createElement('div');
-      item.className = 'attachment-item';
-
-      if(['jpg','jpeg','png','gif'].includes(ext)) {
-        const img = document.createElement('img');
-        img.src = url;
-        img.alt = 'Вкладення';
-        img.loading = 'lazy';
-        img.onerror = function() {
-          this.style.display = 'none';
-          const icon = document.createElement('div');
-          icon.className = 'file-icon';
-          icon.textContent = '🖼️';
-          this.parentNode.insertBefore(icon, this);
-        };
-        item.append(img);
-
-        const link = document.createElement('a');
-        link.className = 'file-link';
-        link.href = url;
-        link.target = '_blank';
-        link.onclick = (e) => {
-          e.preventDefault();
-          openImageModal(url); // Open image in the image modal
-        };
-        item.append(link);
-      } else if(['mp4','webm','mov'].includes(ext)) {
-        const preview = document.createElement('div');
-        preview.className = 'video-preview';
-        item.append(preview);
-
-        const link = document.createElement('a');
-        link.className = 'file-link';
-        link.href = url;
-        link.target = '_blank';
-        link.textContent = 'Відкрити відео';
-        item.append(link);
-      } else { // Handle other file types including PDF
-        const icon = document.createElement('div');
-        icon.className = 'file-icon';
-        icon.textContent = getFileIcon(ext);
-        item.append(icon);
-
-        const info = document.createElement('div');
-        info.className = 'file-info';
-        const fileName = decodeURIComponent(url.split('/').pop().split('?')[0]);
-        info.textContent = fileName;
-        item.append(info);
-
-        const link = document.createElement('a');
-        link.className = 'file-link';
-        link.href = url;
-        link.target = '_blank';
-        link.textContent = 'Відкрити файл';
-        item.append(link);
-      }
-
-      return item;
-    }
-
-    async function fetchHistory() {
-      const chatId = String(tg.initDataUnsafe.user.id);
-      try {
-        // Ensure this URL is correct and accessible
-        const res = await fetch(`https://tesla-service-dashboard-eda44e4816de.herokuapp.com/api/get_requests?chat_id=${chatId}`);
-        const body = await res.json();
-        if(body.status === "ok") {
-          render(body.requests);
-        } else {
-          document.getElementById('history').innerText = body.message || 'Помилка завантаження історії';
+        if (attachments.hasChildNodes()) {
+          body.append(attachments);
         }
-      } catch(error) {
-        console.error('Error fetching history:', error);
-        document.getElementById('history').innerText = 'Не вдалося завантажити історію. Спробуйте пізніше.';
       }
     }
 
-    function render(list) {
-      const out = document.getElementById('history');
-      out.innerHTML = "";
+    const steps = document.createElement('div');
+    steps.className = 'steps';
+    body.append(steps);
 
-      if (!list || list.length === 0) {
-        out.innerHTML = '<div class="request-card"><div class="request-header"><div class="left"><p class="title">Історія порожня</p></div></div></div>';
-        return;
-      }
+    if (r.history && r.history.length > 0) {
+      const historyTitle = document.createElement('h4');
+      historyTitle.textContent = 'Історія змін статусу:';
+      steps.append(historyTitle);
 
-      // Sort requests by date in descending order (newest first)
-      list.sort((a, b) => {
-        const dateA = new Date(a.date);
-        const dateB = new Date(b.date);
-        return dateB - dateA; // Descending order
+      r.history.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+      r.history.forEach(entry => {
+        const entryBlock = document.createElement('div');
+        entryBlock.className = 'history-entry-block';
+        entryBlock.setAttribute('data-status', entry.status || '');
+
+        const left = document.createElement('div');
+        left.className = 'left';
+
+        const statusName = document.createElement('span');
+        statusName.className = 'status-name';
+        statusName.textContent = entry.status || 'Невідомий статус';
+        left.append(statusName);
+
+        const statusTime = document.createElement('span');
+        statusTime.className = 'status-time';
+        statusTime.textContent = entry.created_at ? formatLocal(entry.created_at) : '';
+        left.append(statusTime);
+
+        if (entry.text) {
+          const statusText = document.createElement('div');
+          statusText.className = 'status-text';
+          const truncatedText = entry.text.length > 100 ? entry.text.substring(0, 100) + '...' : entry.text;
+          statusText.textContent = truncatedText;
+          left.append(statusText);
+        }
+
+        const right = document.createElement('div');
+        right.className = 'right';
+
+        // Add PDF button for Diagnostic step with media OR with diagnostic_file in request object
+        if (entry.status === 'Діагностування' && (entry.media || r.diagnostic_file)) {
+          const pdfBtn = document.createElement('button');
+          pdfBtn.textContent = 'ЗАВАНТАЖИТИ PDF файл';
+          pdfBtn.className = 'pdf-button';
+          pdfBtn.style.fontWeight = 'bold';
+          pdfBtn.style.fontSize = '12px';
+          pdfBtn.style.padding = '4px 10px';
+          pdfBtn.style.marginTop = '4px';
+          pdfBtn.style.width = 'auto';
+          pdfBtn.onclick = e => {
+            e.stopPropagation();
+            window.open(entry.media || r.diagnostic_file, '_blank');
+          };
+          right.append(pdfBtn);
+        }
+
+        if (entry.status === 'Висновок' && r.latest_conclusion) {
+          const readMoreBtn = document.createElement('button');
+          readMoreBtn.textContent = 'Читати повністю';
+          readMoreBtn.className = 'read-more-button';
+          readMoreBtn.onclick = e => {
+            e.stopPropagation();
+            openConclusionModal(r.latest_conclusion);
+          };
+          right.append(readMoreBtn);
+        }
+
+        entryBlock.append(left, right);
+        steps.append(entryBlock);
       });
-
-      list.forEach((r) => {
-        const card = document.createElement('div');
-        card.className = 'request-card';
-
-        const hdr = document.createElement('div');
-        hdr.className = 'request-header';
-        // Use r.date for creation date, not r.created_at (which is not returned by API now)
-        hdr.innerHTML = `
-          <div class="left">
-            <p class="title">Заявка №${r.id}</p>
-            <p class="vin">VIN авто: ${r.car_vin || 'Н/Д'}</p>
-            <p class="created-date">Створено: ${formatLocal(r.date)}</p>
-          </div>
-          <p class="vin">Статус: ${r.status || 'Н/Д'}</p>
-        `;
-        card.append(hdr);
-
-        const body = document.createElement('div');
-        body.className = 'request-body';
-
-        body.innerHTML += `
-          <p><strong>Телефон:</strong> <a href="tel:${r.phone}">${r.phone || 'Н/Д'}</a></p>
-          <p><strong>Опис проблеми:</strong> ${r.problem || 'Немає опису'}</p>
-        `;
-
-        // Display Attachments (client media and diagnostic file if present in main request object)
-        // Note: The diagnostic_file from the request object might be the *latest* one,
-        // but displaying it here might be redundant if it's also shown in history steps.
-        // Let's rely on history entries for diagnostic file links within the steps section.
-        // We will keep the client media here.
-        if(r.media_url) {
-            const attachments = document.createElement('div');
-            attachments.className = 'attachments';
-
-            const mediaUrls = r.media_url.split(',').map(url => url.trim()).filter(url => url);
-
-            if(mediaUrls.length > 0) {
-                mediaUrls.forEach(url => {
-                    try {
-                        const attachmentElement = createAttachmentElement(url);
-                        attachments.append(attachmentElement);
-                    } catch(error) {
-                        console.error('Error creating attachment element:', error);
-                        const errorItem = document.createElement('div');
-                        errorItem.className = 'attachment-item';
-                        errorItem.innerHTML = `
-                          <div class="file-icon">❌</div>
-                          <div class="file-info">Помилка завантаження</div>
-                        `;
-                        attachments.append(errorItem);
-                    }
-                });
-                if (attachments.hasChildNodes()) { // Only add if there are successful attachments
-                   body.append(attachments);
-                }
-            }
-        }
-
-
-        // Display History Steps (using the 'history' array from API response)
-        const steps = document.createElement('div');
-        steps.className = 'steps';
-        body.append(steps); // Add the steps container to the body
-
-        if (r.history && r.history.length > 0) {
-             const historyTitle = document.createElement('h4'); // Add a title for the history
-             historyTitle.textContent = 'Історія змін статусу:';
-             steps.append(historyTitle);
-
-             // Sort history by created_at ascending to show timeline correctly
-             r.history.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-
-
-            r.history.forEach(entry => {
-                const entryBlock = document.createElement('div');
-                entryBlock.className = 'history-entry-block';
-                entryBlock.setAttribute('data-status', entry.status || ''); // Add data attribute for status color
-
-                const left = document.createElement('div');
-                left.className = 'left';
-
-                const statusName = document.createElement('span');
-                statusName.className = 'status-name';
-                statusName.textContent = entry.status || 'Невідомий статус';
-                left.append(statusName);
-
-                const statusTime = document.createElement('span');
-                statusTime.className = 'status-time';
-                statusTime.textContent = entry.created_at ? formatLocal(entry.created_at) : '';
-                left.append(statusTime);
-
-                // Display history text if available (e.g., conclusion text)
-                if (entry.text) {
-                    const statusText = document.createElement('div');
-                    statusText.className = 'status-text';
-                    // Truncate long text for display in the step block
-                    const truncatedText = entry.text.length > 100 ? entry.text.substring(0, 100) + '...' : entry.text;
-                    statusText.textContent = truncatedText; // Use textContent
-                    left.append(statusText);
-                }
-
-                const right = document.createElement('div');
-                right.className = 'right';
-
-                // Add PDF button for Diagnostic step with media
-               // Add PDF button for Diagnostic step with media OR with diagnostic_file in request object
-              if (entry.status === 'Діагностування' && (entry.media || r.diagnostic_file)) {
-                  const pdfBtn = document.createElement('button');
-                  pdfBtn.textContent = 'Заванатижити PDF файл';
-                  pdfBtn.className = 'pdf-button';
-                  pdfBtn.style.fontWeight = 'bold';
-                  pdfBtn.style.fontSize = '12px';
-                  pdfBtn.style.padding = '4px 10px';
-                  pdfBtn.style.marginTop = '4px';
-                  pdfBtn.style.width = '100%';
-                  pdfBtn.onclick = e => {
-                      e.stopPropagation();
-                      window.open(entry.media || r.diagnostic_file, '_blank');
-                  };
-                  right.append(pdfBtn);
-                  }
-
-                 // Add "Read More" button for Conclusion step with text
-                 // Use r.latest_conclusion for the full text in modal
-                 if (entry.status === 'Висновок' && r.latest_conclusion) {
-                    const readMoreBtn = document.createElement('button');
-                    readMoreBtn.textContent = 'Читати повністю';
-                    readMoreBtn.className = 'read-more-button';
-                    readMoreBtn.onclick = e => {
-                        e.stopPropagation();
-                        openConclusionModal(r.latest_conclusion); // Open modal with the full conclusion text
-                    };
-                    right.append(readMoreBtn);
-                 }
-
-                entryBlock.append(left, right);
-                steps.append(entryBlock);
-            });
-        } else {
-             const noHistory = document.createElement('p');
-             noHistory.style.cssText = 'color: #bdbdbd; text-align: center; padding: 10px;';
-             noHistory.textContent = 'Історія змін відсутня.';
-             steps.append(noHistory);
-        }
-
-
-        card.append(body);
-
-        hdr.addEventListener('click', () => {
-          body.style.display = body.style.display === 'block' ? 'none' : 'block';
-        });
-
-        out.append(card);
-      });
+    } else {
+      const noHistory = document.createElement('p');
+      noHistory.style.cssText = 'color: #bdbdbd; text-align: center; padding: 10px;';
+      noHistory.textContent = 'Історія змін відсутня.';
+      steps.append(noHistory);
     }
 
-    // Close image modal when clicking outside the image
-    document.getElementById('imageModal').addEventListener('click', (e) => {
-      if (e.target === e.currentTarget) {
-        closeImageModal();
-      }
+    card.append(body);
+
+    hdr.addEventListener('click', () => {
+      body.style.display = body.style.display === 'block' ? 'none' : 'block';
     });
 
-     // Close conclusion modal when clicking outside the content
-     document.getElementById('conclusionModal').addEventListener('click', (e) => {
-       if (e.target === e.currentTarget) {
-         closeConclusionModal();
-       }
-     });
+    out.append(card);
+  });
+}
 
+// Close image modal when clicking outside the image
+document.getElementById('imageModal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) {
+    closeImageModal();
+  }
+});
 
-    // Initial load
-    fetchHistory();
-  </script>
+// Close conclusion modal when clicking outside the content
+document.getElementById('conclusionModal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) {
+    closeConclusionModal();
+  }
+});
+
+// Initial load
+fetchHistory();
+</script>
 </body>
 </html>
