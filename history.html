@@ -356,17 +356,23 @@
     function formatLocal(iso) {
       if (!iso) return '';
       try {
-           const d = new Date(iso);
-           if (isNaN(d.getTime())) {
-               return iso; // Return original if invalid
-           }
-           return d.toLocaleString('uk-UA', {
-               year: 'numeric',
-               month: '2-digit',
-               day: '2-digit',
-               hour: '2-digit',
-               minute: '2-digit'
-           });
+       function formatLocal(iso) {
+      if (!iso) return '';
+      try {
+        // Принудительно добавить 3 часа к времени (если iso в UTC)
+        const d = new Date(iso);
+        if (isNaN(d.getTime())) {
+          return iso;
+        }
+        // Добавить 3 часа
+        d.setHours(d.getHours() + 3);
+        return d.toLocaleString('uk-UA', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
       } catch (e) {
           console.error("Error formatting date:", iso, e);
           return iso; // Return original on error
