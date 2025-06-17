@@ -121,9 +121,38 @@
     }
     #contacts-popup .contact.phone {
       background: #03c75a;
+      color: #fff;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 20px;
+      padding: 14px 0;
     }
     #contacts-popup .contact.phone:hover {
       background: #02b350;
+    }
+    #contacts-popup .copy-btn {
+      background: #2196f3;
+      color: #fff;
+      margin-top: 0;
+      font-size: 16px;
+      padding: 10px 0;
+    }
+    #contacts-popup .copy-btn:hover {
+      background: #1769aa;
+    }
+    #copy-alert {
+      display: none;
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #03c75a;
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 8px;
+      z-index: 1000;
+      font-size: 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
     }
   </style>
 </head>
@@ -152,16 +181,20 @@
 
   <div id="contacts-popup">
     <button class="close-btn" onclick="toggleContacts(event)">✖ Закрити</button>
-    <a href="tel:+380674679495" class="contact phone">
-       +38 067 467 94 95
+    <a href="tel:+380674679495" class="contact phone" id="call-btn">
+      📞 +38 067 467 94 95
     </a>
+    <button class="contact copy-btn" onclick="copyPhone('+380674679495')">
+      📋 Скопіювати номер
+    </button>
     <button class="contact" onclick="window.open(
       'https://www.google.com/maps/dir/?api=1&destination=Столичне+шосе+103,+Київ+03026',
       '_blank'
     )">
-       Столичне шосе, 103, Київ
+      Столичне шосе, 103, Київ
     </button>
   </div>
+  <div id="copy-alert">Номер скопійовано!</div>
 
   <script>
     const tg = window.Telegram.WebApp;
@@ -186,6 +219,31 @@
         popup.style.display = 'none';
       }
     });
+
+    function copyPhone(number) {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(number).then(() => {
+          showCopyAlert();
+        });
+      } else {
+        // fallback для старых браузеров
+        const temp = document.createElement('input');
+        temp.value = number;
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand('copy');
+        document.body.removeChild(temp);
+        showCopyAlert();
+      }
+    }
+
+    function showCopyAlert() {
+      const alert = document.getElementById('copy-alert');
+      alert.style.display = 'block';
+      setTimeout(() => {
+        alert.style.display = 'none';
+      }, 1800);
+    }
   </script>
 
 </body>
