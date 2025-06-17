@@ -617,12 +617,12 @@
                // Add PDF button for Diagnostic step with media OR with diagnostic_file in request object
               if (entry.status === 'Діагностування' && (entry.media || r.diagnostic_file)) {
                   const pdfBtn = document.createElement('button');
-                  pdfBtn.textContent = 'ЗАВАНТАЖИТИ PDF файл';
+                  pdfBtn.textContent = 'Заванатижити PDF файл';
                   pdfBtn.className = 'pdf-button';
                   pdfBtn.style.fontWeight = 'bold';
-                  pdfBtn.style.fontSize = '14px';
-                  pdfBtn.style.padding = '8px 18px';
-                  pdfBtn.style.marginTop = '8px';
+                  pdfBtn.style.fontSize = '12px';
+                  pdfBtn.style.padding = '4px 10px';
+                  pdfBtn.style.marginTop = '4px';
                   pdfBtn.style.width = '100%';
                   pdfBtn.onclick = e => {
                       e.stopPropagation();
