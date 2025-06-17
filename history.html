@@ -11,7 +11,6 @@
       margin: 0; padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       color: #fff;
-      /* Assuming tesla-bg.png exists in the same directory or adjust path */
       background: url('tesla-bg.png') no-repeat center center fixed;
       background-size: cover;
     }
@@ -36,7 +35,6 @@
     .back-card .card:hover { transform: scale(1.03); }
     .back-card .icon { font-size: 24px; margin-right: 12px; }
     .back-card .text { font-size: 18px; }
-
     .history-container {
       display: flex; flex-direction: column; gap: 12px;
     }
@@ -59,7 +57,6 @@
       color: #999;
       margin-top: 4px;
     }
-
     .request-body {
       display: none;
       padding: 0 16px 16px;
@@ -76,14 +73,12 @@
       color: #02b350;
       text-decoration: underline;
     }
-
     .attachments {
       margin: 16px 0;
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
       gap: 12px;
     }
-
     .attachment-item {
       position: relative;
       border-radius: 8px;
@@ -91,18 +86,15 @@
       background: rgba(0,0,0,0.3);
       transition: transform 0.2s;
     }
-
     .attachment-item:hover {
       transform: scale(1.02);
     }
-
     .attachment-item img {
       width: 100%;
       height: 150px;
       object-fit: cover;
       display: block;
     }
-
     .attachment-item .file-info {
       padding: 8px;
       font-size: 13px;
@@ -110,7 +102,6 @@
       text-align: center;
       word-break: break-all;
     }
-
     .attachment-item .file-icon {
       display: flex;
       align-items: center;
@@ -119,7 +110,6 @@
       font-size: 48px;
       color: #03c75a;
     }
-
     .attachment-item .file-link {
       position: absolute;
       top: 0;
@@ -136,11 +126,9 @@
       text-decoration: none;
       font-size: 14px;
     }
-
     .attachment-item:hover .file-link {
       opacity: 1;
     }
-
     .video-preview {
       position: relative;
       width: 100%;
@@ -150,40 +138,37 @@
       align-items: center;
       justify-content: center;
     }
-
     .video-preview::before {
       content: "▶";
       font-size: 48px;
       color: #fff;
       text-shadow: 0 2px 4px rgba(0,0,0,0.5);
     }
-
     .steps {
       display: flex;
       flex-direction: column;
       gap: 8px;
       margin-top: 12px;
     }
-    /* --- Updated styles for history entries --- */
     .history-entry-block {
         display: flex;
         justify-content: space-between;
-        align-items: flex-start; /* Align items to the top */
+        align-items: flex-start;
         background: rgba(0,0,0,0.7);
         border-radius: 12px;
         padding: 8px 12px;
         font-size: 14px;
-        border-left: 4px solid transparent; /* Default border */
+        border-left: 4px solid transparent;
     }
-     .history-entry-block .left {
+    .history-entry-block .left {
         display: flex;
         flex-direction: column;
-        flex-grow: 1; /* Allow left section to grow */
-        padding-right: 10px; /* Space between text and buttons */
-     }
+        flex-grow: 1;
+        padding-right: 10px;
+    }
     .history-entry-block .status-name {
         font-weight: bold;
-        margin-bottom: 4px; /* Space below status name */
+        margin-bottom: 4px;
     }
     .history-entry-block .status-time {
         font-size: 12px;
@@ -191,25 +176,21 @@
     }
     .history-entry-block .status-text {
         font-size: 14px;
-        margin-top: 8px; /* Space above text */
+        margin-top: 8px;
         color: #e0e0e0;
         line-height: 1.4;
-        word-break: break-word; /* Break long words */
+        word-break: break-word;
     }
-
-     /* Status specific colors */
     .history-entry-block[data-status="Нова"],
-    .history-entry-block[data-status="Створена"] { border-left-color: #2196f3; } /* Blue */
-    .history-entry-block[data-status="Діагностування"] { border-left-color: #ff9800; } /* Orange */
-    .history-entry-block[data-status="Висновок"] { border-left-color: #9c27b0; } /* Purple */
-    .history-entry-block[data-status="Завершено"] { border-left-color: #4caf50; } /* Green */
-
-
+    .history-entry-block[data-status="Створена"] { border-left-color: #2196f3; }
+    .history-entry-block[data-status="Діагностування"] { border-left-color: #ff9800; }
+    .history-entry-block[data-status="Висновок"] { border-left-color: #9c27b0; }
+    .history-entry-block[data-status="Завершено"] { border-left-color: #4caf50; }
     .history-entry-block .right {
         display: flex;
-        flex-direction: column; /* Stack buttons vertically */
-        gap: 6px; /* Space between buttons */
-        flex-shrink: 0; /* Prevent right section from shrinking */
+        flex-direction: column;
+        gap: 6px;
+        flex-shrink: 0;
     }
     .history-entry-block .right button {
         background: transparent;
@@ -226,59 +207,51 @@
         transform: scale(1.05);
         background: rgba(255,255,255,0.1);
     }
-
     .history-entry-block .right button.pdf-button {
       background: rgba(3,199,90,0.1);
       border-color: #03c75a;
       color: #03c75a;
     }
-     .history-entry-block .right button.pdf-button:hover {
+    .history-entry-block .right button.pdf-button:hover {
        background: rgba(3,199,90,0.2);
-     }
-
+    }
     .history-entry-block .right button.read-more-button {
-       background: rgba(156, 39, 176, 0.1); /* Purple */
+       background: rgba(156, 39, 176, 0.1);
        border-color: #9c27b0;
        color: #9c27b0;
     }
-     .history-entry-block .right button.read-more-button:hover {
+    .history-entry-block .right button.read-more-button:hover {
         background: rgba(156, 39, 176, 0.2);
-     }
-
-
-    /* --- Conclusion Modal Styles --- */
+    }
     .conclusion-modal {
-      display: none; /* Hidden by default */
-      position: fixed; /* Stay in place */
-      z-index: 2000; /* Sit on top */
+      display: none;
+      position: fixed;
+      z-index: 2000;
       left: 0;
       top: 0;
-      width: 100%; /* Full width */
-      height: 100%; /* Full height */
-      overflow: auto; /* Enable scroll if needed */
-      background-color: rgba(0,0,0,0.8); /* Black w/ opacity */
-      backdrop-filter: blur(5px); /* Optional blur effect */
-      justify-content: center; /* Center content */
-      align-items: center; /* Center content */
-      padding: 20px; /* Add some padding */
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.8);
+      backdrop-filter: blur(5px);
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
     }
-
     .conclusion-modal.active {
-        display: flex; /* Show the modal */
+        display: flex;
     }
-
     .conclusion-modal-content {
-      background-color: #1e1e1e; /* Dark background */
+      background-color: #1e1e1e;
       margin: auto;
       padding: 20px;
       border: 1px solid #333;
       border-radius: 12px;
-      width: 90%; /* Adjust width as needed */
-      max-width: 600px; /* Max width */
+      width: 90%;
+      max-width: 600px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-      position: relative; /* Needed for close button positioning */
+      position: relative;
     }
-
     .conclusion-modal-content h3 {
         margin-top: 0;
         color: #e0e0e0;
@@ -286,15 +259,13 @@
         padding-bottom: 10px;
         margin-bottom: 15px;
     }
-
     .conclusion-modal-text {
         color: #ccc;
         line-height: 1.6;
-        white-space: pre-wrap; /* Preserve whitespace and break lines */
-        max-height: 70vh; /* Limit height */
-        overflow-y: auto; /* Add scroll if text is too long */
+        white-space: pre-wrap;
+        max-height: 70vh;
+        overflow-y: auto;
     }
-
     .conclusion-modal-close {
       color: #aaa;
       position: absolute;
@@ -305,13 +276,11 @@
       cursor: pointer;
       transition: color 0.2s;
     }
-
     .conclusion-modal-close:hover,
     .conclusion-modal-close:focus {
-      color: #e53935; /* Red on hover */
+      color: #e53935;
       text-decoration: none;
     }
-
   </style>
 </head>
 <body>
@@ -320,24 +289,18 @@
       <div class="name">TeslaAssistantBot</div>
       <div class="subtitle">Історія заявок</div>
     </div>
-
     <div class="back-card" onclick="location.href='index.html'">
       <div class="card">
         <div class="icon">←</div>
         <div class="text">На головну</div>
       </div>
     </div>
-
     <div class="history-container" id="history"></div>
   </div>
-
-  <!-- Модальное окно для просмотра изображений -->
   <div class="modal" id="imageModal">
     <button class="modal-close" onclick="closeImageModal()">✖</button>
     <img class="modal-content" id="modalImage">
   </div>
-
-  <!-- Новое модальное окно для чтения заключения -->
   <div id="conclusionModal" class="conclusion-modal">
       <div class="conclusion-modal-content">
           <span class="conclusion-modal-close" onclick="closeConclusionModal()">&times;</span>
@@ -345,9 +308,134 @@
           <div id="conclusionModalText" class="conclusion-modal-text"></div>
       </div>
   </div>
-
-
 <script>
+const tg = window.Telegram?.WebApp || {};
+tg.ready && tg.ready();
+tg.expand && tg.expand();
+
+function formatLocal(iso) {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) {
+      return iso;
+    }
+    if (!iso.includes('+') && !iso.endsWith('Z')) {
+      d.setHours(d.getHours() + 3);
+    }
+    return d.toLocaleString('uk-UA', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch (e) {
+    console.error("Error formatting date:", iso, e);
+    return iso;
+  }
+}
+
+function getFileIcon(ext) {
+  const icons = {
+    pdf: '📄',
+    doc: '📝',
+    docx: '📝',
+    xls: '📊',
+    xlsx: '📊',
+    zip: '📦',
+    rar: '📦',
+    default: '📎'
+  };
+  return icons[ext.toLowerCase()] || icons.default;
+}
+
+function openImageModal(url) {
+  const modal = document.getElementById('imageModal');
+  const modalImg = document.getElementById('modalImage');
+  modalImg.src = url;
+  modal.classList.add('active');
+}
+
+function closeImageModal() {
+  const modal = document.getElementById('imageModal');
+  modal.classList.remove('active');
+}
+
+function openConclusionModal(text) {
+  const modal = document.getElementById('conclusionModal');
+  const modalText = document.getElementById('conclusionModalText');
+  modalText.textContent = text;
+  modal.classList.add('active');
+}
+
+function closeConclusionModal() {
+  const modal = document.getElementById('conclusionModal');
+  modal.classList.remove('active');
+}
+
+function createAttachmentElement(url) {
+  const ext = url.split('.').pop().toLowerCase();
+  const item = document.createElement('div');
+  item.className = 'attachment-item';
+
+  if(['jpg','jpeg','png','gif'].includes(ext)) {
+    const img = document.createElement('img');
+    img.src = url;
+    img.alt = 'Вкладення';
+    img.loading = 'lazy';
+    img.onerror = function() {
+      this.style.display = 'none';
+      const icon = document.createElement('div');
+      icon.className = 'file-icon';
+      icon.textContent = '🖼️';
+      this.parentNode.insertBefore(icon, this);
+    };
+    item.append(img);
+
+    const link = document.createElement('a');
+    link.className = 'file-link';
+    link.href = url;
+    link.target = '_blank';
+    link.onclick = (e) => {
+      e.preventDefault();
+      openImageModal(url);
+    };
+    item.append(link);
+  } else if(['mp4','webm','mov'].includes(ext)) {
+    const preview = document.createElement('div');
+    preview.className = 'video-preview';
+    item.append(preview);
+
+    const link = document.createElement('a');
+    link.className = 'file-link';
+    link.href = url;
+    link.target = '_blank';
+    link.textContent = 'Відкрити відео';
+    item.append(link);
+  } else {
+    const icon = document.createElement('div');
+    icon.className = 'file-icon';
+    icon.textContent = getFileIcon(ext);
+    item.append(icon);
+
+    const info = document.createElement('div');
+    info.className = 'file-info';
+    const fileName = decodeURIComponent(url.split('/').pop().split('?')[0]);
+    info.textContent = fileName;
+    item.append(info);
+
+    const link = document.createElement('a');
+    link.className = 'file-link';
+    link.href = url;
+    link.target = '_blank';
+    link.textContent = 'Відкрити файл';
+    item.append(link);
+  }
+
+  return item;
+}
+
 function render(list) {
   const out = document.getElementById('history');
   out.innerHTML = "";
@@ -359,14 +447,11 @@ function render(list) {
 
   // УСТОЙЧИВАЯ СОРТИРОВКА: сначала по дате, если даты нет — по id (новые выше)
   list.sort((a, b) => {
-    // Если обе заявки имеют дату — сортируем по дате
     if (a.date && b.date) {
       return new Date(b.date) - new Date(a.date);
     }
-    // Если только у одной есть дата — она выше
     if (a.date && !b.date) return -1;
     if (!a.date && b.date) return 1;
-    // Если дат нет — сортируем по id (новые выше)
     return b.id - a.id;
   });
 
@@ -462,7 +547,6 @@ function render(list) {
         const right = document.createElement('div');
         right.className = 'right';
 
-        // Add PDF button for Diagnostic step with media OR with diagnostic_file in request object
         if (entry.status === 'Діагностування' && (entry.media || r.diagnostic_file)) {
           const pdfBtn = document.createElement('button');
           pdfBtn.textContent = 'ЗАВАНТАЖИТИ PDF файл';
@@ -509,6 +593,31 @@ function render(list) {
     out.append(card);
   });
 }
+
+async function fetchHistory() {
+  let chatId = null;
+  try {
+    chatId = String(tg.initDataUnsafe?.user?.id || tg.initDataUnsafe?.user_id || '');
+  } catch (e) {}
+  if (!chatId) {
+    document.getElementById('history').innerText = 'Не знайдено chat_id користувача!';
+    return;
+  }
+  try {
+    const res = await fetch(`https://tesla-service-dashboard-eda44e4816de.herokuapp.com/api/get_requests?chat_id=${chatId}`);
+    const body = await res.json();
+    if(body.status === "ok") {
+      render(body.requests);
+    } else {
+      document.getElementById('history').innerText = body.message || 'Помилка завантаження історії';
+    }
+  } catch(error) {
+    console.error('Error fetching history:', error);
+    document.getElementById('history').innerText = 'Не вдалося завантажити історію. Спробуйте пізніше.';
+  }
+}
+
+fetchHistory();
 </script>
 </body>
 </html>
