@@ -6,7 +6,281 @@
   <title>Історія заявок</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    /* ... (оставляем все ваши стили без изменений) ... */
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #fff;
+      background: url('tesla-bg.png') no-repeat center center fixed;
+      background-size: cover;
+    }
+    .container { padding: 16px; }
+    .header-card {
+      background: rgba(0,0,0,0.7);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .header-card .name { font-size: 32px; margin: 0; }
+    .header-card .subtitle { font-size: 16px; color: #ccc; margin-top: 4px; }
+    .back-card { margin-bottom: 20px; cursor: pointer; }
+    .back-card .card {
+      display: flex; align-items: center;
+      background: rgba(0,0,0,0.7);
+      border-radius: 16px;
+      padding: 12px 16px;
+      transition: transform .1s;
+    }
+    .back-card .card:hover { transform: scale(1.03); }
+    .back-card .icon { font-size: 24px; margin-right: 12px; }
+    .back-card .text { font-size: 18px; }
+    .history-container {
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .request-card {
+      background: rgba(0,0,0,0.7);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .request-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 16px; cursor: pointer;
+      transition: background .2s;
+    }
+    .request-header:hover { background: rgba(0,0,0,0.85); }
+    .request-header .left { display: flex; flex-direction: column; }
+    .request-header .title { margin: 0; font-size: 18px; font-weight: bold; }
+    .request-header .vin { margin: 4px 0 0; font-size: 14px; color: #ccc; }
+    .request-header .created-date {
+      font-size: 12px;
+      color: #999;
+      margin-top: 4px;
+    }
+    .request-body {
+      display: none;
+      padding: 0 16px 16px;
+      border-top: 1px solid #333;
+    }
+    .request-body p {
+      margin: 8px 0; font-size: 15px;
+    }
+    .request-body a {
+      color: #03c75a; text-decoration: none;
+      transition: color 0.2s;
+    }
+    .request-body a:hover {
+      color: #02b350;
+      text-decoration: underline;
+    }
+    .attachments {
+      margin: 16px 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+    }
+    .attachment-item {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      background: rgba(0,0,0,0.3);
+      transition: transform 0.2s;
+    }
+    .attachment-item:hover {
+      transform: scale(1.02);
+    }
+    .attachment-item img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      display: block;
+    }
+    .attachment-item .file-info {
+      padding: 8px;
+      font-size: 13px;
+      color: #ccc;
+      text-align: center;
+      word-break: break-all;
+    }
+    .attachment-item .file-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 150px;
+      font-size: 48px;
+      color: #03c75a;
+    }
+    .attachment-item .file-link {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.5);
+      opacity: 0;
+      transition: opacity 0.2s;
+      color: #fff;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    .attachment-item:hover .file-link {
+      opacity: 1;
+    }
+    .video-preview {
+      position: relative;
+      width: 100%;
+      height: 150px;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .video-preview::before {
+      content: "▶";
+      font-size: 48px;
+      color: #fff;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .history-entry-block {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        background: rgba(0,0,0,0.7);
+        border-radius: 12px;
+        padding: 8px 12px;
+        font-size: 14px;
+        border-left: 4px solid transparent;
+    }
+    .history-entry-block .left {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        padding-right: 10px;
+    }
+    .history-entry-block .status-name {
+        font-weight: bold;
+        margin-bottom: 4px;
+    }
+    .history-entry-block .status-time {
+        font-size: 12px;
+        color: #ddd;
+    }
+    .history-entry-block .status-text {
+        font-size: 14px;
+        margin-top: 8px;
+        color: #e0e0e0;
+        line-height: 1.4;
+        word-break: break-word;
+    }
+    .history-entry-block[data-status="Нова"],
+    .history-entry-block[data-status="Створена"] { border-left-color: #2196f3; }
+    .history-entry-block[data-status="Діагностування"] { border-left-color: #ff9800; }
+    .history-entry-block[data-status="Висновок"] { border-left-color: #9c27b0; }
+    .history-entry-block[data-status="Завершено"] { border-left-color: #4caf50; }
+    .history-entry-block .right {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex-shrink: 0;
+    }
+    .history-entry-block .right button {
+        background: transparent;
+        border: 1px solid #fff;
+        border-radius: 6px;
+        padding: 4px 8px;
+        color: #fff;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+        font-size: 12px;
+    }
+    .history-entry-block .right button:hover {
+        transform: scale(1.05);
+        background: rgba(255,255,255,0.1);
+    }
+    .history-entry-block .right button.pdf-button {
+      background: rgba(3,199,90,0.1);
+      border-color: #03c75a;
+      color: #03c75a;
+    }
+    .history-entry-block .right button.pdf-button:hover {
+       background: rgba(3,199,90,0.2);
+    }
+    .history-entry-block .right button.read-more-button {
+       background: rgba(156, 39, 176, 0.1);
+       border-color: #9c27b0;
+       color: #9c27b0;
+    }
+    .history-entry-block .right button.read-more-button:hover {
+        background: rgba(156, 39, 176, 0.2);
+    }
+    .conclusion-modal {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.8);
+      backdrop-filter: blur(5px);
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .conclusion-modal.active {
+        display: flex;
+    }
+    .conclusion-modal-content {
+      background-color: #1e1e1e;
+      margin: auto;
+      padding: 20px;
+      border: 1px solid #333;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      position: relative;
+    }
+    .conclusion-modal-content h3 {
+        margin-top: 0;
+        color: #e0e0e0;
+        border-bottom: 1px solid #333;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+    }
+    .conclusion-modal-text {
+        color: #ccc;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+    .conclusion-modal-close {
+      color: #aaa;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .conclusion-modal-close:hover,
+    .conclusion-modal-close:focus {
+      color: #e53935;
+      text-decoration: none;
+    }
   </style>
 </head>
 <body>
