@@ -612,7 +612,7 @@ async function fetchHistory() {
     return;
   }
   try {
-    const res = await fetch('/user_history', {
+    const res = await fetch('https://tesla-service-dashboard-eda44e4816de.herokuapp.com/user_history', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ chat_id: chatId })
