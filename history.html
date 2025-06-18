@@ -612,10 +612,12 @@ async function fetchHistory() {
     return;
   }
   try {
-    const res = await fetch('/user_history', {
+    const tg = window.Telegram.WebApp;
+    const initData = tg.initData;
+    const res = await fetch('/api/secure_get_requests', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId })
+      body: JSON.stringify({ chat_id: chatId, init_data: initData })
     });
     const body = await res.json();
     if(body.status === "ok") {
