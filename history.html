@@ -612,12 +612,10 @@ async function fetchHistory() {
     return;
   }
   try {
-    const tg = window.Telegram.WebApp;
-    const initData = tg.initData;
-    const res = await fetch('https://tesla-service-dashboard-eda44e4816de.herokuapp.com/api/secure_get_requests', {
+    const res = await fetch('/user_history', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, init_data: initData })
+      body: JSON.stringify({ chat_id: chatId })
     });
     const body = await res.json();
     if(body.status === "ok") {
