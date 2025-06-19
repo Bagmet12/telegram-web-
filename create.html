@@ -186,7 +186,7 @@
         form.append("media", input.files[i]);
       }
 
-      fetch("/proxy_create_request", {
+      fetch("https://tesla-service-dashboard-eda44e4816de.herokuapp.com/proxy_create_request", {
         method: "POST",
         body: form
       }).then(res => res.json())
