@@ -566,13 +566,14 @@ function render(list) {
         statusTime.textContent = entry.created_at ? formatLocal(entry.created_at) : '';
         left.append(statusTime);
 
-        // Добавляем подпись о смене статуса (кроме первого и автодобавленного 'Нова')
-        if (idx > 0 || (!hasNova && r.history[0].status === 'Діагностування' && idx === 1)) {
-          // Для автодобавленного 'Нова' (idx==0) не пишем подпись, для следующих — пишем
+        // Добавляем подпись о смене статуса (только в нужных случаях)
+        if (
+          (!hasNova && r.history[0].status === 'Діагностування' && idx === 0) ||
+          (hasNova && idx > 0)
+        ) {
           let prevStatus;
-          if (!hasNova && r.history[0].status === 'Діагностування') {
-            // Сдвиг, потому что 'Нова' добавлена только визуально
-            prevStatus = idx === 1 ? 'Нова' : r.history[idx - 1].status;
+          if (!hasNova && r.history[0].status === 'Діагностування' && idx === 0) {
+            prevStatus = 'Нова';
           } else {
             prevStatus = r.history[idx - 1]?.status || '';
           }
