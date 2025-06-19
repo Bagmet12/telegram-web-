@@ -548,7 +548,7 @@ function render(list) {
         steps.append(novaBlock);
       }
 
-      r.history.forEach(entry => {
+      r.history.forEach((entry, idx) => {
         const entryBlock = document.createElement('div');
         entryBlock.className = 'history-entry-block';
         entryBlock.setAttribute('data-status', entry.status || '');
@@ -565,6 +565,24 @@ function render(list) {
         statusTime.className = 'status-time';
         statusTime.textContent = entry.created_at ? formatLocal(entry.created_at) : '';
         left.append(statusTime);
+
+        // Добавляем подпись о смене статуса (кроме первого и автодобавленного 'Нова')
+        if (idx > 0 || (!hasNova && r.history[0].status === 'Діагностування' && idx === 1)) {
+          // Для автодобавленного 'Нова' (idx==0) не пишем подпись, для следующих — пишем
+          let prevStatus;
+          if (!hasNova && r.history[0].status === 'Діагностування') {
+            // Сдвиг, потому что 'Нова' добавлена только визуально
+            prevStatus = idx === 1 ? 'Нова' : r.history[idx - 1].status;
+          } else {
+            prevStatus = r.history[idx - 1]?.status || '';
+          }
+          if (prevStatus) {
+            const transitionText = document.createElement('div');
+            transitionText.className = 'status-transition';
+            transitionText.textContent = `Статус змінено з '${prevStatus}' на '${entry.status}'`;
+            left.append(transitionText);
+          }
+        }
 
         if (entry.text) {
           const statusText = document.createElement('div');
