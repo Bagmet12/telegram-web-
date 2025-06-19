@@ -519,12 +519,34 @@ function render(list) {
     steps.className = 'steps';
     body.append(steps);
 
+    // --- Отображение шага 'Нова' как завершённого, если заявка сразу в 'Діагностування' ---
     if (r.history && r.history.length > 0) {
       const historyTitle = document.createElement('h4');
       historyTitle.textContent = 'Історія змін статусу:';
       steps.append(historyTitle);
 
       r.history.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+      // Проверяем: если нет статуса 'Нова', но первая запись — 'Діагностування', визуализируем 'Нова' завершённой
+      const hasNova = r.history.some(e => e.status === 'Нова');
+      if (!hasNova && r.history[0].status === 'Діагностування') {
+        const novaBlock = document.createElement('div');
+        novaBlock.className = 'history-entry-block';
+        novaBlock.setAttribute('data-status', 'Нова');
+        const left = document.createElement('div');
+        left.className = 'left';
+        const statusName = document.createElement('span');
+        statusName.className = 'status-name';
+        statusName.textContent = 'Нова';
+        left.append(statusName);
+        const statusTime = document.createElement('span');
+        statusTime.className = 'status-time';
+        // Можно взять дату из первой записи (диагностика)
+        statusTime.textContent = r.history[0].created_at ? formatLocal(r.history[0].created_at) : '';
+        left.append(statusTime);
+        novaBlock.append(left);
+        steps.append(novaBlock);
+      }
 
       r.history.forEach(entry => {
         const entryBlock = document.createElement('div');
