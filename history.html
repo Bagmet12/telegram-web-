@@ -585,11 +585,11 @@ function render(list) {
           }
         }
 
-        // Для статуса "Висновок" показываем latest_conclusion, для других — entry.text
-        if (entry.status === 'Висновок' && r.latest_conclusion && r.latest_conclusion.trim() !== '' && r.latest_conclusion.trim() !== 'Підготовлено висновок.') {
+        // Для статуса "Висновок" показываем только entry.text, для других — entry.text
+        if (entry.status === 'Висновок' && entry.text && entry.text.trim() !== '' && entry.text.trim() !== 'Підготовлено висновок.') {
           const statusText = document.createElement('div');
           statusText.className = 'status-text';
-          const truncatedText = r.latest_conclusion.length > 100 ? r.latest_conclusion.substring(0, 100) + '...' : r.latest_conclusion;
+          const truncatedText = entry.text.length > 100 ? entry.text.substring(0, 100) + '...' : entry.text;
           statusText.textContent = truncatedText;
           left.append(statusText);
         } else if (entry.text) {
@@ -619,19 +619,19 @@ function render(list) {
           right.append(pdfBtn);
         }
 
-        // Кнопка "Читати повністю" только если latest_conclusion есть и это не служебное сообщение
+        // Кнопка "Читати повністю" только если entry.text есть и это не служебное сообщение
         if (
           entry.status === 'Висновок' &&
-          r.latest_conclusion &&
-          r.latest_conclusion.trim() !== '' &&
-          r.latest_conclusion.trim() !== 'Підготовлено висновок.'
+          entry.text &&
+          entry.text.trim() !== '' &&
+          entry.text.trim() !== 'Підготовлено висновок.'
         ) {
           const readMoreBtn = document.createElement('button');
           readMoreBtn.textContent = 'Читати повністю';
           readMoreBtn.className = 'read-more-button';
           readMoreBtn.onclick = e => {
             e.stopPropagation();
-            openConclusionModal(r.latest_conclusion);
+            openConclusionModal(entry.text);
           };
           right.append(readMoreBtn);
         }
