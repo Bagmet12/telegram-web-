@@ -525,7 +525,15 @@ function render(list) {
       historyTitle.textContent = 'Історія змін статусу:';
       steps.append(historyTitle);
 
-      r.history.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      r.history.sort((a, b) => {
+        // Сортируем по дате, а если даты равны — 'Висновок' всегда последний
+        const dateA = new Date(a.created_at);
+        const dateB = new Date(b.created_at);
+        if (dateA.getTime() !== dateB.getTime()) return dateA - dateB;
+        if (a.status === 'Висновок') return 1;
+        if (b.status === 'Висновок') return -1;
+        return 0;
+      });
 
       // Проверяем: если нет статуса 'Нова', но первая запись — 'Діагностування', визуализируем 'Нова' завершённой
       const hasNova = r.history.some(e => e.status === 'Нова');
@@ -619,12 +627,13 @@ function render(list) {
           right.append(pdfBtn);
         }
 
-        // Кнопка "Читати повністю" только если entry.text есть и это не служебное сообщение
+        // Кнопка 'Читати повністю' только для настоящего заключения
         if (
           entry.status === 'Висновок' &&
           entry.text &&
           entry.text.trim() !== '' &&
-          entry.text.trim() !== 'Підготовлено висновок.'
+          entry.text.trim() !== 'Підготовлено висновок.' &&
+          !entry.text.trim().startsWith("Статус змінено з")
         ) {
           const readMoreBtn = document.createElement('button');
           readMoreBtn.textContent = 'Читати повністю';
