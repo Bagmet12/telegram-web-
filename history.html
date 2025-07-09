@@ -526,9 +526,11 @@ function render(list) {
       steps.append(historyTitle);
 
       r.history.sort((a, b) => {
-        // Сортируем по дате, а если даты равны — 'Висновок' всегда последний
+        // Сортируем по дате, но 'Завершено' всегда последний
         const dateA = new Date(a.created_at);
         const dateB = new Date(b.created_at);
+        if (a.status === 'Завершено' && b.status !== 'Завершено') return 1;
+        if (b.status === 'Завершено' && a.status !== 'Завершено') return -1;
         if (dateA.getTime() !== dateB.getTime()) return dateA - dateB;
         if (a.status === 'Висновок') return 1;
         if (b.status === 'Висновок') return -1;
