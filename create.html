@@ -192,12 +192,10 @@
       }).then(res => res.json())
         .then(data => {
           // Можно обработать ответ, если нужно
-        }).catch(error => {
-          // Можно обработать ошибку, если нужно
+        })
+        .catch(error => {
+          tg.showPopup({ title: "Помилка", message: error.toString(), buttons: [{ type: "ok" }] });
         });
-
-      tg.showPopup({ title: "Успіх", message: "Заявку надіслано!", buttons: [{ type: "ok" }] });
-      setTimeout(() => window.location.href = "history.html", 1500);
     }
     function previewFiles() {
       const input = document.getElementById("file-input");
