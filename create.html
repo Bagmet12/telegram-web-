@@ -189,9 +189,21 @@
       fetch("https://tesla-service-dashboard-eda44e4816de.herokuapp.com/proxy_create_request", {
         method: "POST",
         body: form
-      }).then(res => res.json())
-        .then(data => {
-          // Можно обработать ответ, если нужно
+      })
+        .then(async res => {
+          let text = await res.text();
+          let data;
+          try {
+            data = JSON.parse(text);
+          } catch {
+            data = text;
+          }
+          if (res.ok) {
+            tg.showPopup({ title: "Успіх", message: typeof data === 'string' ? data : (data.message || "Заявку надіслано!"), buttons: [{ type: "ok" }] });
+            setTimeout(() => window.location.href = "history.html", 1500);
+          } else {
+            tg.showPopup({ title: "Помилка CRM", message: typeof data === 'string' ? data : (data.message || text), buttons: [{ type: "ok" }] });
+          }
         })
         .catch(error => {
           tg.showPopup({ title: "Помилка", message: error.toString(), buttons: [{ type: "ok" }] });
