@@ -81,6 +81,7 @@
     <div id="vin-preview-block" style="width:100%;margin-top:16px;display:none;flex-direction:column;align-items:center;">
       <label for="vin-preview-input" style="color:#fff;font-size:16px;margin-bottom:8px;">Результат сканування (можна відредагувати):</label>
       <input type="text" id="vin-preview-input" maxlength="17" style="font-size:20px;padding:10px 16px;border-radius:8px;border:1px solid #03c75a;width:90%;max-width:320px;text-align:center;letter-spacing:2px;" />
+      <div style="color:#aaa;font-size:13px;margin-top:4px;">Утримуйте поле, щоб скопіювати VIN-код</div>
       <div style="margin-top:10px;display:flex;gap:10px;">
         <button id="vin-confirm-btn" class="submit-btn" style="background:#03c75a;">Підтвердити</button>
         <button id="vin-rescan-btn" class="submit-btn" style="background:#e53935;">Сканувати ще раз</button>
@@ -285,6 +286,22 @@
       this.value = this.value.replace(/[^A-Z0-9]/gi, '').replace(/[IOQ]/g, '').toUpperCase().slice(0, 17);
       if (this.value.length === 17) {
         document.getElementById("vin-confirm-btn").click();
+      }
+    });
+    // Додаю копіювання VIN по довгому натисканню
+    vinPreviewInput.addEventListener('touchstart', function(e) {
+      this._touchStartTime = Date.now();
+    });
+    vinPreviewInput.addEventListener('touchend', function(e) {
+      if (Date.now() - (this._touchStartTime || 0) > 500) {
+        // Довге натискання (понад 500 мс)
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(this.value).then(() => {
+            alert('VIN-код скопійовано у буфер обміну!');
+          });
+        } else {
+          alert('Ваш браузер не підтримує копіювання у буфер обміну.');
+        }
       }
     });
   </script>
