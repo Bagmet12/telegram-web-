@@ -70,25 +70,19 @@
       <button id="submit-btn" class="submit-btn" onclick="submitForm()">Надіслати заявку</button>
     </div>
   </div>
-  <div id="vin-scanner" class="video-wrapper">
-    <div style="position:relative;width:100%;max-width:400px;">
-      <video id="vin-video" autoplay style="width:100%;border-radius:12px;"></video>
-      <div id="vin-overlay" style="position:absolute;top:0;left:0;width:100%;height:100%;border:3px dashed #03c75a;border-radius:12px;box-sizing:border-box;pointer-events:none;"></div>
-      <div style="position:absolute;top:10px;left:0;width:100%;text-align:center;color:#fff;font-size:16px;text-shadow:0 2px 4px #000;">
-        Наведіть рамку на VIN-код (17 символів, латиниця та цифри)
-      </div>
-    </div>
-    <div id="vin-preview-block" style="width:100%;margin-top:16px;display:none;flex-direction:column;align-items:center;">
-      <label for="vin-preview-input" style="color:#fff;font-size:16px;margin-bottom:8px;">Результат сканування (можна відредагувати):</label>
-      <input type="text" id="vin-preview-input" maxlength="17" style="font-size:20px;padding:10px 16px;border-radius:8px;border:1px solid #03c75a;width:90%;max-width:320px;text-align:center;letter-spacing:2px;" />
-      <div style="color:#aaa;font-size:13px;margin-top:4px;">Утримуйте поле, щоб скопіювати VIN-код</div>
+  <!-- Замість video-wrapper додаю простий блок для сканування VIN -->
+  <div id="vin-photo-scanner" style="display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px 0;">
+    <label for="vin-photo-input" style="color:#fff;font-size:18px;margin-bottom:12px;">Зробіть фото VIN-коду (17 символів, латиниця та цифри)</label>
+    <input type="file" id="vin-photo-input" accept="image/*" capture="environment" style="margin-bottom:16px;" />
+    <div id="vin-photo-loading" class="loading-spinner" style="display:none;margin-bottom:16px;"></div>
+    <div id="vin-photo-result-block" style="display:none;width:100%;flex-direction:column;align-items:center;">
+      <label for="vin-photo-result" style="color:#fff;font-size:16px;margin-bottom:8px;">Результат (можна відредагувати):</label>
+      <input type="text" id="vin-photo-result" maxlength="17" style="font-size:20px;padding:10px 16px;border-radius:8px;border:1px solid #03c75a;width:90%;max-width:320px;text-align:center;letter-spacing:2px;" />
       <div style="margin-top:10px;display:flex;gap:10px;">
-        <button id="vin-confirm-btn" class="submit-btn" style="background:#03c75a;">Підтвердити</button>
-        <button id="vin-rescan-btn" class="submit-btn" style="background:#e53935;">Сканувати ще раз</button>
+        <button id="vin-photo-copy-btn" class="submit-btn" style="background:#03c75a;">Скопіювати VIN</button>
+        <button id="vin-photo-rescan-btn" class="submit-btn" style="background:#e53935;">Сканувати ще раз</button>
       </div>
     </div>
-    <button id="scan-confirm" class="submit-btn" style="margin-top: 12px;">Сканувати</button>
-    <div class="loading-spinner" id="vin-loading" style="display: none; margin-top: 12px;"></div>
   </div>
   <script>
     const tg = window.Telegram.WebApp;
@@ -106,39 +100,52 @@
     function scanVIN(inputId) {
       currentVINField = inputId;
       lastVinInput = document.getElementById(inputId);
-      document.getElementById("vin-scanner").style.display = "flex";
-      document.getElementById("vin-preview-block").style.display = "none";
-      document.getElementById("scan-confirm").style.display = "block";
-      const video = document.getElementById("vin-video");
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } } }).then((stream) => {
-        videoStream = stream;
-        video.srcObject = stream;
-      });
+      document.getElementById("vin-photo-scanner").style.display = "flex";
+      document.getElementById("vin-photo-result-block").style.display = "none";
+      document.getElementById("vin-photo-loading").style.display = "none";
+      document.getElementById("vin-photo-input").value = '';
     }
-    document.getElementById("scan-confirm").addEventListener("click", () => {
-      const video = document.getElementById("vin-video");
-      const loading = document.getElementById("vin-loading");
-      loading.style.display = "block";
-      document.getElementById("scan-confirm").style.display = "none";
-      const canvas = document.createElement("canvas");
-      const context = canvas.getContext("2d");
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-      Tesseract.recognize(canvas.toDataURL(), 'eng', { logger: m => console.log(m) })
+    document.getElementById("vin-photo-input").addEventListener("change", function(e) {
+      const file = this.files[0];
+      if (!file) return;
+      document.getElementById("vin-photo-loading").style.display = "block";
+      Tesseract.recognize(URL.createObjectURL(file), 'eng', { logger: m => console.log(m) })
         .then(({ data: { text } }) => {
           const cleaned = text.replace(/[^A-Z0-9]/gi, '').toUpperCase().replace(/[IOQ]/g, '');
           const vin = cleaned.slice(0, 17);
-          document.getElementById("vin-preview-input").value = vin;
-          document.getElementById("vin-preview-block").style.display = "flex";
-          loading.style.display = "none";
+          document.getElementById("vin-photo-result").value = vin;
+          document.getElementById("vin-photo-result-block").style.display = "flex";
+          document.getElementById("vin-photo-loading").style.display = "none";
+          // Автозахват
+          if (vin.length === 17) {
+            lastVinInput.value = vin;
+            document.getElementById("vin-photo-scanner").style.display = "none";
+          }
         })
         .catch(err => {
           alert("Не вдалося зчитати VIN. Спробуйте ще раз.");
           console.error(err);
-          loading.style.display = "none";
-          document.getElementById("scan-confirm").style.display = "block";
+          document.getElementById("vin-photo-loading").style.display = "none";
         });
+    });
+    document.getElementById("vin-photo-copy-btn").addEventListener("click", function() {
+      const vin = document.getElementById("vin-photo-result").value.trim();
+      if (vin.length === 17 && navigator.clipboard) {
+        navigator.clipboard.writeText(vin).then(() => {
+          alert('VIN-код скопійовано у буфер обміну!');
+        });
+      }
+    });
+    document.getElementById("vin-photo-rescan-btn").addEventListener("click", function() {
+      document.getElementById("vin-photo-result-block").style.display = "none";
+      document.getElementById("vin-photo-input").value = '';
+    });
+    document.getElementById("vin-photo-result").addEventListener("input", function() {
+      this.value = this.value.replace(/[^A-Z0-9]/gi, '').replace(/[IOQ]/g, '').toUpperCase().slice(0, 17);
+      if (this.value.length === 17) {
+        lastVinInput.value = this.value;
+        document.getElementById("vin-photo-scanner").style.display = "none";
+      }
     });
     document.getElementById("vin-confirm-btn").addEventListener("click", () => {
       const vin = document.getElementById("vin-preview-input").value.trim().toUpperCase();
