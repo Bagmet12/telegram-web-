@@ -44,14 +44,16 @@
         <label for="vin-car">VIN автомобіля</label>
         <div class="input-wrapper">
           <input type="text" id="vin-car" maxlength="17" placeholder="Введіть VIN авто" required />
-          <div class="scan-btn" data-target="vin-car" onclick="openVinPhotoScanner(event)">📸</div>
+          <input type="file" id="vin-car-photo-input" accept="image/*" capture="environment" style="display:none;" />
+          <div class="scan-btn" onclick="openVinPhotoScanner('vin-car')">📸</div>
         </div>
       </div>
       <div class="form-row">
         <label for="vin-mceu">VIN з монітору авто</label>
         <div class="input-wrapper">
           <input type="text" id="vin-mceu" maxlength="17" placeholder="Введіть VIN з монітору авто" required />
-          <div class="scan-btn" data-target="vin-mceu" onclick="openVinPhotoScanner(event)">📸</div>
+          <input type="file" id="vin-mceu-photo-input" accept="image/*" capture="environment" style="display:none;" />
+          <div class="scan-btn" onclick="openVinPhotoScanner('vin-mceu')">📸</div>
         </div>
       </div>
       <div class="form-row">
@@ -105,28 +107,31 @@
       document.getElementById('vin-photo-loading').style.display = 'none';
       document.getElementById('vin-photo-input').value = '';
     }
-    document.getElementById('vin-photo-input').addEventListener('change', function(e) {
-      const file = this.files[0];
-      if (!file) return;
-      document.getElementById('vin-photo-loading').style.display = 'block';
-      Tesseract.recognize(URL.createObjectURL(file), 'eng', { logger: m => console.log(m) })
-        .then(({ data: { text } }) => {
-          const cleaned = text.replace(/[^A-Z0-9]/gi, '').toUpperCase().replace(/[IOQ]/g, '');
-          const vin = cleaned.slice(0, 17);
-          document.getElementById('vin-photo-result').value = vin;
-          document.getElementById('vin-photo-result-block').style.display = 'flex';
-          document.getElementById('vin-photo-loading').style.display = 'none';
-          // Автозахват
-          if (vin.length === 17 && currentVINField) {
-            document.getElementById(currentVINField).value = vin;
-            document.getElementById('vin-photo-scanner').style.display = 'none';
-          }
-        })
-        .catch(err => {
-          alert('Не вдалося зчитати VIN. Спробуйте ще раз.');
-          console.error(err);
-          document.getElementById('vin-photo-loading').style.display = 'none';
-        });
+    function openVinPhotoScanner(target) {
+      const inputId = target === 'vin-car' ? 'vin-car-photo-input' : 'vin-mceu-photo-input';
+      document.getElementById(inputId).click();
+    }
+    ['vin-car', 'vin-mceu'].forEach(function(field) {
+      const inputId = field + '-photo-input';
+      document.getElementById(inputId).addEventListener('change', function(e) {
+        const file = this.files[0];
+        if (!file) return;
+        // Показати спінер (можна додати окремий для кожного поля)
+        Tesseract.recognize(URL.createObjectURL(file), 'eng', { logger: m => console.log(m) })
+          .then(({ data: { text } }) => {
+            const cleaned = text.replace(/[^A-Z0-9]/gi, '').toUpperCase().replace(/[IOQ]/g, '');
+            const vin = cleaned.slice(0, 17);
+            document.getElementById(field).value = vin;
+            // Автозахват: якщо 17 символів — закриваємо input
+            if (vin.length === 17) {
+              // Можна показати повідомлення або підсвітити поле
+            }
+          })
+          .catch(err => {
+            alert('Не вдалося зчитати VIN. Спробуйте ще раз.');
+            console.error(err);
+          });
+      });
     });
     document.getElementById('vin-photo-copy-btn').addEventListener('click', function() {
       const vin = document.getElementById('vin-photo-result').value.trim();
