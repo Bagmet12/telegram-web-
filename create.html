@@ -44,14 +44,14 @@
         <label for="vin-car">VIN автомобіля</label>
         <div class="input-wrapper">
           <input type="text" id="vin-car" maxlength="17" placeholder="Введіть VIN авто" required />
-          <div class="scan-btn" onclick="scanVIN('vin-car')">📸</div>
+          <div class="scan-btn" data-target="vin-car" onclick="openVinPhotoScanner(event)">📸</div>
         </div>
       </div>
       <div class="form-row">
         <label for="vin-mceu">VIN з монітору авто</label>
         <div class="input-wrapper">
           <input type="text" id="vin-mceu" maxlength="17" placeholder="Введіть VIN з монітору авто" required />
-          <div class="scan-btn" onclick="scanVIN('vin-mceu')">📸</div>
+          <div class="scan-btn" data-target="vin-mceu" onclick="openVinPhotoScanner(event)">📸</div>
         </div>
       </div>
       <div class="form-row">
@@ -97,54 +97,54 @@
     let currentVINField = null;
     let videoStream = null;
     let lastVinInput = null;
-    function scanVIN(inputId) {
-      currentVINField = inputId;
-      lastVinInput = document.getElementById(inputId);
-      document.getElementById("vin-photo-scanner").style.display = "flex";
-      document.getElementById("vin-photo-result-block").style.display = "none";
-      document.getElementById("vin-photo-loading").style.display = "none";
-      document.getElementById("vin-photo-input").value = '';
+    function openVinPhotoScanner(e) {
+      const target = e.currentTarget.getAttribute('data-target');
+      currentVINField = target;
+      document.getElementById('vin-photo-scanner').style.display = 'flex';
+      document.getElementById('vin-photo-result-block').style.display = 'none';
+      document.getElementById('vin-photo-loading').style.display = 'none';
+      document.getElementById('vin-photo-input').value = '';
     }
-    document.getElementById("vin-photo-input").addEventListener("change", function(e) {
+    document.getElementById('vin-photo-input').addEventListener('change', function(e) {
       const file = this.files[0];
       if (!file) return;
-      document.getElementById("vin-photo-loading").style.display = "block";
+      document.getElementById('vin-photo-loading').style.display = 'block';
       Tesseract.recognize(URL.createObjectURL(file), 'eng', { logger: m => console.log(m) })
         .then(({ data: { text } }) => {
           const cleaned = text.replace(/[^A-Z0-9]/gi, '').toUpperCase().replace(/[IOQ]/g, '');
           const vin = cleaned.slice(0, 17);
-          document.getElementById("vin-photo-result").value = vin;
-          document.getElementById("vin-photo-result-block").style.display = "flex";
-          document.getElementById("vin-photo-loading").style.display = "none";
+          document.getElementById('vin-photo-result').value = vin;
+          document.getElementById('vin-photo-result-block').style.display = 'flex';
+          document.getElementById('vin-photo-loading').style.display = 'none';
           // Автозахват
-          if (vin.length === 17) {
-            lastVinInput.value = vin;
-            document.getElementById("vin-photo-scanner").style.display = "none";
+          if (vin.length === 17 && currentVINField) {
+            document.getElementById(currentVINField).value = vin;
+            document.getElementById('vin-photo-scanner').style.display = 'none';
           }
         })
         .catch(err => {
-          alert("Не вдалося зчитати VIN. Спробуйте ще раз.");
+          alert('Не вдалося зчитати VIN. Спробуйте ще раз.');
           console.error(err);
-          document.getElementById("vin-photo-loading").style.display = "none";
+          document.getElementById('vin-photo-loading').style.display = 'none';
         });
     });
-    document.getElementById("vin-photo-copy-btn").addEventListener("click", function() {
-      const vin = document.getElementById("vin-photo-result").value.trim();
+    document.getElementById('vin-photo-copy-btn').addEventListener('click', function() {
+      const vin = document.getElementById('vin-photo-result').value.trim();
       if (vin.length === 17 && navigator.clipboard) {
         navigator.clipboard.writeText(vin).then(() => {
           alert('VIN-код скопійовано у буфер обміну!');
         });
       }
     });
-    document.getElementById("vin-photo-rescan-btn").addEventListener("click", function() {
-      document.getElementById("vin-photo-result-block").style.display = "none";
-      document.getElementById("vin-photo-input").value = '';
+    document.getElementById('vin-photo-rescan-btn').addEventListener('click', function() {
+      document.getElementById('vin-photo-result-block').style.display = 'none';
+      document.getElementById('vin-photo-input').value = '';
     });
-    document.getElementById("vin-photo-result").addEventListener("input", function() {
+    document.getElementById('vin-photo-result').addEventListener('input', function() {
       this.value = this.value.replace(/[^A-Z0-9]/gi, '').replace(/[IOQ]/g, '').toUpperCase().slice(0, 17);
-      if (this.value.length === 17) {
-        lastVinInput.value = this.value;
-        document.getElementById("vin-photo-scanner").style.display = "none";
+      if (this.value.length === 17 && currentVINField) {
+        document.getElementById(currentVINField).value = this.value;
+        document.getElementById('vin-photo-scanner').style.display = 'none';
       }
     });
     document.getElementById("vin-confirm-btn").addEventListener("click", () => {
