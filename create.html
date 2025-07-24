@@ -101,7 +101,12 @@
           .then(({ data: { text } }) => {
             const cleaned = text.replace(/[^A-Z0-9]/gi, '').toUpperCase().replace(/[IOQ]/g, '');
             const vin = cleaned.slice(0, 17);
-            document.getElementById(field).value = vin;
+            const vinInput = document.getElementById(field);
+            vinInput.value = vin;
+            if (vin.length > 0) {
+              vinInput.style.background = '#d4ffd4';
+              setTimeout(() => { vinInput.style.background = ''; }, 1200);
+            }
           })
           .catch(err => {
             alert('Не вдалося зчитати VIN. Спробуйте ще раз.');
@@ -123,7 +128,6 @@
         liveVinStream = stream;
         video.srcObject = stream;
         video.play();
-        // Live OCR кожні 1.5 сек
         liveVinInterval = setInterval(() => {
           if (video.readyState === 4) {
             const canvas = document.createElement('canvas');
@@ -135,13 +139,16 @@
               .then(({ data: { text } }) => {
                 const cleaned = text.replace(/[^A-Z0-9]/gi, '').toUpperCase().replace(/[IOQ]/g, '');
                 const vin = cleaned.slice(0, 17);
-                if (vin.length >= 10) { // показувати якщо щось схоже на VIN
+                if (vin.length >= 10) {
                   document.getElementById('live-vin-result').value = vin;
                   document.getElementById('live-vin-result').style.display = 'block';
                   document.getElementById('live-vin-confirm-btn').style.display = 'inline-block';
                   document.getElementById('live-vin-loading').style.display = 'none';
-                  if (vin.length === 17) {
-                    document.getElementById(liveVinTarget).value = vin;
+                  if (vin.length === 17 && liveVinTarget) {
+                    const vinInput = document.getElementById(liveVinTarget);
+                    vinInput.value = vin;
+                    vinInput.style.background = '#d4ffd4';
+                    setTimeout(() => { vinInput.style.background = ''; }, 1200);
                     closeLiveVinScanner();
                   }
                 }
@@ -171,14 +178,20 @@
     document.getElementById('live-vin-confirm-btn').onclick = function() {
       const vin = document.getElementById('live-vin-result').value.trim();
       if (vin.length >= 10 && liveVinTarget) {
-        document.getElementById(liveVinTarget).value = vin;
+        const vinInput = document.getElementById(liveVinTarget);
+        vinInput.value = vin;
+        vinInput.style.background = '#d4ffd4';
+        setTimeout(() => { vinInput.style.background = ''; }, 1200);
         closeLiveVinScanner();
       }
     };
     document.getElementById('live-vin-result').addEventListener('input', function() {
       this.value = this.value.replace(/[^A-Z0-9]/gi, '').replace(/[IOQ]/g, '').toUpperCase().slice(0, 17);
       if (this.value.length === 17 && liveVinTarget) {
-        document.getElementById(liveVinTarget).value = this.value;
+        const vinInput = document.getElementById(liveVinTarget);
+        vinInput.value = this.value;
+        vinInput.style.background = '#d4ffd4';
+        setTimeout(() => { vinInput.style.background = ''; }, 1200);
         closeLiveVinScanner();
       }
     });
