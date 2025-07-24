@@ -86,6 +86,20 @@
       <button id="live-vin-cancel-btn" class="submit-btn" style="background:#e53935;">Скасувати</button>
     </div>
   </div>
+  <!-- Модальне вікно для фото-сканера VIN -->
+  <div id="vin-photo-modal" style="display:none;position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.85);align-items:center;justify-content:center;flex-direction:column;">
+    <div style="background:#222;padding:24px 16px;border-radius:16px;max-width:340px;width:95%;display:flex;flex-direction:column;align-items:center;">
+      <img id="vin-photo-preview" src="" alt="Фото VIN" style="max-width:300px;max-height:120px;border-radius:8px;margin-bottom:16px;" />
+      <input type="text" id="vin-photo-vin" maxlength="17" placeholder="Введіть або відредагуйте VIN" style="font-size:20px;padding:10px 16px;border-radius:8px;border:1px solid #03c75a;width:100%;text-align:center;letter-spacing:2px;margin-bottom:12px;user-select:auto;" />
+      <div style="display:flex;gap:10px;width:100%;margin-bottom:10px;">
+        <button id="vin-photo-copy-btn" class="submit-btn" style="background:#03c75a;">Скопіювати VIN</button>
+      </div>
+      <div style="display:flex;gap:10px;width:100%;">
+        <button id="vin-photo-confirm-btn" class="submit-btn" style="background:#03c75a;">Підтвердити</button>
+        <button id="vin-photo-retry-btn" class="submit-btn" style="background:#e53935;">Спробувати ще раз</button>
+      </div>
+    </div>
+  </div>
   <script>
     const tg = window.Telegram.WebApp;
     tg.ready();
@@ -96,21 +110,42 @@
       document.getElementById(inputId).addEventListener('change', function(e) {
         const file = this.files[0];
         if (!file) return;
-        Tesseract.recognize(URL.createObjectURL(file), 'eng', { logger: m => console.log(m) })
-          .then(({ data: { text } }) => {
-            const cleaned = text.replace(/[^A-Z0-9]/gi, '').toUpperCase().replace(/[IOQ]/g, '');
-            const vin = cleaned.slice(0, 17);
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+          document.getElementById('vin-photo-preview').src = ev.target.result;
+          document.getElementById('vin-photo-modal').style.display = 'flex';
+          document.getElementById('vin-photo-vin').value = '';
+          // OCR
+          Tesseract.recognize(ev.target.result, 'eng', { logger: m => console.log(m) })
+            .then(({ data: { text } }) => {
+              const cleaned = text.replace(/[^A-Z0-9]/gi, '').toUpperCase().replace(/[IOQ]/g, '');
+              const vin = cleaned.slice(0, 17);
+              document.getElementById('vin-photo-vin').value = vin;
+            })
+            .catch(err => {
+              // Якщо не вдалося — поле порожнє
+              document.getElementById('vin-photo-vin').value = '';
+            });
+          // Кнопка підтвердити
+          document.getElementById('vin-photo-confirm-btn').onclick = function() {
+            const vin = document.getElementById('vin-photo-vin').value.trim();
             const vinInput = document.getElementById(field);
             vinInput.value = vin;
             if (vin.length > 0) {
               vinInput.style.background = '#d4ffd4';
               setTimeout(() => { vinInput.style.background = ''; }, 1200);
             }
-          })
-          .catch(err => {
-            alert('Не вдалося зчитати VIN. Спробуйте ще раз.');
-            console.error(err);
-          });
+            document.getElementById('vin-photo-modal').style.display = 'none';
+            document.getElementById(inputId).value = '';
+          };
+          // Кнопка спробувати ще раз
+          document.getElementById('vin-photo-retry-btn').onclick = function() {
+            document.getElementById('vin-photo-modal').style.display = 'none';
+            document.getElementById(inputId).value = '';
+            document.getElementById(inputId).click();
+          };
+        };
+        reader.readAsDataURL(file);
       });
     });
     let liveVinStream = null;
