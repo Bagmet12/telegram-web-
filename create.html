@@ -45,7 +45,7 @@
         <div class="input-wrapper">
           <input type="text" id="vin-car" maxlength="17" placeholder="Введіть VIN авто" required />
           <input type="file" id="vin-car-photo-input" accept="image/*" capture="environment" style="display:none;" />
-          <div class="scan-btn" onclick="openVinPhotoScanner('vin-car')">📸</div>
+          <div class="scan-btn" onclick="document.getElementById('vin-car-photo-input').click();">📸</div>
         </div>
       </div>
       <div class="form-row">
@@ -53,7 +53,7 @@
         <div class="input-wrapper">
           <input type="text" id="vin-mceu" maxlength="17" placeholder="Введіть VIN з монітору авто" required />
           <input type="file" id="vin-mceu-photo-input" accept="image/*" capture="environment" style="display:none;" />
-          <div class="scan-btn" onclick="openVinPhotoScanner('vin-mceu')">📸</div>
+          <div class="scan-btn" onclick="document.getElementById('vin-mceu-photo-input').click();">📸</div>
         </div>
       </div>
       <div class="form-row">
@@ -137,16 +137,11 @@
       document.getElementById(inputId).addEventListener('change', function(e) {
         const file = this.files[0];
         if (!file) return;
-        // Показати спінер (можна додати окремий для кожного поля)
         Tesseract.recognize(URL.createObjectURL(file), 'eng', { logger: m => console.log(m) })
           .then(({ data: { text } }) => {
             const cleaned = text.replace(/[^A-Z0-9]/gi, '').toUpperCase().replace(/[IOQ]/g, '');
             const vin = cleaned.slice(0, 17);
             document.getElementById(field).value = vin;
-            // Автозахват: якщо 17 символів — закриваємо input
-            if (vin.length === 17) {
-              // Можна показати повідомлення або підсвітити поле
-            }
           })
           .catch(err => {
             alert('Не вдалося зчитати VIN. Спробуйте ще раз.');
