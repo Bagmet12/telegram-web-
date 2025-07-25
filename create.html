@@ -91,8 +91,9 @@
     <div style="background:#222;padding:24px 16px;border-radius:16px;max-width:340px;width:95%;display:flex;flex-direction:column;align-items:center;">
       <img id="vin-photo-preview" src="" alt="Фото VIN" style="max-width:300px;max-height:120px;border-radius:8px;margin-bottom:16px;" />
       <input type="text" id="vin-photo-vin" maxlength="17" placeholder="Введіть або відредагуйте VIN" style="font-size:20px;padding:10px 16px;border-radius:8px;border:1px solid #03c75a;width:100%;text-align:center;letter-spacing:2px;margin-bottom:12px;user-select:auto;" />
+      <div id="vin-photo-candidates" style="display:none;flex-wrap:wrap;gap:6px 8px;margin-bottom:10px;width:100%;justify-content:center;"></div>
       <div style="display:flex;gap:10px;width:100%;margin-bottom:10px;">
-        <button id="vin-photo-copy-btn" class="submit-btn" style="background:#03c75a;">Скопіювати VIN</button>
+        <!-- Кнопка 'Скопіювати VIN' убрана -->
       </div>
       <div style="display:flex;gap:10px;width:100%;">
         <button id="vin-photo-confirm-btn" class="submit-btn" style="background:#03c75a;">Підтвердити</button>
@@ -115,30 +116,45 @@
           document.getElementById('vin-photo-preview').src = ev.target.result;
           document.getElementById('vin-photo-modal').style.display = 'flex';
           document.getElementById('vin-photo-vin').value = '';
+          document.getElementById('vin-photo-candidates').style.display = 'none';
+          document.getElementById('vin-photo-candidates').innerHTML = '';
           // OCR
           Tesseract.recognize(ev.target.result, 'eng', { logger: m => console.log(m) })
             .then(({ data: { text } }) => {
-              const cleaned = text.replace(/[^A-Z0-9]/gi, '').toUpperCase().replace(/[IOQ]/g, '');
-              const vin = cleaned.slice(0, 17);
-              document.getElementById('vin-photo-vin').value = vin;
+              // Ищем все 17-символьные последовательности VIN
+              const candidates = (text.match(/[A-HJ-NPR-Z0-9]{17}/gi) || []).map(v => v.toUpperCase());
+              if (candidates.length > 0) {
+                document.getElementById('vin-photo-candidates').style.display = 'flex';
+                document.getElementById('vin-photo-candidates').innerHTML = candidates.map(vin => `<button type='button' style='padding:6px 10px;border-radius:7px;border:1px solid #03c75a;background:#222;color:#03c75a;font-size:15px;cursor:pointer;margin-bottom:2px;' onclick='document.getElementById(\'vin-photo-vin\').value=\'${vin}\''>${vin}</button>`).join(' ');
+                document.getElementById('vin-photo-vin').value = candidates[0];
+              } else {
+                // fallback: чистим весь текст и берём первые 17 символов
+                const cleaned = text.replace(/[^A-Z0-9]/gi, '').toUpperCase().replace(/[IOQ]/g, '');
+                document.getElementById('vin-photo-vin').value = cleaned.slice(0, 17);
+                document.getElementById('vin-photo-candidates').style.display = 'none';
+              }
+              document.getElementById('vin-photo-vin').focus();
             })
             .catch(err => {
-              // Якщо не вдалося — поле порожнє
               document.getElementById('vin-photo-vin').value = '';
+              document.getElementById('vin-photo-candidates').style.display = 'none';
             });
-          // Кнопка підтвердити
+          // Кнопка подтвердить
           document.getElementById('vin-photo-confirm-btn').onclick = function() {
             const vin = document.getElementById('vin-photo-vin').value.trim();
             const vinInput = document.getElementById(field);
             vinInput.value = vin;
-            if (vin.length > 0) {
+            if (vin.length === 17) {
               vinInput.style.background = '#d4ffd4';
+              setTimeout(() => { vinInput.style.background = ''; }, 1200);
+            } else {
+              vinInput.style.background = '#ffd4d4';
               setTimeout(() => { vinInput.style.background = ''; }, 1200);
             }
             document.getElementById('vin-photo-modal').style.display = 'none';
             document.getElementById(inputId).value = '';
           };
-          // Кнопка спробувати ще раз
+          // Кнопка попробовать еще раз
           document.getElementById('vin-photo-retry-btn').onclick = function() {
             document.getElementById('vin-photo-modal').style.display = 'none';
             document.getElementById(inputId).value = '';
