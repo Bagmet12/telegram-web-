@@ -144,6 +144,9 @@
             const vin = document.getElementById('vin-photo-vin').value.trim();
             const vinInput = document.getElementById(field);
             vinInput.value = vin;
+            document.getElementById('vin-photo-modal').style.display = 'none';
+            document.getElementById(inputId).value = '';
+            vinInput.focus();
             if (vin.length === 17) {
               vinInput.style.background = '#d4ffd4';
               setTimeout(() => { vinInput.style.background = ''; }, 1200);
@@ -151,8 +154,6 @@
               vinInput.style.background = '#ffd4d4';
               setTimeout(() => { vinInput.style.background = ''; }, 1200);
             }
-            document.getElementById('vin-photo-modal').style.display = 'none';
-            document.getElementById(inputId).value = '';
           };
           // Кнопка попробовать еще раз
           document.getElementById('vin-photo-retry-btn').onclick = function() {
