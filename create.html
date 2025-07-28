@@ -305,11 +305,19 @@
       const chat_id = tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id ? String(tg.initDataUnsafe.user.id) : "unknown";
       const owner_name = tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.first_name ? tg.initDataUnsafe.user.first_name : "";
       if (!vinCar || !vinMceu || !problem || !phone) {
-        tg.showPopup({ title: "Помилка", message: "Заповніть усі поля", buttons: [{ type: "ok" }] });
+        tg.showPopup({
+          title: "Помилка",
+          message: "Заповніть усі поля".slice(0, 64),
+          buttons: [{ type: "ok" }]
+        });
         return;
       }
       if (!validatePhone(phone)) {
-        tg.showPopup({ title: "Помилка", message: "Некоректний номер телефону", buttons: [{ type: "ok" }] });
+        tg.showPopup({
+          title: "Помилка",
+          message: "Некоректний номер телефону".slice(0, 64),
+          buttons: [{ type: "ok" }]
+        });
         return;
       }
       const botData = {
@@ -347,14 +355,26 @@
             data = text;
           }
           if (res.ok) {
-            tg.showPopup({ title: "Успіх", message: typeof data === 'string' ? data : (data.message || "Заявку надіслано!"), buttons: [{ type: "ok" }] });
+            tg.showPopup({
+              title: "Успіх",
+              message: String(typeof data === 'string' ? data : (data.message || "Заявку надіслано!")).slice(0, 250),
+              buttons: [{ type: "ok" }]
+            });
             setTimeout(() => window.location.href = "history.html", 1500);
           } else {
-            tg.showPopup({ title: "Помилка CRM", message: typeof data === 'string' ? data : (data.message || text), buttons: [{ type: "ok" }] });
+            tg.showPopup({
+              title: "Помилка CRM",
+              message: String(typeof data === 'string' ? data : (data.message || text)).slice(0, 250),
+              buttons: [{ type: "ok" }]
+            });
           }
         })
         .catch(error => {
-          tg.showPopup({ title: "Помилка", message: error.toString(), buttons: [{ type: "ok" }] });
+          tg.showPopup({
+            title: "Помилка",
+            message: String(error && error.toString ? error.toString() : "Невідома помилка").slice(0, 250),
+            buttons: [{ type: "ok" }]
+          });
         });
     }
   </script>
