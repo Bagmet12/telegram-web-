@@ -512,20 +512,30 @@ function render(list) {
             // Пытаемся найти дату создания несколькими способами
             let createdAt = null;
             
+            console.log(`[DATE DEBUG] Processing request ${r.id}:`, {
+              date: r.date,
+              created_at: r.created_at,
+              created_date: r.created_date,
+              history: r.history
+            });
+            
             // 1. ПРИОРИТЕТ: берем поле date из API (это дата создания из БД)
             if (r.date) {
               createdAt = r.date;
+              console.log(`[DATE DEBUG] Using r.date: ${createdAt}`);
             }
             // 2. Ищем запись "Нова" в истории
             else if (r.history && r.history.length > 0) {
               const createdEntry = r.history.find(e => e.status === "Нова");
               if (createdEntry && createdEntry.created_at) {
                 createdAt = createdEntry.created_at;
+                console.log(`[DATE DEBUG] Using history "Нова" entry: ${createdAt}`);
               }
             }
             // 3. Если не нашли в истории, берем из других полей
             else if (r.created_at || r.created_date) {
               createdAt = r.created_at || r.created_date;
+              console.log(`[DATE DEBUG] Using created_at/created_date: ${createdAt}`);
             }
             // 4. Если все еще нет, берем самую раннюю дату из истории
             else if (r.history && r.history.length > 0) {
@@ -533,18 +543,23 @@ function render(list) {
                 new Date(a.created_at || 0) - new Date(b.created_at || 0)
               );
               createdAt = sortedHistory[0].created_at;
+              console.log(`[DATE DEBUG] Using earliest history entry: ${createdAt}`);
             }
             // 5. Если дата не найдена, показываем "—"
             if (!createdAt) {
+              console.log(`[DATE DEBUG] No date found, showing "—"`);
               return '—';
             }
             
             try {
               const date = new Date(createdAt);
               if (isNaN(date.getTime())) {
+                console.log(`[DATE DEBUG] Invalid date format: ${createdAt}`);
                 return '—';
               }
-              return `${date.toLocaleTimeString('uk-UA', {hour: '2-digit', minute: '2-digit'})} ${date.toLocaleDateString('uk-UA', {day:'2-digit', month:'2-digit', year:'numeric'})}`;
+              const formattedDate = `${date.toLocaleTimeString('uk-UA', {hour: '2-digit', minute: '2-digit'})} ${date.toLocaleDateString('uk-UA', {day:'2-digit', month:'2-digit', year:'numeric'})}`;
+              console.log(`[DATE DEBUG] Formatted date: ${formattedDate}`);
+              return formattedDate;
             } catch (e) {
               console.error('Error formatting date:', createdAt, e);
               return '—';
@@ -774,6 +789,8 @@ async function fetchHistory() {
           console.log('  - created_at:', req.created_at);
           console.log('  - created_date:', req.created_date);
           console.log('  - history:', req.history);
+          console.log('  - All request fields:', Object.keys(req));
+          console.log('  - Full request object:', req);
         });
       }
       render(body.requests);
