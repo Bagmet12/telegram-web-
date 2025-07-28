@@ -466,11 +466,45 @@ function render(list) {
         <p class="vin">VIN авто: ${r.car_vin || 'Н/Д'}</p>
         <p class="created-date">
           Створено: ${(() => {
-            const createdEntry = r.history && r.history.find(e => e.status === "Нова");
-            const createdAt = createdEntry ? createdEntry.created_at : (r.date || r.created_at);
-            return createdAt
-              ? `${new Date(createdAt).toLocaleTimeString('uk-UA', {hour: '2-digit', minute: '2-digit'})} ${new Date(createdAt).toLocaleDateString('uk-UA', {day:'2-digit', month:'2-digit', year:'numeric'})}`
-              : '—';
+            // Пытаемся найти дату создания несколькими способами
+            let createdAt = null;
+            
+            // 1. Ищем запись "Нова" в истории
+            if (r.history && r.history.length > 0) {
+              const createdEntry = r.history.find(e => e.status === "Нова");
+              if (createdEntry && createdEntry.created_at) {
+                createdAt = createdEntry.created_at;
+              }
+            }
+            
+            // 2. Если не нашли в истории, берем из основных полей
+            if (!createdAt) {
+              createdAt = r.created_at || r.date || r.created_date;
+            }
+            
+            // 3. Если все еще нет, берем самую раннюю дату из истории
+            if (!createdAt && r.history && r.history.length > 0) {
+              const sortedHistory = r.history.sort((a, b) => 
+                new Date(a.created_at || 0) - new Date(b.created_at || 0)
+              );
+              createdAt = sortedHistory[0].created_at;
+            }
+            
+            // 4. Если все еще нет, используем текущее время как fallback
+            if (!createdAt) {
+              createdAt = new Date().toISOString();
+            }
+            
+            try {
+              const date = new Date(createdAt);
+              if (isNaN(date.getTime())) {
+                return '—';
+              }
+              return `${date.toLocaleTimeString('uk-UA', {hour: '2-digit', minute: '2-digit'})} ${date.toLocaleDateString('uk-UA', {day:'2-digit', month:'2-digit', year:'numeric'})}`;
+            } catch (e) {
+              console.error('Error formatting date:', createdAt, e);
+              return '—';
+            }
           })()}
         </p>
       </div>
@@ -683,6 +717,12 @@ async function fetchHistory() {
     });
     const body = await res.json();
     if(body.status === "ok") {
+      console.log('History data received:', body.requests);
+      // Debug: log first request structure
+      if (body.requests && body.requests.length > 0) {
+        console.log('First request structure:', body.requests[0]);
+        console.log('First request history:', body.requests[0].history);
+      }
       render(body.requests);
     } else {
       document.getElementById('history').innerText = body.message || 'Помилка завантаження історії';
