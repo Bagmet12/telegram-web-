@@ -641,7 +641,8 @@
         phone: phone,
         owner: "telegram",
         owner_name: owner_name,
-        chat_id: chat_id
+        chat_id: chat_id,
+        created_at: new Date().toISOString()
       };
       
       tg.sendData(JSON.stringify(botData));
@@ -654,6 +655,7 @@
       form.append("owner", "telegram");
       form.append("owner_name", owner_name);
       form.append("chat_id", chat_id);
+      form.append("created_at", new Date().toISOString());
       
       const input = document.getElementById("file-input");
       for (let i = 0; i < input.files.length; i++) {
