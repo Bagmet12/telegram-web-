@@ -56,10 +56,12 @@
     }
     .vin-scanner-video {
       width: 100%;
-      max-width: 360px;
+      max-width: 280px;
       border: 3px solid #03c75a;
-      border-radius: 12px;
+      border-radius: 8px;
       margin-bottom: 20px;
+      height: 60px;
+      object-fit: cover;
     }
     .vin-input-large {
       font-size: 18px;
@@ -163,7 +165,7 @@
   <div id="vin-scanner-modal" class="vin-scanner-modal">
     <div class="vin-scanner-content">
       <h3 style="margin:0 0 16px 0;color:#03c75a;">Сканування VIN</h3>
-      <p style="margin:0 0 20px 0;font-size:14px;color:#ccc;">Наведіть камеру на VIN-код на моніторі авто, натисніть "Копіювати VIN" або введіть вручну</p>
+      <p style="margin:0 0 20px 0;font-size:14px;color:#ccc;">Наведіть камеру на VIN-код на моніторі авто (17 символів, наприклад: 5YJ3E1EB7NF342309), натисніть "Копіювати VIN" або введіть вручну</p>
       
       <video id="vin-scanner-video" class="vin-scanner-video" autoplay playsinline></video>
       
@@ -309,21 +311,55 @@
             tessedit_char_whitelist: 'ABCDEFGHJKLMNPRSTUVWXYZ0123456789'
           });
           
-          // Ищем VIN в тексте
-          const vinMatches = text.match(/[A-HJ-NPR-Z0-9]{17}/gi) || [];
-          const cleanedText = text.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+          console.log('Распознанный текст:', text);
           
+          // Улучшенный поиск VIN
           let foundVin = null;
           
-          // Сначала ищем точные совпадения
-          if (vinMatches.length > 0) {
-            foundVin = vinMatches[0].toUpperCase();
-          } else {
-            // Ищем 17-символьные последовательности
+          // 1. Ищем точные Tesla VIN (начинаются с 5YJ, 7SA, 7SAY и т.д.)
+          const teslaVinPattern = /(5YJ|7SA|7SAY|5YJY|5YJS|5YJ3|5YJY|5YJSA|5YJSE|5YJSB|5YJSC|5YJSD|5YJSE|5YJSF|5YJSG|5YJSH|5YJSI|5YJSJ|5YJSK|5YJSL|5YJSM|5YJSN|5YJSO|5YJSP|5YJSQ|5YJSR|5YJSS|5YJST|5YJSU|5YJSV|5YJSW|5YJSX|5YJSY|5YJSZ)[A-HJ-NPR-Z0-9]{14}/gi;
+          const teslaMatches = text.match(teslaVinPattern);
+          if (teslaMatches && teslaMatches.length > 0) {
+            foundVin = teslaMatches[0].toUpperCase();
+            console.log('Найден Tesla VIN:', foundVin);
+          }
+          
+          // 2. Если не нашли Tesla VIN, ищем любой 17-символьный VIN
+          if (!foundVin) {
+            const allVinMatches = text.match(/[A-HJ-NPR-Z0-9]{17}/gi) || [];
+            if (allVinMatches.length > 0) {
+              // Фильтруем - исключаем очевидно неправильные VIN
+              const validVins = allVinMatches.filter(vin => {
+                const upperVin = vin.toUpperCase();
+                // Исключаем VIN, которые содержат только буквы или только цифры
+                if (/^[A-Z]+$/.test(upperVin) || /^[0-9]+$/.test(upperVin)) {
+                  return false;
+                }
+                // Исключаем VIN, которые выглядят как случайные символы
+                if (upperVin.includes('MOTOR') || upperVin.includes('ENGINE') || upperVin.includes('COMPUTER')) {
+                  return false;
+                }
+                return true;
+              });
+              
+              if (validVins.length > 0) {
+                foundVin = validVins[0].toUpperCase();
+                console.log('Найден общий VIN:', foundVin);
+              }
+            }
+          }
+          
+          // 3. Если все еще не нашли, ищем в очищенном тексте
+          if (!foundVin) {
+            const cleanedText = text.replace(/[^A-Z0-9]/gi, '').toUpperCase();
             for (let i = 0; i <= cleanedText.length - 17; i++) {
               const candidate = cleanedText.slice(i, i + 17);
-              if (/[A-Z]/.test(candidate) && /[0-9]/.test(candidate)) {
+              // Проверяем, что это похоже на VIN
+              if (/[A-Z]/.test(candidate) && /[0-9]/.test(candidate) && 
+                  !candidate.includes('MOTOR') && !candidate.includes('ENGINE') && 
+                  !candidate.includes('COMPUTER') && !candidate.includes('MODEL')) {
                 foundVin = candidate;
+                console.log('Найден кандидат VIN:', foundVin);
                 break;
               }
             }
@@ -341,7 +377,7 @@
           } else {
             tg.showPopup({
               title: "Помилка",
-              message: "VIN не знайдено на екрані. Спробуйте ще раз або введіть вручну.",
+              message: "VIN не знайдено на екрані. Переконайтеся, що VIN видно на моніторі та спробуйте ще раз.",
               buttons: [{ type: "ok" }]
             });
           }
