@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Створити заявку</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2/dist/tesseract.min.js"></script>
   <style>
     body {
       margin: 0;
@@ -61,13 +62,13 @@
       margin-bottom: 20px;
     }
     .vin-input-large {
-      font-size: 24px;
-      padding: 16px;
-      border-radius: 12px;
+      font-size: 18px;
+      padding: 12px;
+      border-radius: 8px;
       border: 2px solid #03c75a;
       width: 100%;
       text-align: center;
-      letter-spacing: 2px;
+      letter-spacing: 1px;
       background: #333;
       color: #fff;
       margin-bottom: 16px;
@@ -162,7 +163,7 @@
   <div id="vin-scanner-modal" class="vin-scanner-modal">
     <div class="vin-scanner-content">
       <h3 style="margin:0 0 16px 0;color:#03c75a;">Сканування VIN</h3>
-      <p style="margin:0 0 20px 0;font-size:14px;color:#ccc;">Наведіть камеру на VIN-код або введіть вручну</p>
+      <p style="margin:0 0 20px 0;font-size:14px;color:#ccc;">Наведіть камеру на VIN-код на моніторі авто, натисніть "Копіювати VIN" або введіть вручну</p>
       
       <video id="vin-scanner-video" class="vin-scanner-video" autoplay playsinline></video>
       
@@ -172,6 +173,7 @@
       
       <div class="scanner-buttons">
         <button id="vin-scanner-confirm" class="scanner-btn confirm">Підтвердити</button>
+        <button id="vin-scanner-copy" class="scanner-btn manual">Копіювати VIN</button>
         <button id="vin-scanner-manual" class="scanner-btn manual">Вручну</button>
         <button id="vin-scanner-cancel" class="scanner-btn cancel">Скасувати</button>
       </div>
@@ -282,6 +284,86 @@
         
         closeVinScanner();
         vinInput.focus();
+      }
+    };
+    
+    document.getElementById('vin-scanner-copy').onclick = async function() {
+      const video = document.getElementById('vin-scanner-video');
+      if (video.srcObject && video.readyState === 4) {
+        // Показываем загрузку
+        const copyBtn = this;
+        const originalText = copyBtn.textContent;
+        copyBtn.textContent = 'Сканування...';
+        copyBtn.disabled = true;
+        
+        try {
+          // Создаем canvas для захвата кадра
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          
+          // OCR для распознавания VIN
+          const { data: { text } } = await Tesseract.recognize(canvas.toDataURL(), 'eng', {
+            tessedit_char_whitelist: 'ABCDEFGHJKLMNPRSTUVWXYZ0123456789'
+          });
+          
+          // Ищем VIN в тексте
+          const vinMatches = text.match(/[A-HJ-NPR-Z0-9]{17}/gi) || [];
+          const cleanedText = text.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+          
+          let foundVin = null;
+          
+          // Сначала ищем точные совпадения
+          if (vinMatches.length > 0) {
+            foundVin = vinMatches[0].toUpperCase();
+          } else {
+            // Ищем 17-символьные последовательности
+            for (let i = 0; i <= cleanedText.length - 17; i++) {
+              const candidate = cleanedText.slice(i, i + 17);
+              if (/[A-Z]/.test(candidate) && /[0-9]/.test(candidate)) {
+                foundVin = candidate;
+                break;
+              }
+            }
+          }
+          
+          if (foundVin) {
+            document.getElementById('vin-scanner-input').value = foundVin;
+            updateVinStatus(foundVin);
+            
+            tg.showPopup({
+              title: "Успіх",
+              message: "VIN знайдено: " + foundVin,
+              buttons: [{ type: "ok" }]
+            });
+          } else {
+            tg.showPopup({
+              title: "Помилка",
+              message: "VIN не знайдено на екрані. Спробуйте ще раз або введіть вручну.",
+              buttons: [{ type: "ok" }]
+            });
+          }
+          
+        } catch (error) {
+          console.error('Помилка OCR:', error);
+          tg.showPopup({
+            title: "Помилка",
+            message: "Не вдалося розпізнати VIN. Спробуйте ще раз або введіть вручну.",
+            buttons: [{ type: "ok" }]
+          });
+        } finally {
+          // Восстанавливаем кнопку
+          copyBtn.textContent = originalText;
+          copyBtn.disabled = false;
+        }
+      } else {
+        tg.showPopup({
+          title: "Помилка",
+          message: "Камера не готова. Зачекайте або введіть VIN вручну.",
+          buttons: [{ type: "ok" }]
+        });
       }
     };
     
