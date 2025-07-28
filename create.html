@@ -48,9 +48,9 @@
     }
     .vin-scanner-content {
       background: #222;
-      padding: 24px;
+      padding: 20px 16px;
       border-radius: 16px;
-      max-width: 400px;
+      max-width: 360px;
       width: 95%;
       text-align: center;
     }
@@ -65,7 +65,7 @@
     }
     .vin-input-large {
       font-size: 18px;
-      padding: 12px;
+      padding: 10px 12px;
       border-radius: 8px;
       border: 2px solid #03c75a;
       width: 100%;
@@ -73,7 +73,7 @@
       letter-spacing: 1px;
       background: #333;
       color: #fff;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
       font-weight: bold;
     }
     .vin-status {
@@ -97,17 +97,21 @@
     }
     .scanner-buttons {
       display: flex;
-      gap: 12px;
+      gap: 8px;
       width: 100%;
+      flex-wrap: wrap;
+      justify-content: center;
     }
     .scanner-btn {
       flex: 1;
-      padding: 12px;
+      min-width: 80px;
+      padding: 10px 8px;
       border-radius: 8px;
       border: none;
-      font-size: 16px;
+      font-size: 14px;
       font-weight: bold;
       cursor: pointer;
+      white-space: nowrap;
     }
     .scanner-btn.confirm {
       background: #03c75a;
@@ -167,17 +171,26 @@
       <h3 style="margin:0 0 16px 0;color:#03c75a;">Сканування VIN</h3>
       <p style="margin:0 0 20px 0;font-size:14px;color:#ccc;">Наведіть камеру на VIN-код на моніторі авто (17 символів, наприклад: 5YJ3E1EB7NF342309), натисніть "Копіювати VIN" або введіть вручну</p>
       
-      <video id="vin-scanner-video" class="vin-scanner-video" autoplay playsinline></video>
+      <div style="position: relative; margin-bottom: 20px;">
+        <video id="vin-scanner-video" class="vin-scanner-video" autoplay playsinline></video>
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #03c75a; font-size: 12px; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.8); pointer-events: none; z-index: 10;">
+          VIN
+        </div>
+      </div>
       
       <input type="text" id="vin-scanner-input" class="vin-input-large" maxlength="17" placeholder="Введіть VIN вручну" />
       
       <div id="vin-scanner-status" class="vin-status" style="display:none;"></div>
       
       <div class="scanner-buttons">
-        <button id="vin-scanner-confirm" class="scanner-btn confirm">Підтвердити</button>
-        <button id="vin-scanner-copy" class="scanner-btn manual">Копіювати VIN</button>
-        <button id="vin-scanner-manual" class="scanner-btn manual">Вручну</button>
-        <button id="vin-scanner-cancel" class="scanner-btn cancel">Скасувати</button>
+        <div style="display: flex; gap: 8px; width: 100%; margin-bottom: 8px;">
+          <button id="vin-scanner-confirm" class="scanner-btn confirm" style="flex: 1;">Підтвердити</button>
+          <button id="vin-scanner-copy" class="scanner-btn manual" style="flex: 1;">Копіювати VIN</button>
+        </div>
+        <div style="display: flex; gap: 8px; width: 100%;">
+          <button id="vin-scanner-manual" class="scanner-btn manual" style="flex: 1;">Вручну</button>
+          <button id="vin-scanner-cancel" class="scanner-btn cancel" style="flex: 1;">Скасувати</button>
+        </div>
       </div>
     </div>
   </div>
