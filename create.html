@@ -23,13 +23,68 @@
     .form-row label { display: block; margin-bottom: 8px; color: #e0e0e0; font-size: 15px; font-weight: 500; }
     .input-wrapper { position: relative; display: flex; align-items: center; gap: 10px; }
     .form-row input, .form-row textarea { flex: 1; padding: 12px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; font-size: 16px; }
-    .scan-btn { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: rgba(3,199,90,0.1); border: 1px solid rgba(3,199,90,0.3); border-radius: 10px; font-size: 20px; color: #03c75a; cursor: pointer; }
+    .scan-btn { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: rgba(3,199,90,0.1); border: 1px solid rgba(3,199,90,0.3); border-radius: 10px; font-size: 20px; color: #03c75a; cursor: pointer; transition: all 0.2s ease; }
+    .scan-btn:hover { background: rgba(3,199,90,0.2); transform: scale(1.05); }
     .submit-btn { display: block; width: 100%; padding: 14px; margin-top: 24px; background: #03c75a; border: none; border-radius: 10px; color: #fff; font-size: 18px; font-weight: bold; cursor: pointer; }
     .form-row.file-row { overflow: hidden; display: flex; flex-direction: column; }
     #file-preview { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 10px; max-width: 100%; box-sizing: border-box; }
     #file-preview > div { position: relative; max-width: 100px; max-height: 100px; overflow: hidden; border-radius: 8px; background: rgba(255,255,255,0.08); box-shadow: 0 2px 8px rgba(0,0,0,0.07); display: flex; align-items: center; justify-content: center; }
     #file-preview img, #file-preview video { max-width: 90px; max-height: 90px; border-radius: 6px; display: block; }
     #file-preview span { position: absolute; top: -8px; right: -8px; cursor: pointer; background: #e53935; color: white; border-radius: 50%; padding: 0 6px; font-size: 18px; z-index: 2; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+    
+    /* VIN Scanner Improvements */
+    .vin-candidate-btn {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 2px solid #03c75a;
+      background: rgba(3,199,90,0.1);
+      color: #03c75a;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 4px;
+      transition: all 0.2s ease;
+      letter-spacing: 1px;
+    }
+    .vin-candidate-btn:hover {
+      background: rgba(3,199,90,0.2);
+      transform: scale(1.02);
+    }
+    .vin-candidate-btn.selected {
+      background: #03c75a;
+      color: #000;
+    }
+    .vin-status {
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin-top: 4px;
+      text-align: center;
+    }
+    .vin-status.valid {
+      background: rgba(3,199,90,0.2);
+      color: #03c75a;
+    }
+    .vin-status.invalid {
+      background: rgba(229,57,53,0.2);
+      color: #e53935;
+    }
+    .vin-status.partial {
+      background: rgba(255,193,7,0.2);
+      color: #ffc107;
+    }
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(3,199,90,0.3);
+      border-top: 4px solid #03c75a;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -42,18 +97,20 @@
         <div class="input-wrapper">
           <input type="text" id="vin-car" maxlength="17" placeholder="Введіть VIN авто" required />
           <input type="file" id="vin-car-photo-input" accept="image/*" capture="environment" style="display:none;" />
-          <div class="scan-btn" onclick="document.getElementById('vin-car-photo-input').click();">📸</div>
+          <div class="scan-btn" onclick="document.getElementById('vin-car-photo-input').click();" title="Сканувати VIN з фото">📸</div>
           <div class="scan-btn" onclick="openLiveVinScanner('vin-car')" title="Live-сканер VIN">🔍</div>
         </div>
+        <div id="vin-car-status" class="vin-status" style="display:none;"></div>
       </div>
       <div class="form-row">
         <label for="vin-mceu">VIN з монітору авто</label>
         <div class="input-wrapper">
           <input type="text" id="vin-mceu" maxlength="17" placeholder="Введіть VIN з монітору авто" required />
           <input type="file" id="vin-mceu-photo-input" accept="image/*" capture="environment" style="display:none;" />
-          <div class="scan-btn" onclick="document.getElementById('vin-mceu-photo-input').click();">📸</div>
+          <div class="scan-btn" onclick="document.getElementById('vin-mceu-photo-input').click();" title="Сканувати VIN з фото">📸</div>
           <div class="scan-btn" onclick="openLiveVinScanner('vin-mceu')" title="Live-сканер VIN">🔍</div>
         </div>
+        <div id="vin-mceu-status" class="vin-status" style="display:none;"></div>
       </div>
       <div class="form-row">
         <label for="problem">Опис проблеми</label>
@@ -71,8 +128,9 @@
       <button id="submit-btn" class="submit-btn" onclick="submitForm()">Надіслати заявку</button>
     </div>
   </div>
+  
   <!-- Live VIN Scanner Modal -->
-  <div id="live-vin-modal" style="display:none;position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.05);align-items:center;justify-content:center;flex-direction:column;">
+  <div id="live-vin-modal" style="display:none;position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.9);align-items:center;justify-content:center;flex-direction:column;">
     <div style="position:relative;width:100%;max-width:400px;">
       <video id="live-vin-video" autoplay playsinline style="width:100%;border:3px dashed #03c75a;border-radius:8px;background:#000;"></video>
       <div style="position:absolute;top:10px;left:0;width:100%;text-align:center;color:#fff;font-size:16px;text-shadow:0 2px 4px #000;">
@@ -86,31 +144,105 @@
       <button id="live-vin-cancel-btn" class="submit-btn" style="background:#e53935;">Скасувати</button>
     </div>
   </div>
+  
   <!-- Модальне вікно для фото-сканера VIN -->
-  <div id="vin-photo-modal" style="display:none;position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.85);align-items:center;justify-content:center;flex-direction:column;">
-    <div style="background:#222;padding:24px 16px;border-radius:16px;max-width:340px;width:95%;display:flex;flex-direction:column;align-items:center;">
-      <img id="vin-photo-preview" src="" alt="Фото VIN" style="max-width:300px;max-height:120px;border-radius:8px;margin-bottom:16px;" />
-      <input type="text" id="vin-photo-vin" maxlength="17" placeholder="Введіть або відредагуйте VIN" style="font-size:20px;padding:10px 16px;border-radius:8px;border:1px solid #03c75a;width:100%;text-align:center;letter-spacing:2px;margin-bottom:12px;user-select:auto;" />
-      <div id="vin-photo-candidates" style="display:none;flex-wrap:wrap;gap:6px 8px;margin-bottom:10px;width:100%;justify-content:center;"></div>
-      <div style="display:flex;gap:10px;width:100%;margin-bottom:10px;">
-        <!-- Кнопка 'Скопіювати VIN' убрана -->
+  <div id="vin-photo-modal" style="display:none;position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.95);align-items:center;justify-content:center;flex-direction:column;">
+    <div style="background:#222;padding:24px 16px;border-radius:16px;max-width:380px;width:95%;display:flex;flex-direction:column;align-items:center;">
+      <div style="text-align:center;margin-bottom:16px;">
+        <h3 style="margin:0 0 8px 0;color:#03c75a;">Сканування VIN</h3>
+        <p style="margin:0;font-size:14px;color:#ccc;">Виберіть найкращий варіант або відредагуйте вручну</p>
       </div>
+      
+      <img id="vin-photo-preview" src="" alt="Фото VIN" style="max-width:320px;max-height:120px;border-radius:8px;margin-bottom:16px;border:2px solid #03c75a;" />
+      
+      <div id="vin-photo-candidates" style="display:none;flex-wrap:wrap;gap:6px 8px;margin-bottom:12px;width:100%;justify-content:center;max-height:120px;overflow-y:auto;"></div>
+      
+      <input type="text" id="vin-photo-vin" maxlength="17" placeholder="Введіть або відредагуйте VIN" style="font-size:18px;padding:12px 16px;border-radius:8px;border:2px solid #03c75a;width:100%;text-align:center;letter-spacing:1px;margin-bottom:12px;user-select:auto;background:#333;color:#fff;" />
+      
+      <div id="vin-photo-status" class="vin-status" style="display:none;margin-bottom:12px;"></div>
+      
       <div style="display:flex;gap:10px;width:100%;">
-        <button id="vin-photo-confirm-btn" class="submit-btn" style="background:#03c75a;">Підтвердити</button>
-        <button id="vin-photo-retry-btn" class="submit-btn" style="background:#e53935;">Спробувати ще раз</button>
+        <button id="vin-photo-confirm-btn" class="submit-btn" style="background:#03c75a;flex:1;">Підтвердити</button>
+        <button id="vin-photo-retry-btn" class="submit-btn" style="background:#e53935;flex:1;">Спробувати ще раз</button>
       </div>
     </div>
   </div>
+  
   <script>
     const tg = window.Telegram.WebApp;
     tg.ready();
     tg.expand();
+    
+    // Улучшенная функция для поиска VIN в тексте
+    function findVinCandidates(text) {
+      const candidates = [];
+      
+      // Ищем точные 17-символьные VIN (только допустимые символы)
+      const exactMatches = text.match(/[A-HJ-NPR-Z0-9]{17}/gi) || [];
+      candidates.push(...exactMatches.map(v => ({ vin: v.toUpperCase(), confidence: 'high' })));
+      
+      // Ищем последовательности с возможными ошибками распознавания
+      const cleanedText = text.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+      for (let i = 0; i <= cleanedText.length - 17; i++) {
+        const candidate = cleanedText.slice(i, i + 17);
+        // Проверяем, что это похоже на VIN (не все цифры, не все буквы)
+        if (candidate.length === 17 && /[A-Z]/.test(candidate) && /[0-9]/.test(candidate)) {
+          candidates.push({ vin: candidate, confidence: 'medium' });
+        }
+      }
+      
+      // Убираем дубликаты и сортируем по приоритету
+      const uniqueCandidates = [];
+      const seen = new Set();
+      candidates.forEach(candidate => {
+        if (!seen.has(candidate.vin)) {
+          seen.add(candidate.vin);
+          uniqueCandidates.push(candidate);
+        }
+      });
+      
+      return uniqueCandidates.slice(0, 5); // Возвращаем максимум 5 кандидатов
+    }
+    
+    // Функция валидации VIN
+    function validateVin(vin) {
+      if (!vin || vin.length !== 17) return 'invalid';
+      if (!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)) return 'invalid';
+      return 'valid';
+    }
+    
+    // Функция обновления статуса VIN
+    function updateVinStatus(fieldId, vin) {
+      const statusElement = document.getElementById(fieldId + '-status');
+      const validation = validateVin(vin);
+      
+      statusElement.style.display = 'block';
+      statusElement.className = 'vin-status ' + validation;
+      
+      if (validation === 'valid') {
+        statusElement.textContent = '✅ VIN валідний';
+      } else if (vin.length > 0 && vin.length < 17) {
+        statusElement.textContent = '⚠️ Неповний VIN (' + vin.length + '/17)';
+        statusElement.className = 'vin-status partial';
+      } else {
+        statusElement.textContent = '❌ Некоректний VIN';
+      }
+    }
+    
     // VIN сканер через фото
     ['vin-car', 'vin-mceu'].forEach(function(field) {
       const inputId = field + '-photo-input';
+      const input = document.getElementById(field);
+      
+      // Добавляем валидацию при вводе
+      input.addEventListener('input', function() {
+        updateVinStatus(field, this.value);
+      });
+      
       document.getElementById(inputId).addEventListener('change', function(e) {
         const file = this.files[0];
         if (!file) return;
+        
         const reader = new FileReader();
         reader.onload = function(ev) {
           document.getElementById('vin-photo-preview').src = ev.target.result;
@@ -118,43 +250,73 @@
           document.getElementById('vin-photo-vin').value = '';
           document.getElementById('vin-photo-candidates').style.display = 'none';
           document.getElementById('vin-photo-candidates').innerHTML = '';
-          // OCR
-          Tesseract.recognize(ev.target.result, 'eng', { logger: m => console.log(m) })
+          document.getElementById('vin-photo-status').style.display = 'none';
+          
+          // Показываем загрузку
+          const loadingDiv = document.createElement('div');
+          loadingDiv.className = 'loading-spinner';
+          loadingDiv.style.margin = '16px auto';
+          document.getElementById('vin-photo-modal').querySelector('div').appendChild(loadingDiv);
+          
+          // OCR с улучшенным распознаванием
+          Tesseract.recognize(ev.target.result, 'eng', { 
+            logger: m => console.log(m),
+            tessedit_char_whitelist: 'ABCDEFGHJKLMNPRSTUVWXYZ0123456789'
+          })
             .then(({ data: { text } }) => {
-              // Ищем все 17-символьные последовательности VIN
-              const candidates = (text.match(/[A-HJ-NPR-Z0-9]{17}/gi) || []).map(v => v.toUpperCase());
+              // Убираем индикатор загрузки
+              loadingDiv.remove();
+              
+              const candidates = findVinCandidates(text);
+              
               if (candidates.length > 0) {
+                // Показываем кандидатов
                 document.getElementById('vin-photo-candidates').style.display = 'flex';
-                document.getElementById('vin-photo-candidates').innerHTML = candidates.map(vin => `<button type='button' style='padding:6px 10px;border-radius:7px;border:1px solid #03c75a;background:#222;color:#03c75a;font-size:15px;cursor:pointer;margin-bottom:2px;' onclick='document.getElementById(\'vin-photo-vin\').value=\'${vin}\''>${vin}</button>`).join(' ');
-                document.getElementById('vin-photo-vin').value = candidates[0];
+                document.getElementById('vin-photo-candidates').innerHTML = candidates.map((candidate, index) => 
+                  `<button type='button' class='vin-candidate-btn ${index === 0 ? 'selected' : ''}' onclick='selectVinCandidate(\"${candidate.vin}\", this)'>${candidate.vin}</button>`
+                ).join('');
+                
+                // Устанавливаем первый кандидат как значение по умолчанию
+                document.getElementById('vin-photo-vin').value = candidates[0].vin;
+                updateVinStatus('vin-photo', candidates[0].vin);
               } else {
-                // fallback: чистим весь текст и берём первые 17 символов
+                // Fallback: берем первые 17 символов из очищенного текста
                 const cleaned = text.replace(/[^A-Z0-9]/gi, '').toUpperCase().replace(/[IOQ]/g, '');
-                document.getElementById('vin-photo-vin').value = cleaned.slice(0, 17);
-                document.getElementById('vin-photo-candidates').style.display = 'none';
+                const fallbackVin = cleaned.slice(0, 17);
+                document.getElementById('vin-photo-vin').value = fallbackVin;
+                updateVinStatus('vin-photo', fallbackVin);
               }
+              
               document.getElementById('vin-photo-vin').focus();
             })
             .catch(err => {
+              loadingDiv.remove();
               document.getElementById('vin-photo-vin').value = '';
-              document.getElementById('vin-photo-candidates').style.display = 'none';
+              document.getElementById('vin-photo-status').style.display = 'block';
+              document.getElementById('vin-photo-status').className = 'vin-status invalid';
+              document.getElementById('vin-photo-status').textContent = '❌ Помилка розпізнавання';
             });
+          
           // Кнопка подтвердить
           document.getElementById('vin-photo-confirm-btn').onclick = function() {
-            const vin = document.getElementById('vin-photo-vin').value.trim();
+            const vin = document.getElementById('vin-photo-vin').value.trim().toUpperCase();
             const vinInput = document.getElementById(field);
             vinInput.value = vin;
             document.getElementById('vin-photo-modal').style.display = 'none';
             document.getElementById(inputId).value = '';
             vinInput.focus();
-            if (vin.length === 17) {
+            updateVinStatus(field, vin);
+            
+            // Визуальная обратная связь
+            if (validateVin(vin) === 'valid') {
               vinInput.style.background = '#d4ffd4';
-              setTimeout(() => { vinInput.style.background = ''; }, 1200);
+              setTimeout(() => { vinInput.style.background = ''; }, 2000);
             } else {
               vinInput.style.background = '#ffd4d4';
-              setTimeout(() => { vinInput.style.background = ''; }, 1200);
+              setTimeout(() => { vinInput.style.background = ''; }, 2000);
             }
           };
+          
           // Кнопка попробовать еще раз
           document.getElementById('vin-photo-retry-btn').onclick = function() {
             document.getElementById('vin-photo-modal').style.display = 'none';
@@ -165,20 +327,42 @@
         reader.readAsDataURL(file);
       });
     });
+    
+    // Функция выбора кандидата VIN
+    function selectVinCandidate(vin, button) {
+      // Убираем выделение со всех кнопок
+      document.querySelectorAll('.vin-candidate-btn').forEach(btn => btn.classList.remove('selected'));
+      // Выделяем выбранную кнопку
+      button.classList.add('selected');
+      // Устанавливаем значение
+      document.getElementById('vin-photo-vin').value = vin;
+      updateVinStatus('vin-photo', vin);
+    }
+    
     let liveVinStream = null;
     let liveVinTarget = null;
     let liveVinInterval = null;
+    
     function openLiveVinScanner(targetField) {
       liveVinTarget = targetField;
       document.getElementById('live-vin-modal').style.display = 'flex';
       document.getElementById('live-vin-result').style.display = 'none';
       document.getElementById('live-vin-confirm-btn').style.display = 'none';
       document.getElementById('live-vin-loading').style.display = 'block';
+      
       const video = document.getElementById('live-vin-video');
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: 'environment' } } }).then((stream) => {
+      
+      navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          facingMode: { exact: 'environment' },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        } 
+      }).then((stream) => {
         liveVinStream = stream;
         video.srcObject = stream;
         video.play();
+        
         liveVinInterval = setInterval(() => {
           if (video.readyState === 4) {
             const canvas = document.createElement('canvas');
@@ -186,20 +370,27 @@
             canvas.height = video.videoHeight;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            Tesseract.recognize(canvas.toDataURL(), 'eng', { logger: m => console.log(m) })
+            
+            Tesseract.recognize(canvas.toDataURL(), 'eng', { 
+              logger: m => console.log(m),
+              tessedit_char_whitelist: 'ABCDEFGHJKLMNPRSTUVWXYZ0123456789'
+            })
               .then(({ data: { text } }) => {
-                const cleaned = text.replace(/[^A-Z0-9]/gi, '').toUpperCase().replace(/[IOQ]/g, '');
-                const vin = cleaned.slice(0, 17);
-                if (vin.length >= 10) {
+                const candidates = findVinCandidates(text);
+                if (candidates.length > 0) {
+                  const vin = candidates[0].vin;
                   document.getElementById('live-vin-result').value = vin;
                   document.getElementById('live-vin-result').style.display = 'block';
                   document.getElementById('live-vin-confirm-btn').style.display = 'inline-block';
                   document.getElementById('live-vin-loading').style.display = 'none';
-                  if (vin.length === 17 && liveVinTarget) {
+                  
+                  // Автоматически подтверждаем, если VIN валидный
+                  if (validateVin(vin) === 'valid' && liveVinTarget) {
                     const vinInput = document.getElementById(liveVinTarget);
                     vinInput.value = vin;
+                    updateVinStatus(liveVinTarget, vin);
                     vinInput.style.background = '#d4ffd4';
-                    setTimeout(() => { vinInput.style.background = ''; }, 1200);
+                    setTimeout(() => { vinInput.style.background = ''; }, 2000);
                     closeLiveVinScanner();
                   }
                 }
@@ -208,12 +399,13 @@
                 console.error(err);
               });
           }
-        }, 1500);
+        }, 2000); // Увеличили интервал для лучшей производительности
       }).catch(err => {
         alert('Не вдалося отримати доступ до камери. Спробуйте простий сканер через фото.');
         document.getElementById('live-vin-modal').style.display = 'none';
       });
     }
+    
     function closeLiveVinScanner() {
       document.getElementById('live-vin-modal').style.display = 'none';
       if (liveVinStream) {
@@ -225,31 +417,37 @@
         liveVinInterval = null;
       }
     }
+    
     document.getElementById('live-vin-cancel-btn').onclick = closeLiveVinScanner;
     document.getElementById('live-vin-confirm-btn').onclick = function() {
       const vin = document.getElementById('live-vin-result').value.trim();
       if (vin.length >= 10 && liveVinTarget) {
         const vinInput = document.getElementById(liveVinTarget);
         vinInput.value = vin;
+        updateVinStatus(liveVinTarget, vin);
         vinInput.style.background = '#d4ffd4';
-        setTimeout(() => { vinInput.style.background = ''; }, 1200);
+        setTimeout(() => { vinInput.style.background = ''; }, 2000);
         closeLiveVinScanner();
       }
     };
+    
     document.getElementById('live-vin-result').addEventListener('input', function() {
       this.value = this.value.replace(/[^A-Z0-9]/gi, '').replace(/[IOQ]/g, '').toUpperCase().slice(0, 17);
       if (this.value.length === 17 && liveVinTarget) {
         const vinInput = document.getElementById(liveVinTarget);
         vinInput.value = this.value;
+        updateVinStatus(liveVinTarget, this.value);
         vinInput.style.background = '#d4ffd4';
-        setTimeout(() => { vinInput.style.background = ''; }, 1200);
+        setTimeout(() => { vinInput.style.background = ''; }, 2000);
         closeLiveVinScanner();
       }
     });
+    
     // Валідація телефону
     function validatePhone(phone) {
       return /^\+380\d{9}$/.test(phone);
     }
+    
     const phoneInput = document.getElementById("phone");
     phoneInput.addEventListener("input", function(e) {
       if (!this.value.startsWith("+380")) {
@@ -259,6 +457,7 @@
         this.value = this.value.slice(0, 13);
       }
     });
+    
     // Прев'ю файлів
     function previewFiles() {
       const input = document.getElementById("file-input");
@@ -286,6 +485,7 @@
         reader.readAsDataURL(file);
       });
     }
+    
     function removePreview(index) {
       const input = document.getElementById("file-input");
       const dt = new DataTransfer();
@@ -296,6 +496,7 @@
       input.files = dt.files;
       previewFiles();
     }
+    
     // Відправка форми
     async function submitForm() {
       const vinCar = document.getElementById("vin-car").value.trim();
@@ -304,6 +505,7 @@
       const phone = document.getElementById("phone").value.trim();
       const chat_id = tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id ? String(tg.initDataUnsafe.user.id) : "unknown";
       const owner_name = tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.first_name ? tg.initDataUnsafe.user.first_name : "";
+      
       if (!vinCar || !vinMceu || !problem || !phone) {
         tg.showPopup({
           title: "Помилка",
@@ -312,6 +514,7 @@
         });
         return;
       }
+      
       if (!validatePhone(phone)) {
         tg.showPopup({
           title: "Помилка",
@@ -320,6 +523,26 @@
         });
         return;
       }
+      
+      // Проверяем валидность VIN
+      if (validateVin(vinCar) !== 'valid') {
+        tg.showPopup({
+          title: "Помилка",
+          message: "Некоректний VIN автомобіля".slice(0, 64),
+          buttons: [{ type: "ok" }]
+        });
+        return;
+      }
+      
+      if (validateVin(vinMceu) !== 'valid') {
+        tg.showPopup({
+          title: "Помилка",
+          message: "Некоректний VIN з монітору авто".slice(0, 64),
+          buttons: [{ type: "ok" }]
+        });
+        return;
+      }
+      
       const botData = {
         vin: vinMceu,
         car_vin: vinCar,
@@ -329,7 +552,9 @@
         owner_name: owner_name,
         chat_id: chat_id
       };
+      
       tg.sendData(JSON.stringify(botData));
+      
       const form = new FormData();
       form.append("vin", vinMceu);
       form.append("car_vin", vinCar);
@@ -338,10 +563,12 @@
       form.append("owner", "telegram");
       form.append("owner_name", owner_name);
       form.append("chat_id", chat_id);
+      
       const input = document.getElementById("file-input");
       for (let i = 0; i < input.files.length; i++) {
         form.append("media", input.files[i]);
       }
+      
       fetch("https://tesla-service-dashboard-new-549c7415b70b.herokuapp.com/proxy_create_request", {
         method: "POST",
         body: form
