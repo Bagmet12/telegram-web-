@@ -446,11 +446,49 @@ function render(list) {
 
   // УСТОЙЧИВАЯ СОРТИРОВКА: сначала по дате, если даты нет — по id (новые выше)
   list.sort((a, b) => {
-    if (a.date && b.date) {
-      return new Date(b.date) - new Date(a.date);
+    // Получаем даты создания для сортировки
+    const getCreationDate = (request) => {
+      // 1. Ищем запись "Нова" в истории
+      if (request.history && request.history.length > 0) {
+        const createdEntry = request.history.find(e => e.status === "Нова");
+        if (createdEntry && createdEntry.created_at) {
+          return new Date(createdEntry.created_at);
+        }
+      }
+      
+      // 2. Берем из основных полей
+      const date = request.created_at || request.date || request.created_date;
+      if (date) {
+        return new Date(date);
+      }
+      
+      // 3. Берем самую раннюю дату из истории
+      if (request.history && request.history.length > 0) {
+        const sortedHistory = request.history.sort((a, b) => 
+          new Date(a.created_at || 0) - new Date(b.created_at || 0)
+        );
+        if (sortedHistory[0].created_at) {
+          return new Date(sortedHistory[0].created_at);
+        }
+      }
+      
+      // 4. Если даты нет, возвращаем 0 для сортировки по ID
+      return null;
+    };
+    
+    const dateA = getCreationDate(a);
+    const dateB = getCreationDate(b);
+    
+    // Если обе даты есть, сортируем по дате
+    if (dateA && dateB) {
+      return dateB - dateA; // Новые выше
     }
-    if (a.date && !b.date) return -1;
-    if (!a.date && b.date) return 1;
+    
+    // Если только одна дата есть, она идет выше
+    if (dateA && !dateB) return -1;
+    if (!dateA && dateB) return 1;
+    
+    // Если дат нет, сортируем по ID
     return b.id - a.id;
   });
 
@@ -490,9 +528,9 @@ function render(list) {
               createdAt = sortedHistory[0].created_at;
             }
             
-            // 4. Если все еще нет, используем текущее время как fallback
+            // 4. Если дата не найдена, показываем "—"
             if (!createdAt) {
-              createdAt = new Date().toISOString();
+              return '—';
             }
             
             try {
@@ -722,6 +760,15 @@ async function fetchHistory() {
       if (body.requests && body.requests.length > 0) {
         console.log('First request structure:', body.requests[0]);
         console.log('First request history:', body.requests[0].history);
+        
+        // Debug: check dates for all requests
+        body.requests.forEach((req, index) => {
+          console.log(`Request ${index + 1} (ID: ${req.id}):`);
+          console.log('  - created_at:', req.created_at);
+          console.log('  - date:', req.date);
+          console.log('  - created_date:', req.created_date);
+          console.log('  - history:', req.history);
+        });
       }
       render(body.requests);
     } else {
