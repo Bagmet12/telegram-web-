@@ -448,7 +448,12 @@ function render(list) {
   list.sort((a, b) => {
     // Получаем даты создания для сортировки
     const getCreationDate = (request) => {
-      // 1. Ищем запись "Нова" в истории
+      // 1. ПРИОРИТЕТ: берем поле date из API (это дата создания из БД)
+      if (request.date) {
+        return new Date(request.date);
+      }
+      
+      // 2. Ищем запись "Нова" в истории
       if (request.history && request.history.length > 0) {
         const createdEntry = request.history.find(e => e.status === "Нова");
         if (createdEntry && createdEntry.created_at) {
@@ -456,13 +461,13 @@ function render(list) {
         }
       }
       
-      // 2. Берем из основных полей
-      const date = request.created_at || request.date || request.created_date;
+      // 3. Берем из других полей
+      const date = request.created_at || request.created_date;
       if (date) {
         return new Date(date);
       }
       
-      // 3. Берем самую раннюю дату из истории
+      // 4. Берем самую раннюю дату из истории
       if (request.history && request.history.length > 0) {
         const sortedHistory = request.history.sort((a, b) => 
           new Date(a.created_at || 0) - new Date(b.created_at || 0)
@@ -472,7 +477,7 @@ function render(list) {
         }
       }
       
-      // 4. Если даты нет, возвращаем 0 для сортировки по ID
+      // 5. Если даты нет, возвращаем null для сортировки по ID
       return null;
     };
     
@@ -507,28 +512,29 @@ function render(list) {
             // Пытаемся найти дату создания несколькими способами
             let createdAt = null;
             
-            // 1. Ищем запись "Нова" в истории
-            if (r.history && r.history.length > 0) {
+            // 1. ПРИОРИТЕТ: берем поле date из API (это дата создания из БД)
+            if (r.date) {
+              createdAt = r.date;
+            }
+            // 2. Ищем запись "Нова" в истории
+            else if (r.history && r.history.length > 0) {
               const createdEntry = r.history.find(e => e.status === "Нова");
               if (createdEntry && createdEntry.created_at) {
                 createdAt = createdEntry.created_at;
               }
             }
-            
-            // 2. Если не нашли в истории, берем из основных полей
-            if (!createdAt) {
-              createdAt = r.created_at || r.date || r.created_date;
+            // 3. Если не нашли в истории, берем из других полей
+            else if (r.created_at || r.created_date) {
+              createdAt = r.created_at || r.created_date;
             }
-            
-            // 3. Если все еще нет, берем самую раннюю дату из истории
-            if (!createdAt && r.history && r.history.length > 0) {
+            // 4. Если все еще нет, берем самую раннюю дату из истории
+            else if (r.history && r.history.length > 0) {
               const sortedHistory = r.history.sort((a, b) => 
                 new Date(a.created_at || 0) - new Date(b.created_at || 0)
               );
               createdAt = sortedHistory[0].created_at;
             }
-            
-            // 4. Если дата не найдена, показываем "—"
+            // 5. Если дата не найдена, показываем "—"
             if (!createdAt) {
               return '—';
             }
@@ -764,8 +770,8 @@ async function fetchHistory() {
         // Debug: check dates for all requests
         body.requests.forEach((req, index) => {
           console.log(`Request ${index + 1} (ID: ${req.id}):`);
+          console.log('  - date (from DB):', req.date);
           console.log('  - created_at:', req.created_at);
-          console.log('  - date:', req.date);
           console.log('  - created_date:', req.created_date);
           console.log('  - history:', req.history);
         });
