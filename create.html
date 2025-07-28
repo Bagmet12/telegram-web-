@@ -23,7 +23,23 @@
     .form-row label { display: block; margin-bottom: 8px; color: #e0e0e0; font-size: 15px; font-weight: 500; }
     .input-wrapper { position: relative; display: flex; align-items: center; gap: 10px; }
     .form-row input, .form-row textarea { flex: 1; padding: 12px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; font-size: 16px; }
-    .scan-btn { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: rgba(3,199,90,0.1); border: 1px solid rgba(3,199,90,0.3); border-radius: 10px; font-size: 20px; color: #03c75a; cursor: pointer; transition: all 0.2s ease; }
+    .scan-btn { 
+      width: auto; 
+      min-width: 80px;
+      height: 42px; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      background: rgba(3,199,90,0.1); 
+      border: 1px solid rgba(3,199,90,0.3); 
+      border-radius: 10px; 
+      font-size: 14px; 
+      color: #03c75a; 
+      cursor: pointer; 
+      transition: all 0.2s ease; 
+      padding: 0 12px;
+      font-weight: bold;
+    }
     .scan-btn:hover { background: rgba(3,199,90,0.2); transform: scale(1.05); }
     .submit-btn { display: block; width: 100%; padding: 14px; margin-top: 24px; background: #03c75a; border: none; border-radius: 10px; color: #fff; font-size: 18px; font-weight: bold; cursor: pointer; }
     .form-row.file-row { overflow: hidden; display: flex; flex-direction: column; }
@@ -140,7 +156,7 @@
         <label for="vin-car">VIN автомобіля</label>
         <div class="input-wrapper">
           <input type="text" id="vin-car" maxlength="17" placeholder="Введіть VIN авто" required />
-          <div class="scan-btn" onclick="openVinScanner('vin-car')" title="Сканувати VIN">🔍</div>
+          <div class="scan-btn" onclick="openVinScanner('vin-car')" title="Сканувати VIN">Скан VIN</div>
         </div>
         <div id="vin-car-status" class="vin-status" style="display:none;"></div>
       </div>
@@ -148,7 +164,7 @@
         <label for="vin-mceu">VIN з монітору авто</label>
         <div class="input-wrapper">
           <input type="text" id="vin-mceu" maxlength="17" placeholder="Введіть VIN з монітору авто" required />
-          <div class="scan-btn" onclick="openVinScanner('vin-mceu')" title="Сканувати VIN">🔍</div>
+          <div class="scan-btn" onclick="openVinScanner('vin-mceu')" title="Сканувати VIN">Скан VIN</div>
         </div>
         <div id="vin-mceu-status" class="vin-status" style="display:none;"></div>
       </div>
